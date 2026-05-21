@@ -54,32 +54,5 @@
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-5-1779396869641-8aecb65b.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-6-1779396870918-b04371f5.jpg"
     ]
-  },
-  {
-    "id": "8c87821c35cd8d40b83ae968",
-    "year": "2010",
-    "make": "NISSAN",
-    "model": "ALTIMA",
-    "category": "car",
-    "miles": "125124",
-    "price": "4500",
-    "notes": "CAR RUNS RELLAY GOOD AND WITHOUT ISSUES, CAL TO MAKE YOUR DRIVE TEST",
-    "stockNumber": "5478",
-    "vin": "14528",
-    "condition": "GREAT",
-    "engine": "2.0",
-    "transmission": "AUT",
-    "exteriorColor": "GREY",
-    "interiorColor": "BLACK",
-    "drivetrain": "FWD",
-    "fuelEconomy": "20 CITY/ 28 H",
-    "damage": "",
-    "images": [
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-1-1779396872944-a3a316ec.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-2-1779396874055-96581574.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-3-1779396875076-4597ad81.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-4-1779396876656-59e30548.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-5-1779396877573-28e2d28f.jpg"
-    ]
   }
 ]
