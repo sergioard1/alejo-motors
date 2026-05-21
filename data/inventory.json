@@ -1,28 +1,5 @@
 [
   {
-    "id": "eb9f2df304986de9e7dc298d",
-    "year": "2099",
-    "make": "TEST",
-    "model": "SAVE BUTTON",
-    "category": "car",
-    "miles": "1",
-    "price": "Call for price",
-    "notes": "Temporary production save test",
-    "stockNumber": "",
-    "vin": "",
-    "condition": "",
-    "engine": "",
-    "transmission": "",
-    "exteriorColor": "",
-    "interiorColor": "",
-    "drivetrain": "",
-    "fuelEconomy": "",
-    "damage": "",
-    "images": [
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/eb9f2df304986de9e7dc298d/photo-1-1779396861265-1a18917a.jpg"
-    ]
-  },
-  {
     "id": "c1d4a5e92b53e6d641337d6f",
     "year": "2012",
     "make": "VOLKSWAGEN",
