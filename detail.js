@@ -27,7 +27,6 @@ const requestForm = document.querySelector("#requestForm");
 const messageInput = document.querySelector("#message");
 const requestStatus = document.querySelector("#requestStatus");
 const notFound = document.querySelector("#notFound");
-const dealerEmail = "alejomotorstx@gmail.com";
 const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
 
 let currentImages = [];
@@ -86,7 +85,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-requestForm.addEventListener("submit", async (event) => {
+requestForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const firstName = document.querySelector("#firstName").value.trim();
@@ -105,41 +104,20 @@ requestForm.addEventListener("submit", async (event) => {
     message,
     page: window.location.href,
   };
-  const leadText = [
+  const smsText = [
+    "Hi Alejo Motors, I would like more information.",
     `Vehicle: ${currentTitle}`,
     `Name: ${firstName} ${lastName}`,
-    `Email: ${email}`,
-    `Phone: ${phone || "Not provided"}`,
+    `Phone: ${phone}`,
+    email ? `Email: ${email}` : "",
     `Trade-in: ${tradeIn}`,
     `Message: ${message}`,
     `Page: ${window.location.href}`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
-  requestStatus.textContent = "Sending your request...";
-
-  try {
-    const response = await fetch(buildApiUrl("/api/leads"), {
-      method: "POST",
-      credentials: apiBaseUrl ? "include" : "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(lead),
-    });
-
-    if (response.ok) {
-      const delivery = await response.json();
-      requestStatus.textContent = delivery.sentEmail || delivery.sentSms
-        ? "Message sent. We will contact you shortly."
-        : "Request saved. Please call or text us for the fastest response.";
-      requestForm.reset();
-      messageInput.value = `Could you provide more information about this ${currentTitle}?`;
-      return;
-    }
-  } catch {
-    // GitHub Pages is static, so fall back to the customer's email app.
-  }
-
-  requestStatus.textContent = "Opening your email app. You can also call or text us for the fastest response.";
-  window.location.href = `mailto:${dealerEmail}?subject=${encodeURIComponent(`Vehicle inquiry: ${currentTitle}`)}&body=${encodeURIComponent(leadText)}`;
+  saveLeadQuietly(lead);
+  requestStatus.textContent = "Opening your text message app with the vehicle information ready.";
+  window.location.href = `sms:+16789271739?body=${encodeURIComponent(smsText)}`;
 });
 
 async function loadVehicle() {
@@ -165,6 +143,18 @@ async function loadVehicle() {
 
 function buildApiUrl(url) {
   return `${apiBaseUrl}${url}`;
+}
+
+function saveLeadQuietly(lead) {
+  fetch(buildApiUrl("/api/leads"), {
+    method: "POST",
+    credentials: apiBaseUrl ? "include" : "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(lead),
+    keepalive: true,
+  }).catch(() => {
+    // The SMS app is the primary path on mobile.
+  });
 }
 
 async function loadStaticVehicle() {
