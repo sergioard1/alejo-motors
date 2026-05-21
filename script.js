@@ -19,7 +19,7 @@ const adminMessage = document.querySelector("#adminMessage");
 const adminPanel = document.querySelector("#adminPanel");
 const logoutAdmin = document.querySelector("#logoutAdmin");
 const loginModal = document.querySelector("#loginModal");
-const openOwnerLogin = document.querySelector("#openOwnerLogin");
+const ownerLoginTriggers = document.querySelectorAll(".owner-login-trigger");
 const closeOwnerLogin = document.querySelector("#closeOwnerLogin");
 
 let vehicles = [];
@@ -74,7 +74,9 @@ bodyStyleSelect.addEventListener("change", () => {
   renderVehicles();
 });
 
-openOwnerLogin?.addEventListener("click", openLoginModal);
+ownerLoginTriggers.forEach((button) => {
+  button.addEventListener("click", openLoginModal);
+});
 
 closeOwnerLogin.addEventListener("click", closeLoginModal);
 
@@ -227,13 +229,20 @@ async function loadSession() {
 }
 
 async function loadVehicles() {
+  resultCount.textContent = "Loading inventory...";
+
   try {
     vehicles = await apiRequest("/api/vehicles");
     apiAvailable = true;
   } catch {
     apiAvailable = false;
-    const response = await fetch("data/inventory.json", { cache: "no-store" });
-    vehicles = await response.json();
+    try {
+      const response = await fetch("data/inventory.json", { cache: "no-store" });
+      vehicles = await response.json();
+    } catch {
+      vehicles = [];
+      resultCount.textContent = "Inventory could not load. Please refresh the page.";
+    }
   }
 }
 
@@ -330,6 +339,10 @@ function updateAdminUI() {
 
   document.querySelectorAll(".owner-only").forEach((element) => {
     element.hidden = !ownerMode;
+  });
+
+  ownerLoginTriggers.forEach((button) => {
+    button.hidden = ownerMode;
   });
 }
 
