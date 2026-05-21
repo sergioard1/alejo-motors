@@ -21,6 +21,8 @@ const logoutAdmin = document.querySelector("#logoutAdmin");
 const loginModal = document.querySelector("#loginModal");
 const ownerLoginTriggers = document.querySelectorAll(".owner-login-trigger");
 const closeOwnerLogin = document.querySelector("#closeOwnerLogin");
+const vehicleFormMessage = document.querySelector("#vehicleFormMessage");
+const saveVehicleButton = vehicleForm.querySelector('button[type="submit"]');
 
 let vehicles = [];
 let activeFilter = "all";
@@ -98,11 +100,28 @@ photoInput.addEventListener("change", async () => {
   if (!files.length) {
     selectedPhotos = [];
     renderPhotoPreview([]);
+    setVehicleFormMessage("");
     return;
   }
 
-  selectedPhotos = await Promise.all(files.slice(0, 8).map(resizeImage));
-  renderPhotoPreview(selectedPhotos);
+  setVehicleFormMessage("Preparing photos...");
+
+  try {
+    const photos = files.slice(0, 6);
+    selectedPhotos = await Promise.all(photos.map(resizeImage));
+    renderPhotoPreview(selectedPhotos);
+    setVehicleFormMessage(
+      files.length > 6
+        ? "6 photos ready. Extra photos were skipped so the vehicle saves faster."
+        : `${selectedPhotos.length} photo${selectedPhotos.length === 1 ? "" : "s"} ready.`,
+      "success"
+    );
+  } catch {
+    selectedPhotos = [];
+    photoInput.value = "";
+    renderPhotoPreview([]);
+    setVehicleFormMessage("Those photos could not be prepared. Try different photos.", "error");
+  }
 });
 
 adminLoginForm.addEventListener("submit", async (event) => {
@@ -158,8 +177,19 @@ window.addEventListener("hashchange", () => {
 vehicleForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  if (!isAdmin) return;
-  if (!apiAvailable) return;
+  if (!isAdmin) {
+    setVehicleFormMessage("Please unlock owner mode first.", "error");
+    return;
+  }
+
+  if (!apiAvailable) {
+    setVehicleFormMessage("Owner editing is not connected. Refresh and try again.", "error");
+    return;
+  }
+
+  if (!vehicleForm.reportValidity()) {
+    return;
+  }
 
   const vehicle = {
     year: document.querySelector("#yearInput").value.trim(),
@@ -182,19 +212,31 @@ vehicleForm.addEventListener("submit", async (event) => {
     images: selectedPhotos.length ? selectedPhotos : ["assets/alejo-motors-logo.svg"],
   };
 
-  await apiRequest("/api/vehicles", {
-    method: "POST",
-    body: vehicle,
-  });
+  saveVehicleButton.disabled = true;
+  saveVehicleButton.textContent = "Saving...";
+  setVehicleFormMessage("Saving vehicle...");
 
-  await loadVehicles();
-  vehicleForm.reset();
-  selectedPhotos = [];
-  renderPhotoPreview([]);
-  activeFilter = "all";
-  setActiveFilter("all");
-  renderVehicles();
-  document.querySelector("#inventory").scrollIntoView({ behavior: "smooth" });
+  try {
+    await apiRequest("/api/vehicles", {
+      method: "POST",
+      body: vehicle,
+    });
+
+    await loadVehicles();
+    vehicleForm.reset();
+    selectedPhotos = [];
+    renderPhotoPreview([]);
+    activeFilter = "all";
+    setActiveFilter("all");
+    renderVehicles();
+    setVehicleFormMessage("Vehicle saved. It is now live in inventory.", "success");
+    document.querySelector("#inventory").scrollIntoView({ behavior: "smooth" });
+  } catch (error) {
+    setVehicleFormMessage(error.message || "The vehicle could not be saved. Try again.", "error");
+  } finally {
+    saveVehicleButton.disabled = false;
+    saveVehicleButton.textContent = "Save Vehicle";
+  }
 });
 
 resetInventory.addEventListener("click", async () => {
@@ -254,7 +296,14 @@ async function apiRequest(url, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { error: text || "Request failed" };
+  }
 
   if (!response.ok) {
     throw new Error(data.error || "Request failed");
@@ -429,6 +478,12 @@ function renderPhotoPreview(images) {
   });
 }
 
+function setVehicleFormMessage(message, tone = "") {
+  vehicleFormMessage.textContent = message;
+  vehicleFormMessage.classList.toggle("success", tone === "success");
+  vehicleFormMessage.classList.toggle("error", tone === "error");
+}
+
 function resizeImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -437,15 +492,29 @@ function resizeImage(file) {
       const image = new Image();
 
       image.onload = () => {
-        const maxWidth = 1200;
-        const scale = Math.min(1, maxWidth / image.width);
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
+        let maxWidth = 1000;
+        let quality = 0.74;
+        let result = "";
 
-        canvas.width = Math.round(image.width * scale);
-        canvas.height = Math.round(image.height * scale);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const scale = Math.min(1, maxWidth / image.width);
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          result = canvas.toDataURL("image/jpeg", quality);
+
+          if (result.length < 850_000) {
+            break;
+          }
+
+          maxWidth = Math.round(maxWidth * 0.82);
+          quality = Math.max(0.52, quality - 0.08);
+        }
+
+        resolve(result);
       };
 
       image.onerror = reject;
