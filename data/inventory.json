@@ -1,5 +1,33 @@
 [
   {
+    "id": "150ef36f86e040b50f7f4cd9",
+    "year": "2007",
+    "make": "HONDA",
+    "model": "ACCORD",
+    "category": "car",
+    "miles": "184600",
+    "price": "$4250",
+    "notes": "Runs & drives good\nCold A/C – Heater works\nAutomatic transmission\nLeather heated seats\nSunroof\nEmission inspection done\nClean title\nReliable daily driver\nSpacious and comfortable\nCash deal\n\nReady to drive today",
+    "stockNumber": "",
+    "vin": "",
+    "condition": "",
+    "engine": "3.0 V6",
+    "transmission": "Aut",
+    "exteriorColor": "Grey",
+    "interiorColor": "Grey",
+    "drivetrain": "FWD",
+    "fuelEconomy": "22 city/ 30 hwy",
+    "damage": "",
+    "images": [
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-1-1779398971401-1c667256.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-2-1779398972791-285ca912.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-3-1779398974408-a6698427.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-4-1779398975882-f634cdec.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-5-1779398977394-0492fefc.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-6-1779398978850-7b207895.jpg"
+    ]
+  },
+  {
     "id": "d400e8dea34d33f93841fd46",
     "year": "1983",
     "make": "MERCEDES BENZ",
