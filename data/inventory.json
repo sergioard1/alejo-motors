@@ -1,28 +1,5 @@
 [
   {
-    "id": "cecd108348c995b250fbee52",
-    "year": "2099",
-    "make": "TEST",
-    "model": "DO NOT KEEP",
-    "category": "car",
-    "miles": "1",
-    "price": "Call for price",
-    "notes": "Temporary backend test",
-    "stockNumber": "",
-    "vin": "",
-    "condition": "",
-    "engine": "",
-    "transmission": "",
-    "exteriorColor": "",
-    "interiorColor": "",
-    "drivetrain": "",
-    "fuelEconomy": "",
-    "damage": "",
-    "images": [
-      "assets/alejo-motors-logo.svg"
-    ]
-  },
-  {
     "id": "8c87821c35cd8d40b83ae968",
     "year": "2010",
     "make": "NISSAN",
