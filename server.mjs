@@ -93,7 +93,9 @@ createServer(async (request, response) => {
     serveStatic(request, response, url);
   } catch (error) {
     console.error(error);
-    sendJson(response, 500, { error: "Server error" });
+    const status = Number(error.status || error.statusCode) || 500;
+    const message = status === 500 ? "Server error. Please try again." : error.message;
+    sendJson(response, status, { error: message });
   }
 }).listen(port, () => {
   console.log(`ALEJO MOTORS running at http://localhost:${port}`);
@@ -172,7 +174,7 @@ async function handleApi(request, response, url) {
 
     const vehicle = await readJson(request);
     const vehicles = await readInventory();
-    const cleanVehicle = normalizeVehicle(vehicle);
+    const cleanVehicle = await normalizeVehicle(vehicle);
     vehicles.unshift(cleanVehicle);
     await writeInventory(vehicles);
     sendJson(response, 201, cleanVehicle);
@@ -263,17 +265,27 @@ function isOriginAllowed(origin) {
 function readJson(request) {
   return new Promise((resolveBody, rejectBody) => {
     let raw = "";
+    let tooLarge = false;
 
     request.on("data", (chunk) => {
+      if (tooLarge) return;
+
       raw += chunk;
 
-      if (raw.length > 12_000_000) {
-        rejectBody(new Error("Request body too large"));
-        request.destroy();
+      if (raw.length > 24_000_000) {
+        tooLarge = true;
+        raw = "";
       }
     });
 
     request.on("end", () => {
+      if (tooLarge) {
+        const error = new Error("Photos are too large. Try fewer photos or smaller photos.");
+        error.status = 413;
+        rejectBody(error);
+        return;
+      }
+
       try {
         resolveBody(raw ? JSON.parse(raw) : {});
       } catch {
@@ -409,11 +421,13 @@ function encodePath(value) {
     .join("/");
 }
 
-function normalizeVehicle(vehicle) {
+async function normalizeVehicle(vehicle) {
+  const id = randomBytes(12).toString("hex");
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+  const uploadedImages = await prepareVehicleImages(id, images);
 
   return {
-    id: randomBytes(12).toString("hex"),
+    id,
     year: String(vehicle.year || "").trim(),
     make: String(vehicle.make || "").trim(),
     model: String(vehicle.model || "").trim(),
@@ -431,8 +445,64 @@ function normalizeVehicle(vehicle) {
     drivetrain: String(vehicle.drivetrain || "").trim(),
     fuelEconomy: String(vehicle.fuelEconomy || "").trim(),
     damage: String(vehicle.damage || "").trim(),
-    images: images.length ? images.map((image) => String(image).trim()).filter(Boolean) : ["assets/alejo-motors-logo.svg"]
+    images: uploadedImages.length ? uploadedImages : ["assets/alejo-motors-logo.svg"]
   };
+}
+
+async function prepareVehicleImages(vehicleId, images) {
+  const cleanImages = images
+    .map((image) => String(image || "").trim())
+    .filter(Boolean)
+    .slice(0, 6);
+
+  if (!hasGitHubStorage()) {
+    return cleanImages;
+  }
+
+  const prepared = [];
+
+  for (let index = 0; index < cleanImages.length; index += 1) {
+    const image = cleanImages[index];
+
+    if (!image.startsWith("data:image/")) {
+      prepared.push(image);
+      continue;
+    }
+
+    prepared.push(await uploadVehicleImage(vehicleId, image, index));
+  }
+
+  return prepared;
+}
+
+async function uploadVehicleImage(vehicleId, dataUrl, index) {
+  const match = dataUrl.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
+
+  if (!match) {
+    throw Object.assign(new Error("One photo could not be read. Try a JPG or PNG image."), { status: 400 });
+  }
+
+  const mimeType = match[1];
+  const content = match[2];
+  const size = Buffer.byteLength(content, "base64");
+
+  if (size > 4_000_000) {
+    throw Object.assign(new Error("One photo is still too large. Try fewer or smaller photos."), { status: 413 });
+  }
+
+  const extension = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
+  const path = `uploads/${vehicleId}/photo-${index + 1}.${extension}`;
+
+  await githubApi(`repos/${githubRepo}/contents/${encodePath(path)}`, {
+    method: "PUT",
+    body: {
+      message: "Add Alejo Motors vehicle photo",
+      content,
+      branch: githubBranch
+    }
+  });
+
+  return `https://raw.githubusercontent.com/${githubRepo}/${githubBranch}/${path}`;
 }
 
 function migrateVehicle(vehicle) {
