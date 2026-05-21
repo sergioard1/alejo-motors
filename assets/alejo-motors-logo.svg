@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 150" role="img" aria-labelledby="title desc">
+  <title id="title">Alejo Motors Autosales</title>
+  <desc id="desc">Alejo Motors Autosales logo in blue and red.</desc>
+  <rect width="850" height="150" fill="none"/>
+  <g transform="translate(6 8)">
+    <path d="M38 12 65 45 108 45 73 70 86 113 38 85-10 113 3 70-32 45 11 45Z" fill="#08235f"/>
+    <path d="M112 38 143 69 187 60 156 92 174 133 129 113 94 142 100 96 62 72 107 66Z" fill="#d91e28"/>
+    <path d="M57 70 104 70" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+    <path d="M118 89 161 82" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="220" y="82" fill="#08235f" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="900" letter-spacing="8">ALEJO MOTORS</text>
+  <text x="405" y="124" fill="#08235f" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="900" letter-spacing="2">AUTOSALES</text>
+</svg>

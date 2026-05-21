@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ALEJO MOTORS</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="promo-strip">
+      <span>Fort Worth used cars ready for your next drive</span>
+      <a href="tel:+16789271739">Call or text today: (678) 927-1739</a>
+    </div>
+
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="ALEJO MOTORS">
+        <img class="brand-logo" src="assets/alejo-motors-logo.svg" alt="ALEJO MOTORS Autosales" />
+      </a>
+      <div class="header-contact">
+        <a href="https://maps.google.com/?q=5601%20E%20Lancaster%20Ave%2C%20Fort%20Worth%2C%20TX%2076112">5601 E Lancaster Ave, Fort Worth, TX 76112</a>
+        <a href="tel:+16789271739">(678) 927-1739</a>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#home">Home</a>
+        <a href="#inventory">Inventory</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <nav class="category-nav" aria-label="Vehicle categories">
+      <button class="filter active" data-filter="all" type="button">All Cars For Sale</button>
+      <button class="filter" data-filter="car" type="button">Cars For Sale</button>
+      <button class="filter" data-filter="suv" type="button">SUVs For Sale</button>
+      <button class="filter" data-filter="pickup" type="button">Pickup Trucks For Sale</button>
+    </nav>
+
+    <main>
+      <section class="hero dealer-hero" id="home">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <p class="eyebrow">ALEJO MOTORS AUTOSALES</p>
+          <h1>Drive Home Ready</h1>
+          <p>
+            Explore hand-picked cars, SUVs, and pickups with the details customers need to feel
+            confident before they call, text, or visit.
+          </p>
+          <div class="hero-badges" aria-label="Alejo Motors highlights">
+            <span>Fort Worth, TX</span>
+            <span>Promotions Available</span>
+            <span>Ready to Show</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button primary" href="#inventory">Our Inventory</a>
+            <a class="button secondary" href="#contact">Contact Us</a>
+            <a class="button secondary" href="https://maps.google.com/?q=5601%20E%20Lancaster%20Ave%2C%20Fort%20Worth%2C%20TX%2076112">Get Directions</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="quick-actions" aria-label="Main actions">
+        <a href="#inventory">
+          <strong>Our Inventory</strong>
+          <span>See vehicles with photos, details, and fast contact options.</span>
+        </a>
+        <a href="#contact">
+          <strong>Fast Answers</strong>
+          <span>Ask about availability, promotions, or a visit today.</span>
+        </a>
+        <a href="https://maps.google.com/?q=5601%20E%20Lancaster%20Ave%2C%20Fort%20Worth%2C%20TX%2076112">
+          <strong>Visit the Lot</strong>
+          <span>Find Alejo Motors in Fort Worth, Texas.</span>
+        </a>
+      </section>
+
+      <section class="vehicle-search">
+        <div>
+          <p class="eyebrow">Find a Vehicle</p>
+          <h2>Search our inventory</h2>
+        </div>
+        <label>
+          Keyword
+          <input id="inventorySearch" type="search" placeholder="Search make, model, VIN..." />
+        </label>
+        <label>
+          Body Style
+          <select id="bodyStyleSelect">
+            <option value="all">All Inventory</option>
+            <option value="car">Cars</option>
+            <option value="suv">SUVs</option>
+            <option value="pickup">Pickup Trucks</option>
+          </select>
+        </label>
+        <a class="button primary" href="#inventory">Search</a>
+      </section>
+
+      <section class="inventory" id="inventory">
+        <div class="inventory-results">
+          <div class="results-header">
+            <div>
+              <p class="eyebrow">Featured Vehicles</p>
+              <h2>Cars For Sale in Fort Worth, TX</h2>
+              <span id="resultCount">Showing inventory</span>
+            </div>
+            <a class="button small owner-only" href="#manager" hidden>Add Vehicle</a>
+          </div>
+
+          <div class="vehicle-grid featured-grid" id="vehicleGrid"></div>
+          <p class="empty-state" id="emptyState" hidden>No vehicles match this search.</p>
+        </div>
+      </section>
+
+      <section class="manager owner-only" id="manager" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Owner area</p>
+            <h2>Manage inventory</h2>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="adminPanel">
+          <div class="admin-bar">
+            <span>Owner mode is on</span>
+            <div>
+              <button class="button ghost" id="resetInventory" type="button">Restore Samples</button>
+              <button class="button quiet" id="logoutAdmin" type="button">Lock</button>
+            </div>
+          </div>
+
+          <form class="vehicle-form" id="vehicleForm">
+            <label>
+              Photos
+              <input id="photoInput" type="file" accept="image/*" multiple />
+            </label>
+
+            <label>
+              Year
+              <input id="yearInput" type="number" min="1900" max="2100" placeholder="2015" required />
+            </label>
+
+            <label>
+              Make
+              <input id="makeInput" type="text" placeholder="Audi" required />
+            </label>
+
+            <label>
+              Model
+              <input id="modelInput" type="text" placeholder="Q5 Premium Plus" required />
+            </label>
+
+            <label>
+              Category
+              <select id="categoryInput" required>
+                <option value="car">Car</option>
+                <option value="suv">SUV</option>
+                <option value="pickup">Pick Up</option>
+              </select>
+            </label>
+
+            <label>
+              Miles
+              <input id="milesInput" type="text" placeholder="134,491 miles" />
+            </label>
+
+            <label>
+              Price
+              <input id="priceInput" type="text" placeholder="Call for price" />
+            </label>
+
+            <label>
+              Stock #
+              <input id="stockNumberInput" type="text" placeholder="44906649" />
+            </label>
+
+            <label>
+              VIN
+              <input id="vinInput" type="text" placeholder="3N1BC1CP6AL411912" />
+            </label>
+
+            <label>
+              Engine
+              <input id="engineInput" type="text" placeholder="2.0L I4" />
+            </label>
+
+            <label>
+              Transmission
+              <input id="transmissionInput" type="text" placeholder="Automatic" />
+            </label>
+
+            <label>
+              Exterior Color
+              <input id="exteriorColorInput" type="text" placeholder="Black" />
+            </label>
+
+            <label>
+              Interior Color
+              <input id="interiorColorInput" type="text" placeholder="Black" />
+            </label>
+
+            <label>
+              Drivetrain
+              <input id="drivetrainInput" type="text" placeholder="AWD" />
+            </label>
+
+            <label>
+              Fuel Economy
+              <input id="fuelEconomyInput" type="text" placeholder="20 city / 25 hwy" />
+            </label>
+
+            <label>
+              Condition
+              <input id="conditionInput" type="text" placeholder="Run & Drive" />
+            </label>
+
+            <label>
+              Damage
+              <input id="damageInput" type="text" placeholder="Front End" />
+            </label>
+
+            <label class="wide">
+              Notes
+              <textarea id="notesInput" rows="3" placeholder="Run & Drive, VIN, title, damage, or promotion"></textarea>
+            </label>
+
+            <div class="preview wide" id="photoPreview">
+              <span>Photo preview</span>
+            </div>
+
+            <button class="button primary wide" type="submit">Save Vehicle</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="contact" id="contact">
+        <div class="contact-copy">
+          <p class="eyebrow">Call or text</p>
+          <h2>Ready to see one in person?</h2>
+          <p>Call or send a text to confirm availability, ask about promotions, or schedule a visit to see your next vehicle in person.</p>
+        </div>
+        <div class="contact-panel">
+          <span class="contact-label">Alejo Motors Autosales</span>
+          <a class="phone-number" href="tel:+16789271739">(678) 927-1739</a>
+          <div class="contact-actions">
+            <a class="button primary full" href="tel:+16789271739">Call</a>
+            <a class="button text full" href="sms:+16789271739">Text</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>ALEJO MOTORS - 5601 E Lancaster Ave, Fort Worth, TX 76112</p>
+      <div>
+        <a href="tel:+16789271739">(678) 927-1739</a>
+        <a href="sms:+16789271739">Text Message</a>
+        <button class="owner-link" id="openOwnerLogin" type="button">Owner</button>
+      </div>
+    </footer>
+
+    <div class="login-modal" id="loginModal" hidden>
+      <div class="login-card" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <button class="modal-close" id="closeOwnerLogin" type="button" aria-label="Close owner login">×</button>
+        <form class="admin-login" id="adminLoginForm">
+          <div>
+            <h3 id="loginTitle">Owner Login</h3>
+            <p>Sign in to manage inventory.</p>
+          </div>
+          <label>
+            Email
+            <input id="adminEmailInput" type="email" autocomplete="username" placeholder="owner@email.com" required />
+          </label>
+          <label>
+            Password
+            <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="Password" required />
+          </label>
+          <button class="button primary" type="submit">Unlock</button>
+          <p class="form-message" id="adminMessage" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+
+    <template id="vehicleTemplate">
+      <article class="vehicle-card">
+        <a class="vehicle-photo-link" href="#"><img alt="" /></a>
+        <div class="vehicle-info">
+          <div>
+            <a class="vehicle-title" href="#"><h3></h3></a>
+            <p class="vehicle-subtitle"></p>
+            <dl class="vehicle-specs"></dl>
+          </div>
+          <strong class="vehicle-price"></strong>
+        </div>
+        <div class="card-actions">
+          <a class="details-link" href="#">More Info</a>
+          <a class="card-link" href="tel:+16789271739">Call</a>
+          <button class="delete-button owner-only" type="button" hidden>Remove</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehicle Details | ALEJO MOTORS</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="top-strip">
+      <span>ALEJO MOTORS AUTOSALES</span>
+      <a href="https://maps.google.com/?q=5601%20E%20Lancaster%20Ave%2C%20Fort%20Worth%2C%20TX%2076112">5601 E Lancaster Ave, Fort Worth, TX 76112</a>
+      <a href="tel:+16789271739">(678) 927-1739</a>
+    </div>
+
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="ALEJO MOTORS">
+        <img class="brand-logo" src="assets/alejo-motors-logo.svg" alt="ALEJO MOTORS Autosales" />
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html#inventory">Inventory</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+      <a class="header-cta" href="tel:+16789271739">Call Now</a>
+    </header>
+
+    <main class="detail-page">
+      <section class="vehicle-top" id="vehicleTop" hidden>
+        <div class="vehicle-breadcrumb">
+          <a href="index.html">Home</a>
+          <span>/</span>
+          <a href="index.html#inventory">Inventory</a>
+          <span>/</span>
+          <span id="breadcrumbVehicle">Vehicle</span>
+        </div>
+        <div class="vehicle-top-main">
+          <div class="vehicle-heading">
+            <h1 id="detailTitle">Loading vehicle...</h1>
+            <p id="detailSubtitle"></p>
+            <div class="vehicle-top-actions">
+              <a class="blue-action" id="topCall" href="tel:+16789271739">Call (678) 927-1739</a>
+              <a class="blue-action" id="topText" href="sms:+16789271739">Text Message</a>
+            </div>
+          </div>
+          <dl class="vehicle-top-stats">
+            <div>
+              <dt>Price</dt>
+              <dd id="topPrice">Call for price</dd>
+            </div>
+            <div>
+              <dt>Mileage</dt>
+              <dd id="topMileage">Call</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="detail-layout" id="detailContent" hidden>
+        <div class="gallery">
+          <div class="gallery-toolbar">
+            <span class="photos-pill" id="photoCount">Photos</span>
+          </div>
+          <div class="gallery-stage">
+            <button class="gallery-nav prev" id="prevPhoto" type="button" aria-label="Previous photo">&lsaquo;</button>
+            <button class="gallery-open" id="openLightbox" type="button" aria-label="Open photo gallery">
+              <img class="gallery-main" id="mainPhoto" alt="" />
+            </button>
+            <button class="gallery-nav next" id="nextPhoto" type="button" aria-label="Next photo">&rsaquo;</button>
+          </div>
+          <div class="gallery-thumbs" id="galleryThumbs"></div>
+        </div>
+
+        <div class="detail-info" id="infoSection">
+          <h2>Vehicle Info</h2>
+          <div class="vehicle-info-list" id="infoGrid"></div>
+          <div class="fuel-economy-card" id="fuelEconomyCard" hidden></div>
+        </div>
+
+        <aside class="request-panel" id="requestPanel">
+          <p class="eyebrow">Message Us</p>
+          <h2>Request Info</h2>
+          <form class="request-form" id="requestForm">
+            <input id="firstName" name="firstName" type="text" placeholder="First Name *" required />
+            <input id="lastName" name="lastName" type="text" placeholder="Last Name *" required />
+            <input id="email" name="email" type="email" placeholder="Email *" required />
+            <input id="phone" name="phone" type="tel" placeholder="Phone" />
+            <textarea id="message" name="message" rows="5"></textarea>
+            <label class="checkbox-row">
+              <input id="tradeIn" type="checkbox" />
+              Do you have a trade-in?
+            </label>
+            <button class="button primary full" type="submit">Send Message</button>
+          </form>
+        </aside>
+      </section>
+
+      <section class="detail-notes" id="notesSection" hidden>
+        <p class="eyebrow">Description</p>
+        <h2>Notes</h2>
+        <p id="detailNotes"></p>
+      </section>
+
+      <section class="not-found" id="notFound" hidden>
+        <h1>Vehicle not found</h1>
+        <p>This vehicle may have been removed from the inventory.</p>
+        <a class="button primary" href="index.html#inventory">Back to inventory</a>
+      </section>
+    </main>
+
+    <div class="photo-lightbox" id="photoLightbox" hidden>
+      <button class="lightbox-close" id="closeLightbox" type="button" aria-label="Close photo">&times;</button>
+      <button class="lightbox-nav prev" id="lightboxPrev" type="button" aria-label="Previous photo">&lsaquo;</button>
+      <img id="lightboxImage" alt="" />
+      <button class="lightbox-nav next" id="lightboxNext" type="button" aria-label="Next photo">&rsaquo;</button>
+    </div>
+
+    <footer class="footer">
+      <p>ALEJO MOTORS - 5601 E Lancaster Ave, Fort Worth, TX 76112</p>
+      <div>
+        <a href="tel:+16789271739">(678) 927-1739</a>
+        <a href="sms:+16789271739">Text Message</a>
+      </div>
+    </footer>
+
+    <script src="detail.js"></script>
+  </body>
+</html>
