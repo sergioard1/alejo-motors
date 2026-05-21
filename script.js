@@ -30,11 +30,28 @@ let apiAvailable = true;
 
 init();
 
+if (window.location.hash === "#owner-login") {
+  openLoginModal();
+}
+
 async function init() {
+  applyUrlCategory();
   await loadSession();
   await loadVehicles();
   updateAdminUI();
   renderVehicles();
+}
+
+function applyUrlCategory() {
+  const category = new URLSearchParams(window.location.search).get("category");
+
+  if (!["all", "car", "suv", "pickup"].includes(category)) {
+    return;
+  }
+
+  activeFilter = category;
+  bodyStyleSelect.value = category;
+  setActiveFilter(category);
 }
 
 filterButtons.forEach((button) => {
@@ -56,15 +73,7 @@ bodyStyleSelect.addEventListener("change", () => {
   renderVehicles();
 });
 
-openOwnerLogin.addEventListener("click", () => {
-  if (isAdmin) {
-    openOwnerArea();
-    return;
-  }
-
-  loginModal.hidden = false;
-  adminEmailInput.focus();
-});
+openOwnerLogin?.addEventListener("click", openLoginModal);
 
 closeOwnerLogin.addEventListener("click", closeLoginModal);
 
@@ -134,6 +143,11 @@ logoutAdmin.addEventListener("click", async () => {
 });
 
 window.addEventListener("hashchange", () => {
+  if (window.location.hash === "#owner-login") {
+    openLoginModal();
+    return;
+  }
+
   updateAdminUI();
   renderVehicles();
 });
@@ -303,6 +317,10 @@ function renderVehicles() {
 function updateAdminUI() {
   const ownerMode = isOwnerMode();
 
+  if (!ownerMode && window.location.hash === "#manager") {
+    history.replaceState(null, "", "#inventory");
+  }
+
   adminPanel.hidden = !ownerMode;
 
   document.querySelectorAll(".owner-only").forEach((element) => {
@@ -312,6 +330,16 @@ function updateAdminUI() {
 
 function isOwnerMode() {
   return isAdmin && window.location.hash === "#manager";
+}
+
+function openLoginModal() {
+  if (isAdmin) {
+    openOwnerArea();
+    return;
+  }
+
+  loginModal.hidden = false;
+  adminEmailInput.focus();
 }
 
 function openOwnerArea() {

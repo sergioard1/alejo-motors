@@ -18,10 +18,12 @@
         <img class="brand-logo" src="assets/alejo-motors-logo.svg" alt="ALEJO MOTORS Autosales" />
       </a>
       <nav class="nav" aria-label="Main navigation">
-        <a href="index.html#inventory">Inventory</a>
+        <a href="index.html#inventory">All Inventory</a>
+        <a href="index.html?category=car#inventory">Cars</a>
+        <a href="index.html?category=suv#inventory">SUVs</a>
+        <a href="index.html?category=pickup#inventory">Trucks</a>
         <a href="index.html#contact">Contact</a>
       </nav>
-      <a class="header-cta" href="tel:+16789271739">Call Now</a>
     </header>
 
     <main class="detail-page">
@@ -90,6 +92,7 @@
               Do you have a trade-in?
             </label>
             <button class="button primary full" type="submit">Send Message</button>
+            <p class="form-message" id="requestStatus" aria-live="polite"></p>
           </form>
         </aside>
       </section>

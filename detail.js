@@ -25,7 +25,9 @@ const notesSection = document.querySelector("#notesSection");
 const detailNotes = document.querySelector("#detailNotes");
 const requestForm = document.querySelector("#requestForm");
 const messageInput = document.querySelector("#message");
+const requestStatus = document.querySelector("#requestStatus");
 const notFound = document.querySelector("#notFound");
+const dealerEmail = "alejomotorstx@gmail.com";
 
 let currentImages = [];
 let currentIndex = 0;
@@ -83,7 +85,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-requestForm.addEventListener("submit", (event) => {
+requestForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const firstName = document.querySelector("#firstName").value.trim();
@@ -92,16 +94,50 @@ requestForm.addEventListener("submit", (event) => {
   const phone = document.querySelector("#phone").value.trim();
   const message = messageInput.value.trim();
   const tradeIn = document.querySelector("#tradeIn").checked ? "Yes" : "No";
-  const smsText = [
+  const lead = {
+    vehicle: currentTitle,
+    firstName,
+    lastName,
+    email,
+    phone,
+    tradeIn,
+    message,
+    page: window.location.href,
+  };
+  const leadText = [
     `Vehicle: ${currentTitle}`,
     `Name: ${firstName} ${lastName}`,
     `Email: ${email}`,
     `Phone: ${phone || "Not provided"}`,
     `Trade-in: ${tradeIn}`,
     `Message: ${message}`,
+    `Page: ${window.location.href}`,
   ].join("\n");
 
-  window.location.href = `sms:+16789271739?body=${encodeURIComponent(smsText)}`;
+  requestStatus.textContent = "Sending your request...";
+
+  try {
+    const response = await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lead),
+    });
+
+    if (response.ok) {
+      const delivery = await response.json();
+      requestStatus.textContent = delivery.sentEmail || delivery.sentSms
+        ? "Message sent. We will contact you shortly."
+        : "Request saved. Please call or text us for the fastest response.";
+      requestForm.reset();
+      messageInput.value = `Could you provide more information about this ${currentTitle}?`;
+      return;
+    }
+  } catch {
+    // GitHub Pages is static, so fall back to the customer's email app.
+  }
+
+  requestStatus.textContent = "Opening your email app. You can also call or text us for the fastest response.";
+  window.location.href = `mailto:${dealerEmail}?subject=${encodeURIComponent(`Vehicle inquiry: ${currentTitle}`)}&body=${encodeURIComponent(leadText)}`;
 });
 
 async function loadVehicle() {
