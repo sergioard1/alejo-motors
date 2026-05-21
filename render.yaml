@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: alejo-motors
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_EMAIL
+        value: alejomotorstx@gmail.com
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: CONTACT_EMAIL
+        value: alejomotorstx@gmail.com
+      - key: CONTACT_PHONE
+        value: "+16789271739"
+      - key: GITHUB_REPO
+        value: sergioard1/alejo-motors
+      - key: GITHUB_BRANCH
+        value: main
+      - key: GITHUB_INVENTORY_PATH
+        value: data/inventory.json
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDGRID_FROM_EMAIL
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false

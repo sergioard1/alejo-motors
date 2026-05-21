@@ -28,6 +28,7 @@ const messageInput = document.querySelector("#message");
 const requestStatus = document.querySelector("#requestStatus");
 const notFound = document.querySelector("#notFound");
 const dealerEmail = "alejomotorstx@gmail.com";
+const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
 
 let currentImages = [];
 let currentIndex = 0;
@@ -117,8 +118,9 @@ requestForm.addEventListener("submit", async (event) => {
   requestStatus.textContent = "Sending your request...";
 
   try {
-    const response = await fetch("/api/leads", {
+    const response = await fetch(buildApiUrl("/api/leads"), {
       method: "POST",
+      credentials: apiBaseUrl ? "include" : "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(lead),
     });
@@ -147,7 +149,7 @@ async function loadVehicle() {
   }
 
   try {
-    const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}`);
+    const response = await fetch(buildApiUrl(`/api/vehicles/${encodeURIComponent(vehicleId)}`));
 
     if (!response.ok) {
       await loadStaticVehicle();
@@ -159,6 +161,10 @@ async function loadVehicle() {
   } catch {
     await loadStaticVehicle();
   }
+}
+
+function buildApiUrl(url) {
+  return `${apiBaseUrl}${url}`;
 }
 
 async function loadStaticVehicle() {

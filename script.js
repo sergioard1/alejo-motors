@@ -1,4 +1,5 @@
 const phoneNumber = "+16789271739";
+const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
 
 const vehicleGrid = document.querySelector("#vehicleGrid");
 const vehicleTemplate = document.querySelector("#vehicleTemplate");
@@ -237,9 +238,9 @@ async function loadVehicles() {
 }
 
 async function apiRequest(url, options = {}) {
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: options.method || "GET",
-    credentials: "same-origin",
+    credentials: apiBaseUrl ? "include" : "same-origin",
     headers: options.body ? { "Content-Type": "application/json" } : {},
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
@@ -251,6 +252,10 @@ async function apiRequest(url, options = {}) {
   }
 
   return data;
+}
+
+function buildApiUrl(url) {
+  return `${apiBaseUrl}${url}`;
 }
 
 function renderVehicles() {
