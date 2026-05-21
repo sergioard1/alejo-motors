@@ -1,5 +1,33 @@
 [
   {
+    "id": "d400e8dea34d33f93841fd46",
+    "year": "1983",
+    "make": "MERCEDES BENZ",
+    "model": "240 D",
+    "category": "car",
+    "miles": "Exempt",
+    "price": "$2899",
+    "notes": "Classic Mercedes-Benz ready for summer cruising\nAutomatic transmission\nDiesel engine\nRuns and drives\nBluetooth stereo\nClean blue interior\nOriginal classic styling\nLegendary Mercedes diesel reliability\nChrome trim and vintage details all around\nGreat project car or weekend cruiser\nHard to find in this condition\nRebuilt title\n\nIf you’ve been looking for an old-school Mercedes with character, this is it. The 240D is known for being one of the most reliable diesel sedans ever made. Perfect for someone who wants a classic daily, a cool summer cruiser, or a vintage project to enjoy and slowly restore.",
+    "stockNumber": "",
+    "vin": "",
+    "condition": "Vintage auto",
+    "engine": "4 cyl Diesel",
+    "transmission": "Aut",
+    "exteriorColor": "Blue",
+    "interiorColor": "Blue",
+    "drivetrain": "RWD",
+    "fuelEconomy": "30 city/ 35 hwy",
+    "damage": "Rebuilt title",
+    "images": [
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-1-1779398166832-3e7d97af.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-2-1779398168340-2ca056f9.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-3-1779398169749-14dce217.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-4-1779398171252-4b7787b9.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-5-1779398173078-0ca93b43.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-6-1779398174322-a292da3e.jpg"
+    ]
+  },
+  {
     "id": "de6ef661e19dd69c2c6d0f16",
     "year": "2016",
     "make": "ACURA",
