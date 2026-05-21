@@ -1,5 +1,33 @@
 [
   {
+    "id": "de6ef661e19dd69c2c6d0f16",
+    "year": "2016",
+    "make": "ACURA",
+    "model": "MDX",
+    "category": "suv",
+    "miles": "246000",
+    "price": "$6400",
+    "notes": "Luxury SUV\nRuns & drives great\nAutomatic transmission\nSH-AWD\n3rd row seating\nCold A/C – Heater works\nLeather interior\nSunroof\nBackup camera\nPremium wheels\nSpacious interior\nGood tires\nClean inside and out\nEmission inspection ready\nDaily driver ready\nCash deal\n\nIf you’re looking for a comfortable and reliable SUV with luxury features and plenty of room, this MDX is a great option. Smooth ride, sharp look, and perfect for family trips or daily driving.\n\n✅ Luxury SUV\n✅ 3rd row seating\n✅ AWD for all weather conditions\n✅ Spacious and comfortable\n✅ Ready to drive today",
+    "stockNumber": "",
+    "vin": "",
+    "condition": "Rebuilt title",
+    "engine": "3.5 L",
+    "transmission": "Aut",
+    "exteriorColor": "Blue",
+    "interiorColor": "Gray",
+    "drivetrain": "AWD",
+    "fuelEconomy": "22 city/ 26 hwy",
+    "damage": "",
+    "images": [
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-1-1779397953988-900c4e2a.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-2-1779397955643-7354ff0e.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-3-1779397957153-3d1ab942.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-4-1779397958706-43a43a92.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-5-1779397960460-26e665a2.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-6-1779397961502-417cea95.jpg"
+    ]
+  },
+  {
     "id": "c1d4a5e92b53e6d641337d6f",
     "year": "2012",
     "make": "VOLKSWAGEN",
