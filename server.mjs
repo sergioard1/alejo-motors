@@ -373,7 +373,7 @@ function hasGitHubStorage() {
 
 async function readGitHubInventory() {
   const data = await githubApi(`repos/${githubRepo}/contents/${encodePath(githubInventoryPath)}?ref=${encodeURIComponent(githubBranch)}`);
-  const json = Buffer.from(data.content || "", "base64").toString("utf-8");
+  const json = await readGitHubFileContent(data);
   const vehicles = JSON.parse(json);
   return Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [];
 }
@@ -381,7 +381,8 @@ async function readGitHubInventory() {
 async function writeGitHubInventory(vehicles) {
   const endpoint = `repos/${githubRepo}/contents/${encodePath(githubInventoryPath)}`;
   const existing = await githubApi(`${endpoint}?ref=${encodeURIComponent(githubBranch)}`);
-  const content = Buffer.from(JSON.stringify(vehicles.map(migrateVehicle), null, 2)).toString("base64");
+  const inventory = await prepareInventoryForStorage(vehicles.map(migrateVehicle));
+  const content = Buffer.from(JSON.stringify(inventory, null, 2)).toString("base64");
 
   await githubApi(endpoint, {
     method: "PUT",
@@ -392,6 +393,26 @@ async function writeGitHubInventory(vehicles) {
       sha: existing.sha
     }
   });
+}
+
+async function readGitHubFileContent(data) {
+  if (data.content && data.encoding === "base64") {
+    return Buffer.from(data.content, "base64").toString("utf-8");
+  }
+
+  if (data.download_url) {
+    const response = await fetch(data.download_url, {
+      headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {}
+    });
+
+    if (!response.ok) {
+      throw new Error(`Could not download inventory with status ${response.status}`);
+    }
+
+    return response.text();
+  }
+
+  throw new Error("Inventory file is empty or unavailable.");
 }
 
 async function githubApi(endpoint, options = {}) {
@@ -475,6 +496,23 @@ async function prepareVehicleImages(vehicleId, images) {
   return prepared;
 }
 
+async function prepareInventoryForStorage(vehicles) {
+  if (!hasGitHubStorage()) {
+    return vehicles;
+  }
+
+  const prepared = [];
+
+  for (const vehicle of vehicles) {
+    prepared.push({
+      ...vehicle,
+      images: await prepareVehicleImages(vehicle.id, vehicle.images)
+    });
+  }
+
+  return prepared;
+}
+
 async function uploadVehicleImage(vehicleId, dataUrl, index) {
   const match = dataUrl.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
 
@@ -491,7 +529,8 @@ async function uploadVehicleImage(vehicleId, dataUrl, index) {
   }
 
   const extension = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
-  const path = `uploads/${vehicleId}/photo-${index + 1}.${extension}`;
+  const suffix = `${Date.now()}-${randomBytes(4).toString("hex")}`;
+  const path = `uploads/${vehicleId}/photo-${index + 1}-${suffix}.${extension}`;
 
   await githubApi(`repos/${githubRepo}/contents/${encodePath(path)}`, {
     method: "PUT",
