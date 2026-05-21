@@ -701,6 +701,14 @@ textarea {
   font-weight: 900;
 }
 
+.form-message.success {
+  color: #176a3a;
+}
+
+.form-message.error {
+  color: var(--accent);
+}
+
 .admin-panel {
   display: grid;
   gap: 16px;
