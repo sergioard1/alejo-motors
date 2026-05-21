@@ -23,6 +23,13 @@ GITHUB_REPO=sergioard1/alejo-motors
 GITHUB_BRANCH=main
 GITHUB_INVENTORY_PATH=data/inventory.json
 GITHUB_TOKEN=<GitHub token with contents read/write access>
+```
+
+## Optional notification variables
+
+The backend works without these. Add them later in Render when the Twilio and SendGrid accounts are ready.
+
+```text
 SENDGRID_API_KEY=<SendGrid API key>
 SENDGRID_FROM_EMAIL=<verified SendGrid sender email>
 TWILIO_ACCOUNT_SID=<Twilio account SID>
