@@ -55,29 +55,6 @@
     ]
   },
   {
-    "id": "4d34a33743b51dbda45f1007",
-    "year": "2009",
-    "make": "bm",
-    "model": "kl",
-    "category": "car",
-    "miles": "1235",
-    "price": "Call for price",
-    "notes": "",
-    "stockNumber": "001",
-    "vin": "565654",
-    "condition": "",
-    "engine": "",
-    "transmission": "",
-    "exteriorColor": "",
-    "interiorColor": "",
-    "drivetrain": "",
-    "fuelEconomy": "",
-    "damage": "",
-    "images": [
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/4d34a33743b51dbda45f1007/photo-1-1779396878650-45357281.jpg"
-    ]
-  },
-  {
     "id": "audi-q5-2015",
     "year": "2015",
     "make": "Audi",
