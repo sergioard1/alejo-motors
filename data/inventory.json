@@ -53,29 +53,5 @@
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-4-1779396876656-59e30548.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/8c87821c35cd8d40b83ae968/photo-5-1779396877573-28e2d28f.jpg"
     ]
-  },
-  {
-    "id": "audi-q5-2015",
-    "year": "2015",
-    "make": "Audi",
-    "model": "Q5 Premium Plus",
-    "category": "suv",
-    "miles": "",
-    "price": "Call for price",
-    "notes": "Run & Drive - Lot #97965625 - VIN: WA1LFAFPXFA010327",
-    "stockNumber": "97965625",
-    "vin": "WA1LFAFPXFA010327",
-    "condition": "Run & Drive",
-    "engine": "",
-    "transmission": "",
-    "exteriorColor": "Black",
-    "interiorColor": "",
-    "drivetrain": "",
-    "fuelEconomy": "",
-    "damage": "",
-    "images": [
-      "assets/2015-audi-q5-front.png",
-      "assets/2015-audi-q5-side.png"
-    ]
   }
 ]
