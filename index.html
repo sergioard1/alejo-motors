@@ -77,83 +77,28 @@
           <h1>Affordable Used Cars in Fort Worth, TX</h1>
           <p class="hero-hook">Clean title options • Cash deals • Ready to drive today</p>
           <p>
-            Hi, I'm Sergio from Alejo Motors. We focus on affordable used vehicles for daily driving in the DFW area, with real photos, quick answers, and inventory you can actually come see.
+            Alejo Motors offers affordable used cars, SUVs, and trucks with real photos, clear
+            details, and fast contact by call, text, or WhatsApp before you visit.
           </p>
           <div class="hero-badges" aria-label="Alejo Motors highlights">
-            <span id="heroInventoryBadge">Inventory Available</span>
-            <span id="heroPriceBadge">Promotions Available</span>
+            <span>Clean Title Options</span>
+            <span>Cash Deals Welcome</span>
             <span>Open by Appointment</span>
           </div>
           <div class="hero-actions">
+            <a class="button secondary" href="#inventory">View Inventory</a>
             <a class="button primary" href="tel:+16789271739">Call Now</a>
-            <a class="button message" href="sms:+16789271739">Text Sergio</a>
-            <a class="button accent-soft" href="sms:+16789271739?body=Hi%20Alejo%20Motors%2C%20I%20want%20to%20ask%20about%20financing.">Ask About Financing</a>
-            <a class="button secondary" href="#contact">Schedule Test Drive</a>
-          </div>
-          <div class="hero-secondary-actions">
-            <a class="button secondary" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">Get Directions</a>
+            <a class="button message" href="sms:+16789271739">Text Us</a>
             <a class="button text" href="https://wa.me/16789271739?text=Hi%20Alejo%20Motors%2C%20I%20want%20more%20information%20about%20a%20vehicle." target="_blank" rel="noopener">WhatsApp</a>
           </div>
         </div>
       </section>
 
-      <section class="quick-actions" aria-label="Main actions">
-        <a href="#featuredVehicles">
-          <strong>Featured Cars</strong>
-          <span>See the best daily-driver options first, with real photos and real prices.</span>
-        </a>
-        <a href="tel:+16789271739">
-          <strong>Call Now</strong>
-          <span>Ask about availability, promotions, or a same-day visit.</span>
-        </a>
-        <a href="sms:+16789271739">
-          <strong>Send Message</strong>
-          <span>Text Sergio directly about a vehicle, financing, or a test drive.</span>
-        </a>
-        <a href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">
-          <strong>Google Reviews</strong>
-          <span>Check our location, photos, and Google Maps presence before you visit.</span>
-        </a>
-      </section>
-
-      <section class="dealer-stats" aria-label="Dealer highlights">
-        <article class="stat-card">
-          <span>Vehicles Available</span>
-          <strong class="stat-value" id="statAvailable" data-target="0">0</strong>
-        </article>
-        <article class="stat-card">
-          <span>Under $5,000</span>
-          <strong class="stat-value" id="statAffordable" data-target="0">0</strong>
-        </article>
-        <article class="stat-card">
-          <span>AWD &amp; SUV Options</span>
-          <strong class="stat-value" id="statUtility" data-target="0">0</strong>
-        </article>
-        <article class="stat-card rating-card">
-          <span>Google Maps Rating</span>
-          <strong>5.0</strong>
-        </article>
-      </section>
-
-      <section class="home-featured" id="featuredVehicles">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Start Here</p>
-            <h2>Featured Cars Ready for Daily Driving</h2>
-            <p class="section-copy">Three highlighted options so shoppers can see real inventory right away without digging through the full list.</p>
-          </div>
-          <a class="button text" href="#inventory">See Full Inventory</a>
-        </div>
-        <div class="vehicle-grid featured-grid" id="featuredGrid"></div>
-      </section>
-
       <section class="trust-bar" aria-label="Customer confidence">
         <span>Clean title options available</span>
-        <span>Emissions-ready vehicles</span>
-        <span>Test drives available</span>
         <span>Cash deals welcome</span>
         <span>Fast response by call, text, or WhatsApp</span>
-        <span>Local Fort Worth dealer</span>
+        <span>Located in Fort Worth, TX</span>
       </section>
 
       <section class="vehicle-search">
@@ -189,7 +134,7 @@
         <div class="inventory-results">
           <div class="results-header">
             <div>
-              <p class="eyebrow">Featured Vehicles</p>
+              <p class="eyebrow">Current Inventory</p>
               <h2>Cars For Sale in Fort Worth, TX</h2>
               <span id="resultCount">Showing inventory</span>
             </div>
@@ -197,19 +142,17 @@
               <label class="sort-control">
                 Sort
                 <select id="sortSelect">
-                  <option value="featured">Featured</option>
+                  <option value="year-new">Newest First</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="mileage-low">Mileage: Low to High</option>
-                  <option value="year-new">Year: Newest First</option>
                 </select>
               </label>
               <a class="button small owner-only" href="#manager" hidden>Add Vehicle</a>
             </div>
           </div>
 
-          <div class="inventory-summary" id="inventorySummary" aria-label="Inventory summary"></div>
-          <div class="vehicle-grid featured-grid" id="vehicleGrid"></div>
+          <div class="vehicle-grid" id="vehicleGrid"></div>
           <p class="empty-state" id="emptyState" hidden>No vehicles match this search. Text us and we will help you find the right car.</p>
         </div>
       </section>
@@ -218,11 +161,16 @@
         <div class="lot-copy">
           <p class="eyebrow">Visit the Lot</p>
           <h2>Open by appointment</h2>
-          <p>Call or text before visiting so we can confirm availability and have the vehicle ready for you.</p>
+          <p>
+            Call, text, or WhatsApp before visiting so we can confirm availability and have the
+            vehicle ready when you arrive.
+          </p>
           <div class="lot-actions">
-            <a class="button primary" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">Get Directions</a>
-            <a class="button text" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">See Google Reviews</a>
+            <a class="button primary" href="tel:+16789271739">Call Now</a>
+            <a class="button message" href="sms:+16789271739">Text Us</a>
+            <a class="button text" href="https://wa.me/16789271739?text=Hi%20Alejo%20Motors%2C%20I%20want%20to%20confirm%20availability%20before%20visiting." target="_blank" rel="noopener">WhatsApp</a>
           </div>
+          <a class="lot-directions" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">5601 E Lancaster Ave, Fort Worth, TX 76112</a>
         </div>
         <div class="lot-gallery" id="lotGallery" aria-label="Current Alejo Motors inventory photos">
           <img src="assets/alejo-motors-logo.svg" alt="Alejo Motors lot photo" />
@@ -231,49 +179,18 @@
         </div>
       </section>
 
-      <section class="dealer-proof" aria-label="Why customers reach out">
-        <div class="dealer-story">
-          <p class="eyebrow">Meet Sergio</p>
-          <h2>Affordable daily drivers for DFW families</h2>
-          <p>
-            Hi, I'm Sergio from Alejo Motors. We keep the process simple: real pictures, direct answers, and affordable used cars that make sense for work, family, and everyday driving around Fort Worth and the DFW area.
-          </p>
-          <div class="dealer-story-actions">
-            <a class="button primary" href="tel:+16789271739">Call Sergio</a>
-            <a class="button message" href="sms:+16789271739">Text Sergio</a>
-          </div>
-        </div>
-        <div class="review-stack">
-          <article class="review-card featured">
-            <span class="review-source">Google Maps</span>
-            <strong>Rated 5.0</strong>
-            <p>See our location, hours updates, and Google Maps profile before you visit the lot.</p>
-            <a class="button text" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">See Google Reviews</a>
-          </article>
-          <article class="review-card">
-            <span class="review-source">By Appointment</span>
-            <p>Shoppers see the cars first, then call or text so the right vehicle is ready when they arrive.</p>
-          </article>
-          <article class="review-card">
-            <span class="review-source">Direct Response</span>
-            <p>Need pricing, financing questions, or a test drive? Call, text, or WhatsApp for a fast answer.</p>
-          </article>
-        </div>
-      </section>
-
       <section class="manager owner-only" id="manager" hidden>
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Owner area</p>
-            <h2>Manage inventory</h2>
+            <p class="eyebrow">Dealer access</p>
+            <h2>Inventory Manager</h2>
           </div>
         </div>
 
         <div class="admin-panel" id="adminPanel">
           <div class="admin-bar">
-            <span>Owner mode is on</span>
+            <span>Dealer mode is on</span>
             <div>
-              <button class="button ghost" id="resetInventory" type="button">Restore Samples</button>
               <button class="button quiet" id="logoutAdmin" type="button">Lock</button>
             </div>
           </div>
@@ -387,17 +304,18 @@
         <div class="contact-copy">
           <p class="eyebrow">Call or text</p>
           <h2>Found a vehicle you like?</h2>
-          <p>Call, text, or message Sergio today to confirm availability, ask about financing, and schedule a test drive before you visit.</p>
+          <p>
+            Call, text, or WhatsApp us today to confirm availability and plan your visit before
+            you come by.
+          </p>
         </div>
         <div class="contact-panel">
           <span class="contact-label">Alejo Motors Autosales</span>
           <a class="phone-number" href="tel:+16789271739">(678) 927-1739</a>
           <div class="contact-actions">
-            <a class="button message full" href="sms:+16789271739">Text Sergio</a>
             <a class="button primary full" href="tel:+16789271739">Call Now</a>
-            <a class="button accent-soft full" href="sms:+16789271739?body=Hi%20Alejo%20Motors%2C%20I%20want%20to%20ask%20about%20financing.">Ask About Financing</a>
-            <a class="button secondary full" href="sms:+16789271739?body=Hi%20Alejo%20Motors%2C%20I%20want%20to%20schedule%20a%20test%20drive.">Schedule Test Drive</a>
-            <a class="button text full" href="https://maps.app.goo.gl/KCAERz3AATqYcYst7" target="_blank" rel="noopener">Google Reviews</a>
+            <a class="button message full" href="sms:+16789271739">Text Us</a>
+            <a class="button text full" href="https://wa.me/16789271739?text=Hi%20Alejo%20Motors%2C%20I%20want%20more%20information%20about%20a%20vehicle." target="_blank" rel="noopener">WhatsApp</a>
           </div>
         </div>
       </section>
@@ -408,15 +326,14 @@
       <div>
         <a href="tel:+16789271739">(678) 927-1739</a>
         <a href="sms:+16789271739">Text Message</a>
-        <button class="owner-link owner-login-trigger" type="button" aria-label="Dealer access">Dealer Access</button>
+        <button class="owner-link owner-login-trigger" type="button" aria-label="Dealer login">Dealer Login</button>
       </div>
     </footer>
 
     <div class="floating-contact-bar" aria-label="Quick contact actions">
       <a class="floating-action call" href="tel:+16789271739">Call Now</a>
-      <a class="floating-action text" href="sms:+16789271739">Text Sergio</a>
+      <a class="floating-action text" href="sms:+16789271739">Text Us</a>
       <a class="floating-action whatsapp" href="https://wa.me/16789271739?text=Hi%20Alejo%20Motors%2C%20I%20want%20more%20information%20about%20a%20vehicle." target="_blank" rel="noopener">WhatsApp</a>
-      <a class="floating-action schedule" href="sms:+16789271739?body=Hi%20Alejo%20Motors%2C%20I%20want%20to%20schedule%20a%20test%20drive.">Test Drive</a>
     </div>
 
     <div class="login-modal" id="loginModal" hidden>
@@ -424,7 +341,7 @@
         <button class="modal-close" id="closeOwnerLogin" type="button" aria-label="Close owner login">×</button>
         <form class="admin-login" id="adminLoginForm">
           <div>
-            <h3 id="loginTitle">Owner Login</h3>
+            <h3 id="loginTitle">Dealer Login</h3>
             <p>Sign in to manage inventory.</p>
           </div>
           <label>
