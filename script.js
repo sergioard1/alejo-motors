@@ -6,8 +6,6 @@ const vehicleGrid = document.querySelector("#vehicleGrid");
 const vehicleTemplate = document.querySelector("#vehicleTemplate");
 const emptyState = document.querySelector("#emptyState");
 const resultCount = document.querySelector("#resultCount");
-const soldGrid = document.querySelector("#soldGrid");
-const recentlySoldSection = document.querySelector("#recentlySoldSection");
 const inventorySearch = document.querySelector("#inventorySearch");
 const bodyStyleSelect = document.querySelector("#bodyStyleSelect");
 const sortSelect = document.querySelector("#sortSelect");
@@ -39,7 +37,6 @@ let searchTerm = "";
 let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
-const maxRecentlySold = 2;
 
 init();
 
@@ -284,7 +281,7 @@ vehicleGrid.addEventListener("click", async (event) => {
 
   if (soldButton) {
     const title = soldButton.dataset.title || "this vehicle";
-    const confirmSold = window.confirm(`Mark ${title} as sold? It will move to Recently Sold.`);
+    const confirmSold = window.confirm(`Mark ${title} as sold? It will stay in inventory with a sold badge.`);
 
     if (!confirmSold) {
       return;
@@ -296,7 +293,7 @@ vehicleGrid.addEventListener("click", async (event) => {
       await apiRequest(`/api/vehicles/${encodeURIComponent(soldButton.dataset.id)}/sold`, { method: "POST" });
       await loadVehicles();
       renderVehicles();
-      setVehicleFormMessage(`${title} is now in Recently Sold.`, "success");
+      setVehicleFormMessage(`${title} was marked as sold.`, "success");
     } catch (error) {
       setVehicleFormMessage(error.message || "The vehicle could not be marked as sold.", "error");
     }
@@ -398,8 +395,7 @@ function scrollToCurrentHash() {
 
 function renderVehicles() {
   const availableVehicles = vehicles.filter((vehicle) => !isSoldVehicle(vehicle));
-  const soldVehicles = getRecentlySoldVehicles();
-  const filteredVehicles = availableVehicles.filter((vehicle) => {
+  const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesCategory = activeFilter === "all" || vehicle.category === activeFilter;
     const matchesQuickFilter = matchesVehicleQuickFilter(vehicle);
     const searchable = [
@@ -423,9 +419,8 @@ function renderVehicles() {
   const visibleVehicles = sortVehicles(filteredVehicles);
 
   vehicleGrid.innerHTML = "";
-  resultCount.textContent = `Showing ${visibleVehicles.length} of ${availableVehicles.length} vehicles`;
+  resultCount.textContent = `Showing ${visibleVehicles.length} of ${vehicles.length} vehicles`;
   emptyState.hidden = visibleVehicles.length > 0;
-  renderRecentlySold(soldVehicles);
   renderLotGallery(availableVehicles);
   updateHeroBackground(visibleVehicles[0] || availableVehicles[0] || vehicles[0]);
 
@@ -436,24 +431,22 @@ function renderVehicles() {
 
 function sortVehicles(items) {
   const sortable = [...items];
+  let comparator = () => 0;
 
   if (activeSort === "price-low") {
-    return sortable.sort((first, second) => compareKnownNumbers(parsePrice(first.price), parsePrice(second.price)));
+    comparator = (first, second) => compareKnownNumbers(parsePrice(first.price), parsePrice(second.price));
+  } else if (activeSort === "price-high") {
+    comparator = (first, second) => compareKnownNumbersDesc(parsePrice(first.price), parsePrice(second.price));
+  } else if (activeSort === "mileage-low") {
+    comparator = (first, second) => compareKnownNumbers(parseMileage(first.miles), parseMileage(second.miles));
+  } else if (activeSort === "year-new") {
+    comparator = (first, second) => compareKnownNumbersDesc(parseYear(first.year), parseYear(second.year));
   }
 
-  if (activeSort === "price-high") {
-    return sortable.sort((first, second) => compareKnownNumbersDesc(parsePrice(first.price), parsePrice(second.price)));
-  }
-
-  if (activeSort === "mileage-low") {
-    return sortable.sort((first, second) => compareKnownNumbers(parseMileage(first.miles), parseMileage(second.miles)));
-  }
-
-  if (activeSort === "year-new") {
-    return sortable.sort((first, second) => compareKnownNumbersDesc(parseYear(first.year), parseYear(second.year)));
-  }
-
-  return sortable;
+  return sortable.sort((first, second) => {
+    const soldOrder = compareSoldStatus(first, second);
+    return soldOrder || comparator(first, second);
+  });
 }
 
 function compareKnownNumbers(first, second) {
@@ -476,6 +469,17 @@ function compareKnownNumbersDesc(first, second) {
   return 0;
 }
 
+function compareSoldStatus(first, second) {
+  const firstSold = isSoldVehicle(first);
+  const secondSold = isSoldVehicle(second);
+
+  if (firstSold === secondSold) {
+    return 0;
+  }
+
+  return firstSold ? 1 : -1;
+}
+
 function updateHeroBackground(vehicle) {
   if (!heroSection || !vehicle) return;
 
@@ -489,19 +493,27 @@ function updateHeroBackground(vehicle) {
 function buildVehicleCard(vehicle) {
   const card = vehicleTemplate.content.firstElementChild.cloneNode(true);
   const title = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
-  const subtitle = [buildFamilyPitch(vehicle), formatCategory(vehicle.category)].filter(Boolean).join(" - ");
+  const sold = isSoldVehicle(vehicle);
+  const subtitleParts = [buildFamilyPitch(vehicle), formatCategory(vehicle.category)];
+  const subtitle = subtitleParts.filter(Boolean).join(" - ");
   const image = card.querySelector("img");
   const detailUrl = `detail.html?id=${encodeURIComponent(vehicle.id)}`;
+  const photoLink = card.querySelector(".vehicle-photo-link");
+  const titleLink = card.querySelector(".vehicle-title");
+  const price = card.querySelector(".vehicle-price");
+  const detailsLink = card.querySelector(".details-link");
+  const callLink = card.querySelector(".card-link");
+  const messageLink = card.querySelector(".message-link");
+  const cardActions = card.querySelector(".card-actions");
+  const deleteButton = card.querySelector(".delete-button");
+  const soldButton = card.querySelector(".sold-button");
 
   card.dataset.category = vehicle.category;
-  const photoLink = card.querySelector(".vehicle-photo-link");
-  photoLink.href = detailUrl;
   image.src = getVehicleImages(vehicle)[0];
   image.alt = title || "Vehicle for sale";
-  card.querySelector(".vehicle-title").href = detailUrl;
   card.querySelector("h3").textContent = title || "Vehicle for Sale";
-  card.querySelector(".vehicle-subtitle").textContent = subtitle || "Available now";
-  card.querySelector(".vehicle-price").textContent = formatPrice(vehicle.price);
+  card.querySelector(".vehicle-subtitle").textContent = sold ? `${subtitle || "Vehicle"} - Sold` : (subtitle || "Available now");
+  price.textContent = sold ? "Sold" : formatPrice(vehicle.price);
   card.querySelector(".vehicle-specs").innerHTML = renderSpecs([
     ["Mileage", formatMileage(vehicle.miles, true)],
     ["Engine", vehicle.engine],
@@ -510,42 +522,38 @@ function buildVehicleCard(vehicle) {
     ["Interior Color", vehicle.interiorColor],
     ["Drivetrain", vehicle.drivetrain],
   ]);
-  card.querySelector(".details-link").href = detailUrl;
-  card.querySelector(".card-link").href = `tel:${phoneNumber}`;
-  card.querySelector(".message-link").href = buildSmsHref(title);
-
-  const deleteButton = card.querySelector(".delete-button");
-  const soldButton = card.querySelector(".sold-button");
+  callLink.href = `tel:${phoneNumber}`;
+  messageLink.href = buildSmsHref(title);
 
   soldButton.dataset.id = vehicle.id;
   soldButton.dataset.title = title || "this vehicle";
-  soldButton.hidden = !isAdmin;
   deleteButton.dataset.id = vehicle.id;
   deleteButton.dataset.title = title || "this vehicle";
+
+  if (sold) {
+    const watermark = document.createElement("span");
+    watermark.className = "sold-watermark inventory-sold-watermark";
+    watermark.textContent = "SOLD";
+
+    card.classList.add("is-sold");
+    photoLink.classList.add("is-static");
+    titleLink.classList.add("is-static");
+    photoLink.removeAttribute("href");
+    titleLink.removeAttribute("href");
+    detailsLink.hidden = true;
+    callLink.hidden = true;
+    messageLink.hidden = true;
+    soldButton.hidden = true;
+    photoLink.append(watermark);
+  } else {
+    photoLink.href = detailUrl;
+    titleLink.href = detailUrl;
+    detailsLink.href = detailUrl;
+    soldButton.hidden = !isAdmin;
+  }
+
   deleteButton.hidden = !isAdmin;
-
-  return card;
-}
-
-function buildSoldCard(vehicle) {
-  const card = document.createElement("article");
-  const imageWrap = document.createElement("div");
-  const image = document.createElement("img");
-  const watermark = document.createElement("span");
-  const title = document.createElement("h3");
-  const vehicleTitle = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") || "Sold Vehicle";
-
-  card.className = "sold-card";
-  imageWrap.className = "sold-card-photo";
-  image.src = getVehicleImages(vehicle)[0];
-  image.alt = `${vehicleTitle} sold by Alejo Motors`;
-  watermark.className = "sold-watermark";
-  watermark.textContent = "SOLD";
-  title.className = "sold-card-title";
-  title.textContent = vehicleTitle;
-
-  imageWrap.append(image, watermark);
-  card.append(imageWrap, title);
+  cardActions.hidden = [...cardActions.children].every((element) => element.hidden);
 
   return card;
 }
@@ -652,35 +660,8 @@ function renderLotGallery(availableVehicles = vehicles.filter((vehicle) => !isSo
   });
 }
 
-function renderRecentlySold(soldVehicles) {
-  if (!recentlySoldSection || !soldGrid) return;
-
-  soldGrid.innerHTML = "";
-  recentlySoldSection.hidden = soldVehicles.length === 0;
-
-  soldVehicles.forEach((vehicle) => {
-    soldGrid.append(buildSoldCard(vehicle));
-  });
-}
-
-function getRecentlySoldVehicles() {
-  return vehicles
-    .filter(isSoldVehicle)
-    .sort((first, second) => {
-      const firstTime = parseSoldTimestamp(first.soldAt);
-      const secondTime = parseSoldTimestamp(second.soldAt);
-      return secondTime - firstTime;
-    })
-    .slice(0, maxRecentlySold);
-}
-
 function isSoldVehicle(vehicle) {
   return String(vehicle.status || "").toLowerCase() === "sold";
-}
-
-function parseSoldTimestamp(value) {
-  const timestamp = Date.parse(String(value || ""));
-  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function isOwnerMode() {
