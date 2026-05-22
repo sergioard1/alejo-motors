@@ -187,7 +187,7 @@ async function loadStaticVehicle() {
   try {
     const response = await fetch("data/inventory.json", { cache: "no-store" });
     const vehicles = await response.json();
-    const vehicle = vehicles.find((item) => item.id === vehicleId);
+    const vehicle = vehicles.find((item) => item.id === vehicleId && String(item.status || "").toLowerCase() !== "sold");
 
     if (!vehicle) {
       showNotFound();
