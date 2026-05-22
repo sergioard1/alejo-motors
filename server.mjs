@@ -130,12 +130,12 @@ async function handleApi(request, response, url) {
     const token = randomBytes(32).toString("hex");
     sessions.add(token);
     response.setHeader("Set-Cookie", buildSessionCookie(request, token, 28800));
-    sendJson(response, 200, { authenticated: true });
+    sendJson(response, 200, { authenticated: true, token });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/api/logout") {
-    const token = getSessionToken(request);
+    const token = getAuthToken(request);
     if (token) sessions.delete(token);
     response.setHeader("Set-Cookie", buildSessionCookie(request, "", 0));
     sendJson(response, 200, { authenticated: false });
@@ -254,7 +254,7 @@ function handleCors(request, response) {
     response.setHeader("Vary", "Origin");
   }
 
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
 
   if (request.method === "OPTIONS") {
@@ -698,8 +698,18 @@ function requireAuth(request, response) {
 }
 
 function isAuthenticated(request) {
-  const token = getSessionToken(request);
+  const token = getAuthToken(request);
   return Boolean(token && sessions.has(token));
+}
+
+function getAuthToken(request) {
+  const header = String(request.headers.authorization || "").trim();
+
+  if (/^Bearer\s+/i.test(header)) {
+    return header.replace(/^Bearer\s+/i, "").trim();
+  }
+
+  return getSessionToken(request);
 }
 
 function getSessionToken(request) {
