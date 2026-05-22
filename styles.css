@@ -495,7 +495,7 @@ h2 {
 
 .trust-bar {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   padding: 0 clamp(18px, 6vw, 80px) 30px;
   background: #f1e5d5;
@@ -543,10 +543,18 @@ h2 {
 }
 
 .lot-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 6px;
+}
+
+.lot-directions {
+  margin-top: 16px;
+  color: var(--muted);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .lot-gallery {
@@ -557,18 +565,46 @@ h2 {
   min-height: 360px;
 }
 
+.lot-gallery-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e8ded0;
+}
+
+.lot-gallery > :first-child {
+  grid-row: 1 / span 2;
+}
+
 .lot-gallery img {
   display: block;
   width: 100%;
   height: 100%;
   min-height: 0;
   object-fit: cover;
-  border-radius: 8px;
   background: #e8ded0;
+  transition: transform 220ms ease;
 }
 
-.lot-gallery img:first-child {
-  grid-row: 1 / span 2;
+.lot-gallery-card:hover img {
+  transform: scale(1.04);
+}
+
+.lot-gallery-label {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.08), rgba(12, 12, 12, 0.82));
+  color: #fff;
+  font-family: "Sora", "Manrope", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .dealer-proof {
@@ -1166,12 +1202,8 @@ textarea {
 
 .contact-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-}
-
-.contact-actions .message {
-  grid-column: 1 / -1;
 }
 
 .footer {
@@ -1236,8 +1268,7 @@ textarea {
   background: var(--accent);
 }
 
-.floating-action.text,
-.floating-action.schedule {
+.floating-action.text {
   background: #151515;
 }
 
@@ -1314,7 +1345,7 @@ textarea {
 
 .vehicle-top-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   gap: 24px;
   align-items: start;
 }
@@ -1335,7 +1366,7 @@ textarea {
 
 .vehicle-top-actions {
   display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(260px, 300px) minmax(180px, 220px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1366,6 +1397,14 @@ textarea {
   background: var(--price-green-dark);
 }
 
+.blue-action.whatsapp-action {
+  background: #0f8a47;
+}
+
+.blue-action.whatsapp-action:hover {
+  background: #0b6a37;
+}
+
 .blue-action.directions-action {
   background: #151515;
 }
@@ -1376,15 +1415,17 @@ textarea {
 
 .vehicle-top-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 150px));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 420px);
   margin: 0;
+  justify-self: end;
 }
 
 .vehicle-top-stats div {
   display: grid;
-  justify-items: center;
+  justify-items: end;
   gap: 4px;
-  padding: 0 22px;
+  padding: 0 0 0 18px;
   border-left: 1px solid rgba(0, 0, 0, 0.12);
 }
 
@@ -1397,9 +1438,11 @@ textarea {
 .vehicle-top-stats dd {
   margin: 0;
   color: #000;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-size: clamp(1.7rem, 2.7vw, 3rem);
   font-weight: 900;
   line-height: 1;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .vehicle-top-stats div:first-child dd,
@@ -2056,14 +2099,18 @@ textarea {
     width: 100%;
   }
 
+  .lot-actions {
+    grid-template-columns: 1fr;
+  }
+
   .lot-gallery {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     min-height: 0;
   }
 
-  .lot-gallery img,
-  .lot-gallery img:first-child {
+  .lot-gallery > :first-child,
+  .lot-gallery img {
     grid-row: auto;
     height: 210px;
   }
@@ -2108,7 +2155,7 @@ textarea {
     right: 0;
     left: 0;
     bottom: 0;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(17, 17, 17, 0.96);
