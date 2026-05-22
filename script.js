@@ -1,5 +1,6 @@
 const phoneNumber = "+16789271739";
-const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
+const apiBaseUrl = window.ALEJO_API_BASE_URL
+  || (window.location.hostname === "sergioard1.github.io" ? "https://alejo-motors.onrender.com" : "");
 const photoLimit = 20;
 
 const vehicleGrid = document.querySelector("#vehicleGrid");
@@ -37,6 +38,7 @@ let searchTerm = "";
 let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
+let authToken = window.localStorage.getItem("alejo_owner_token") || "";
 
 init();
 
@@ -165,6 +167,8 @@ adminLoginForm.addEventListener("submit", async (event) => {
     });
 
     isAdmin = Boolean(session.authenticated);
+    authToken = String(session.token || authToken || "");
+    syncStoredAuthToken();
     adminPasswordInput.value = "";
     closeLoginModal();
     openOwnerArea();
@@ -178,6 +182,8 @@ adminLoginForm.addEventListener("submit", async (event) => {
 logoutAdmin.addEventListener("click", async () => {
   await apiRequest("/api/logout", { method: "POST" });
   isAdmin = false;
+  authToken = "";
+  syncStoredAuthToken();
   if (window.location.hash === "#manager") {
     window.location.hash = "inventory";
   }
@@ -318,6 +324,10 @@ async function loadSession() {
   try {
     const session = await apiRequest("/api/session");
     isAdmin = Boolean(session.authenticated);
+    if (!isAdmin && authToken) {
+      authToken = "";
+      syncStoredAuthToken();
+    }
   } catch {
     apiAvailable = false;
     isAdmin = false;
@@ -350,10 +360,20 @@ async function loadVehicles() {
 }
 
 async function apiRequest(url, options = {}) {
+  const headers = {};
+
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(buildApiUrl(url), {
     method: options.method || "GET",
     credentials: apiBaseUrl ? "include" : "same-origin",
-    headers: options.body ? { "Content-Type": "application/json" } : {},
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
@@ -367,10 +387,23 @@ async function apiRequest(url, options = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 401 && authToken) {
+      authToken = "";
+      syncStoredAuthToken();
+    }
     throw new Error(data.error || "Request failed");
   }
 
   return data;
+}
+
+function syncStoredAuthToken() {
+  if (authToken) {
+    window.localStorage.setItem("alejo_owner_token", authToken);
+    return;
+  }
+
+  window.localStorage.removeItem("alejo_owner_token");
 }
 
 function buildApiUrl(url) {
