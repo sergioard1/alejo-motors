@@ -6,6 +6,8 @@ const vehicleGrid = document.querySelector("#vehicleGrid");
 const vehicleTemplate = document.querySelector("#vehicleTemplate");
 const emptyState = document.querySelector("#emptyState");
 const resultCount = document.querySelector("#resultCount");
+const soldGrid = document.querySelector("#soldGrid");
+const recentlySoldSection = document.querySelector("#recentlySoldSection");
 const inventorySearch = document.querySelector("#inventorySearch");
 const bodyStyleSelect = document.querySelector("#bodyStyleSelect");
 const sortSelect = document.querySelector("#sortSelect");
@@ -37,6 +39,7 @@ let searchTerm = "";
 let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
+const maxRecentlySold = 2;
 
 init();
 
@@ -273,14 +276,45 @@ if (resetInventory) {
 }
 
 vehicleGrid.addEventListener("click", async (event) => {
-  const button = event.target.closest(".delete-button");
+  const soldButton = event.target.closest(".sold-button");
+  const deleteButton = event.target.closest(".delete-button");
 
-  if (!button || !isAdmin) return;
+  if ((!soldButton && !deleteButton) || !isAdmin) return;
   if (!apiAvailable) return;
 
-  await apiRequest(`/api/vehicles/${encodeURIComponent(button.dataset.id)}`, { method: "DELETE" });
+  if (soldButton) {
+    const title = soldButton.dataset.title || "this vehicle";
+    const confirmSold = window.confirm(`Mark ${title} as sold? It will move to Recently Sold.`);
+
+    if (!confirmSold) {
+      return;
+    }
+
+    setVehicleFormMessage(`Marking ${title} as sold...`);
+
+    try {
+      await apiRequest(`/api/vehicles/${encodeURIComponent(soldButton.dataset.id)}/sold`, { method: "POST" });
+      await loadVehicles();
+      renderVehicles();
+      setVehicleFormMessage(`${title} is now in Recently Sold.`, "success");
+    } catch (error) {
+      setVehicleFormMessage(error.message || "The vehicle could not be marked as sold.", "error");
+    }
+
+    return;
+  }
+
+  const title = deleteButton.dataset.title || "this vehicle";
+  const confirmDelete = window.confirm(`Remove ${title} from the system?`);
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  await apiRequest(`/api/vehicles/${encodeURIComponent(deleteButton.dataset.id)}`, { method: "DELETE" });
   await loadVehicles();
   renderVehicles();
+  setVehicleFormMessage(`${title} was removed.`, "success");
 });
 
 async function loadSession() {
@@ -363,7 +397,9 @@ function scrollToCurrentHash() {
 }
 
 function renderVehicles() {
-  const filteredVehicles = vehicles.filter((vehicle) => {
+  const availableVehicles = vehicles.filter((vehicle) => !isSoldVehicle(vehicle));
+  const soldVehicles = getRecentlySoldVehicles();
+  const filteredVehicles = availableVehicles.filter((vehicle) => {
     const matchesCategory = activeFilter === "all" || vehicle.category === activeFilter;
     const matchesQuickFilter = matchesVehicleQuickFilter(vehicle);
     const searchable = [
@@ -387,10 +423,11 @@ function renderVehicles() {
   const visibleVehicles = sortVehicles(filteredVehicles);
 
   vehicleGrid.innerHTML = "";
-  resultCount.textContent = `Showing ${visibleVehicles.length} of ${vehicles.length} vehicles`;
+  resultCount.textContent = `Showing ${visibleVehicles.length} of ${availableVehicles.length} vehicles`;
   emptyState.hidden = visibleVehicles.length > 0;
-  renderLotGallery();
-  updateHeroBackground(visibleVehicles[0] || vehicles[0]);
+  renderRecentlySold(soldVehicles);
+  renderLotGallery(availableVehicles);
+  updateHeroBackground(visibleVehicles[0] || availableVehicles[0] || vehicles[0]);
 
   visibleVehicles.forEach((vehicle) => {
     vehicleGrid.append(buildVehicleCard(vehicle));
@@ -478,8 +515,37 @@ function buildVehicleCard(vehicle) {
   card.querySelector(".message-link").href = buildSmsHref(title);
 
   const deleteButton = card.querySelector(".delete-button");
+  const soldButton = card.querySelector(".sold-button");
+
+  soldButton.dataset.id = vehicle.id;
+  soldButton.dataset.title = title || "this vehicle";
+  soldButton.hidden = !isAdmin;
   deleteButton.dataset.id = vehicle.id;
+  deleteButton.dataset.title = title || "this vehicle";
   deleteButton.hidden = !isAdmin;
+
+  return card;
+}
+
+function buildSoldCard(vehicle) {
+  const card = document.createElement("article");
+  const imageWrap = document.createElement("div");
+  const image = document.createElement("img");
+  const watermark = document.createElement("span");
+  const title = document.createElement("h3");
+  const vehicleTitle = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") || "Sold Vehicle";
+
+  card.className = "sold-card";
+  imageWrap.className = "sold-card-photo";
+  image.src = getVehicleImages(vehicle)[0];
+  image.alt = `${vehicleTitle} sold by Alejo Motors`;
+  watermark.className = "sold-watermark";
+  watermark.textContent = "SOLD";
+  title.className = "sold-card-title";
+  title.textContent = vehicleTitle;
+
+  imageWrap.append(image, watermark);
+  card.append(imageWrap, title);
 
   return card;
 }
@@ -549,10 +615,10 @@ function updateAdminUI() {
   });
 }
 
-function renderLotGallery() {
+function renderLotGallery(availableVehicles = vehicles.filter((vehicle) => !isSoldVehicle(vehicle))) {
   if (!lotGallery) return;
 
-  const photos = vehicles
+  const photos = availableVehicles
     .filter((vehicle) => !/mercedes/i.test(`${vehicle.make || ""} ${vehicle.model || ""}`))
     .map((vehicle) => ({ image: getVehicleImages(vehicle)[0], vehicle }))
     .filter(({ image }) => image && !image.includes("alejo-motors-logo.svg"))
@@ -584,6 +650,37 @@ function renderLotGallery() {
     card.append(image, label);
     lotGallery.append(card);
   });
+}
+
+function renderRecentlySold(soldVehicles) {
+  if (!recentlySoldSection || !soldGrid) return;
+
+  soldGrid.innerHTML = "";
+  recentlySoldSection.hidden = soldVehicles.length === 0;
+
+  soldVehicles.forEach((vehicle) => {
+    soldGrid.append(buildSoldCard(vehicle));
+  });
+}
+
+function getRecentlySoldVehicles() {
+  return vehicles
+    .filter(isSoldVehicle)
+    .sort((first, second) => {
+      const firstTime = parseSoldTimestamp(first.soldAt);
+      const secondTime = parseSoldTimestamp(second.soldAt);
+      return secondTime - firstTime;
+    })
+    .slice(0, maxRecentlySold);
+}
+
+function isSoldVehicle(vehicle) {
+  return String(vehicle.status || "").toLowerCase() === "sold";
+}
+
+function parseSoldTimestamp(value) {
+  const timestamp = Date.parse(String(value || ""));
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function isOwnerMode() {
