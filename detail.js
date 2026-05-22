@@ -6,6 +6,7 @@ const breadcrumbVehicle = document.querySelector("#breadcrumbVehicle");
 const detailTitle = document.querySelector("#detailTitle");
 const detailSubtitle = document.querySelector("#detailSubtitle");
 const topText = document.querySelector("#topText");
+const topWhatsapp = document.querySelector("#topWhatsapp");
 const topPrice = document.querySelector("#topPrice");
 const topMileage = document.querySelector("#topMileage");
 const detailContent = document.querySelector("#detailContent");
@@ -131,14 +132,22 @@ async function loadVehicle() {
     const response = await fetch(buildApiUrl(`/api/vehicles/${encodeURIComponent(vehicleId)}`));
 
     if (!response.ok) {
-      await loadStaticVehicle();
+      if (shouldUseStaticFallback()) {
+        await loadStaticVehicle();
+      } else {
+        showNotFound();
+      }
       return;
     }
 
     const vehicle = await response.json();
     renderVehicle(vehicle);
   } catch {
-    await loadStaticVehicle();
+    if (shouldUseStaticFallback()) {
+      await loadStaticVehicle();
+    } else {
+      showNotFound();
+    }
   }
 }
 
@@ -146,10 +155,20 @@ function buildApiUrl(url) {
   return `${apiBaseUrl}${url}`;
 }
 
+function shouldUseStaticFallback() {
+  return window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
 function buildSmsHref(title = "this vehicle") {
   const message = `Hi Alejo Motors, I would like more information about ${title || "this vehicle"}.`;
 
   return `sms:+16789271739?body=${encodeURIComponent(message)}`;
+}
+
+function buildWhatsAppHref(title = "this vehicle") {
+  const message = `Hi Alejo Motors, I would like more information about ${title || "this vehicle"}.`;
+
+  return `https://wa.me/16789271739?text=${encodeURIComponent(message)}`;
 }
 
 function saveLeadQuietly(lead) {
@@ -195,6 +214,7 @@ function renderVehicle(vehicle) {
   topPrice.textContent = formatPrice(vehicle.price, "Call");
   topMileage.textContent = formatMileage(vehicle.miles);
   topText.href = buildSmsHref(title);
+  topWhatsapp.href = buildWhatsAppHref(title);
   photoCount.textContent = `Photos (${images.length})`;
   messageInput.value = `Could you provide more information about this ${title}?`;
 
