@@ -18,7 +18,6 @@ const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const githubInventoryPath = process.env.GITHUB_INVENTORY_PATH || "data/inventory.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
-const maxRecentlySold = 2;
 
 const sampleVehicles = [
   {
@@ -201,8 +200,7 @@ async function handleApi(request, response, url) {
       soldAt: new Date().toISOString()
     };
 
-    const trimmedVehicles = limitRecentlySoldVehicles(vehicles);
-    await writeInventory(trimmedVehicles);
+    await writeInventory(vehicles);
     sendJson(response, 200, migrateVehicle(vehicles[vehicleIndex]));
     return;
   }
@@ -357,7 +355,7 @@ function readLocalInventory() {
 
   try {
     const data = JSON.parse(readFileSync(inventoryPath, "utf-8"));
-    return Array.isArray(data) ? limitRecentlySoldVehicles(data.map(migrateVehicle)) : sampleVehicles.map(migrateVehicle);
+    return Array.isArray(data) ? data.map(migrateVehicle) : sampleVehicles.map(migrateVehicle);
   } catch {
     writeLocalInventory(sampleVehicles);
     return sampleVehicles.map(migrateVehicle);
@@ -365,7 +363,7 @@ function readLocalInventory() {
 }
 
 async function writeInventory(vehicles) {
-  const cleanVehicles = limitRecentlySoldVehicles(vehicles);
+  const cleanVehicles = Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [];
 
   if (hasGitHubStorage()) {
     await writeGitHubInventory(cleanVehicles);
@@ -377,7 +375,7 @@ async function writeInventory(vehicles) {
 
 function writeLocalInventory(vehicles) {
   mkdirSync(dirname(inventoryPath), { recursive: true });
-  writeFileSync(inventoryPath, JSON.stringify(limitRecentlySoldVehicles(vehicles), null, 2));
+  writeFileSync(inventoryPath, JSON.stringify(Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [], null, 2));
 }
 
 function saveLead(lead) {
@@ -403,13 +401,13 @@ async function readGitHubInventory() {
   const data = await githubApi(`repos/${githubRepo}/contents/${encodePath(githubInventoryPath)}?ref=${encodeURIComponent(githubBranch)}`);
   const json = await readGitHubFileContent(data);
   const vehicles = JSON.parse(json);
-  return Array.isArray(vehicles) ? limitRecentlySoldVehicles(vehicles.map(migrateVehicle)) : [];
+  return Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [];
 }
 
 async function writeGitHubInventory(vehicles) {
   const endpoint = `repos/${githubRepo}/contents/${encodePath(githubInventoryPath)}`;
   const existing = await githubApi(`${endpoint}?ref=${encodeURIComponent(githubBranch)}`);
-  const inventory = await prepareInventoryForStorage(limitRecentlySoldVehicles(vehicles.map(migrateVehicle)));
+  const inventory = await prepareInventoryForStorage(Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : []);
   const content = Buffer.from(JSON.stringify(inventory, null, 2)).toString("base64");
 
   await githubApi(endpoint, {
@@ -602,21 +600,6 @@ function migrateVehicle(vehicle) {
     soldAt: String(vehicle.soldAt || "").trim(),
     images: images.map((image) => String(image || "").trim()).filter(Boolean)
   };
-}
-
-function limitRecentlySoldVehicles(vehicles) {
-  const migratedVehicles = Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [];
-  const soldVehicles = migratedVehicles
-    .filter((vehicle) => vehicle.status === "sold")
-    .sort((first, second) => parseSoldTimestamp(second.soldAt) - parseSoldTimestamp(first.soldAt));
-  const keepSoldIds = new Set(soldVehicles.slice(0, maxRecentlySold).map((vehicle) => vehicle.id));
-
-  return migratedVehicles.filter((vehicle) => vehicle.status !== "sold" || keepSoldIds.has(vehicle.id));
-}
-
-function parseSoldTimestamp(value) {
-  const timestamp = Date.parse(String(value || ""));
-  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function normalizeLead(lead) {
