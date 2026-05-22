@@ -29,7 +29,8 @@ const requestForm = document.querySelector("#requestForm");
 const messageInput = document.querySelector("#message");
 const requestStatus = document.querySelector("#requestStatus");
 const notFound = document.querySelector("#notFound");
-const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
+const apiBaseUrl = window.ALEJO_API_BASE_URL
+  || (window.location.hostname === "sergioard1.github.io" ? "https://alejo-motors.onrender.com" : "");
 
 let currentImages = [];
 let currentIndex = 0;
