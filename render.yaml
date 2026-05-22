@@ -1,6 +1,7 @@
 services:
   - type: web
     name: alejo-motors
+    # Keep this service tied to the latest public inventory build.
     runtime: node
     plan: free
     buildCommand: ""
