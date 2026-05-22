@@ -73,9 +73,9 @@
       <section class="hero dealer-hero" id="home">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-          <p class="eyebrow">ALEJO MOTORS • FORT WORTH, TX</p>
+          <p class="eyebrow">ALEJO MOTORS | FORT WORTH, TX</p>
           <h1>Affordable Used Cars in Fort Worth, TX</h1>
-          <p class="hero-hook">Clean title options • Cash deals • Ready to drive today</p>
+          <p class="hero-hook">Clean title options | Cash deals | Ready to drive today</p>
           <p>
             Alejo Motors offers affordable used cars, SUVs, and trucks with real photos, clear
             details, and fast contact by call, text, or WhatsApp before you visit.
@@ -154,6 +154,19 @@
 
           <div class="vehicle-grid" id="vehicleGrid"></div>
           <p class="empty-state" id="emptyState" hidden>No vehicles match this search. Text us and we will help you find the right car.</p>
+        </div>
+      </section>
+
+      <section class="recently-sold" id="recentlySoldSection" hidden>
+        <div class="inventory-results">
+          <div class="results-header sold-header">
+            <div>
+              <p class="eyebrow">Autos Vendidos Recientemente</p>
+              <h2>Recently Sold</h2>
+              <span>Proof that inventory moves at Alejo Motors</span>
+            </div>
+          </div>
+          <div class="sold-grid" id="soldGrid"></div>
         </div>
       </section>
 
@@ -338,7 +351,7 @@
 
     <div class="login-modal" id="loginModal" hidden>
       <div class="login-card" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-        <button class="modal-close" id="closeOwnerLogin" type="button" aria-label="Close owner login">×</button>
+        <button class="modal-close" id="closeOwnerLogin" type="button" aria-label="Close owner login">&times;</button>
         <form class="admin-login" id="adminLoginForm">
           <div>
             <h3 id="loginTitle">Dealer Login</h3>
@@ -373,6 +386,7 @@
           <a class="details-link" href="#">View Details</a>
           <a class="card-link" href="tel:+16789271739">Call</a>
           <a class="message-link" href="sms:+16789271739">Text Us</a>
+          <button class="sold-button owner-only" type="button" hidden>Mark Sold</button>
           <button class="delete-button owner-only" type="button" hidden>Remove</button>
         </div>
       </article>
