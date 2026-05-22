@@ -18,6 +18,7 @@ const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const githubInventoryPath = process.env.GITHUB_INVENTORY_PATH || "data/inventory.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
+const photoLimit = 20;
 
 const sampleVehicles = [
   {
@@ -272,7 +273,7 @@ function readJson(request) {
 
       raw += chunk;
 
-      if (raw.length > 24_000_000) {
+      if (raw.length > 36_000_000) {
         tooLarge = true;
         raw = "";
       }
@@ -474,7 +475,7 @@ async function prepareVehicleImages(vehicleId, images) {
   const cleanImages = images
     .map((image) => String(image || "").trim())
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, photoLimit);
 
   if (!hasGitHubStorage()) {
     return cleanImages;
