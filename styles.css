@@ -1,15 +1,22 @@
 :root {
-  --ink: #151515;
-  --muted: #6f675f;
-  --line: #e2d8cb;
-  --paper: #f6efe5;
-  --surface: #fffaf3;
+  --ink: #161515;
+  --muted: #6b6257;
+  --line: #ddd1c0;
+  --paper: #efe6d8;
+  --surface: #fff8ef;
   --accent: #d71920;
   --accent-dark: #a9151b;
+  --accent-soft: #f5d6bc;
+  --accent-soft-dark: #c96c2b;
+  --price-green: #128244;
+  --price-green-dark: #0b5c30;
+  --price-green-soft: #e8f7ee;
   --dark: #111111;
-  --soft: #fbf6ef;
-  --cream: #f1e5d5;
+  --dark-soft: #1f1a17;
+  --soft: #fbf5eb;
+  --cream: #f1e4cf;
   --gold: #b78a45;
+  --hero-image: url("https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-1-1779396862470-45d8ebd9.jpg");
   --shadow: 0 18px 48px rgba(35, 25, 15, 0.14);
   --radius: 14px;
 }
@@ -22,17 +29,22 @@
   display: none !important;
 }
 
+body:not(.owner-mode) .owner-only {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at 18% 0%, rgba(183, 138, 69, 0.16), transparent 28rem),
-    linear-gradient(180deg, #fffaf3 0%, var(--paper) 46%, #eee3d6 100%);
+    linear-gradient(180deg, #f7f1e7 0%, var(--paper) 46%, #e9ddcf 100%);
   color: var(--ink);
+  overflow-x: hidden;
 }
 
 a {
@@ -45,6 +57,12 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Sora", "Manrope", sans-serif;
 }
 
 .promo-strip,
@@ -76,7 +94,7 @@ textarea {
   align-items: center;
   gap: 22px;
   padding: 12px clamp(18px, 5vw, 64px);
-  background: rgba(255, 250, 243, 0.96);
+  background: rgba(255, 248, 239, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(12px);
 }
@@ -125,12 +143,12 @@ textarea {
 
 .category-nav {
   position: sticky;
-  top: 82px;
+  top: 92px;
   z-index: 18;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  background: #151515;
+  background: #120f0d;
   border-bottom: 4px solid var(--gold);
 }
 
@@ -165,6 +183,7 @@ textarea {
 .button,
 .filter,
 .card-link,
+.message-link,
 .details-link,
 .delete-button {
   border: 0;
@@ -178,9 +197,9 @@ textarea {
   min-height: 620px;
   display: grid;
   align-items: center;
-  padding: clamp(70px, 9vw, 120px) clamp(18px, 6vw, 80px);
-  background-image: url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1800&q=82");
-  background-position: center;
+  padding: 64px clamp(18px, 6vw, 80px);
+  background-image: var(--hero-image);
+  background-position: 76% center;
   background-size: cover;
   color: #fff;
 }
@@ -189,13 +208,13 @@ textarea {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(9, 9, 9, 0.9), rgba(15, 13, 11, 0.65), rgba(15, 13, 11, 0.2)),
-    linear-gradient(0deg, rgba(183, 138, 69, 0.18), transparent 45%);
+    linear-gradient(90deg, rgba(9, 9, 9, 0.93), rgba(15, 13, 11, 0.76), rgba(15, 13, 11, 0.24)),
+    linear-gradient(0deg, rgba(183, 138, 69, 0.22), transparent 45%);
 }
 
 .hero-content {
   position: relative;
-  max-width: 720px;
+  max-width: 760px;
 }
 
 .eyebrow {
@@ -228,9 +247,11 @@ h1 {
 }
 
 .hero h1 {
-  max-width: 660px;
+  max-width: 860px;
   margin-bottom: 14px;
-  font-size: clamp(3rem, 6.3vw, 5.8rem);
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  line-height: 1.02;
+  text-transform: none;
 }
 
 h2 {
@@ -245,6 +266,14 @@ h2 {
   color: rgba(255, 255, 255, 0.92);
   font-size: clamp(1rem, 1.6vw, 1.15rem);
   line-height: 1.55;
+}
+
+.hero-hook {
+  margin-bottom: 14px;
+  color: #f8dca8;
+  font-size: 1.18rem !important;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .hero-badges {
@@ -274,6 +303,13 @@ h2 {
   margin-top: 24px;
 }
 
+.hero-secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -281,6 +317,7 @@ h2 {
   min-height: 46px;
   padding: 12px 22px;
   text-transform: uppercase;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease;
 }
 
 .button.primary {
@@ -291,6 +328,30 @@ h2 {
 
 .button.primary:hover {
   background: var(--accent-dark);
+  transform: translateY(-2px);
+}
+
+.button.message {
+  background: linear-gradient(180deg, #16a45a, var(--price-green));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(18, 130, 68, 0.24);
+}
+
+.button.message:hover {
+  background: var(--price-green-dark);
+  transform: translateY(-2px);
+}
+
+.button.accent-soft {
+  background: linear-gradient(180deg, #ffdcb8, var(--accent-soft));
+  color: #572f10;
+  box-shadow: 0 10px 24px rgba(201, 108, 43, 0.16);
+}
+
+.button.accent-soft:hover {
+  background: var(--accent-soft-dark);
+  color: #fff;
+  transform: translateY(-2px);
 }
 
 .button.secondary {
@@ -300,10 +361,23 @@ h2 {
   backdrop-filter: blur(8px);
 }
 
+.contact-panel .button.secondary {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--ink);
+  backdrop-filter: none;
+}
+
 .button.text,
 .button.small {
   background: #151515;
   color: #fff;
+}
+
+.button.text:hover,
+.button.small:hover,
+.button.secondary:hover {
+  transform: translateY(-2px);
 }
 
 .button.ghost {
@@ -325,10 +399,10 @@ h2 {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
-  padding: 30px clamp(18px, 6vw, 80px);
-  background: linear-gradient(180deg, #fffaf3, #f6efe5);
+  padding: 30px clamp(18px, 6vw, 80px) 20px;
+  background: linear-gradient(180deg, #f7f1e7, #f1e5d5);
   border-bottom: 1px solid var(--line);
 }
 
@@ -337,8 +411,8 @@ h2 {
   gap: 8px;
   padding: 24px;
   border: 1px solid var(--line);
-  border-top: 4px solid var(--accent);
-  border-radius: var(--radius);
+  border-top: 4px solid var(--price-green);
+  border-radius: 10px;
   background: rgba(255, 250, 243, 0.92);
   box-shadow: var(--shadow);
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -359,12 +433,72 @@ h2 {
   line-height: 1.4;
 }
 
-.trust-bar {
+.dealer-stats,
+.home-featured,
+.dealer-proof {
+  padding: 0 clamp(18px, 6vw, 80px);
+}
+
+.dealer-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 34px;
+}
+
+.stat-card {
+  display: grid;
+  gap: 8px;
+  min-height: 118px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 248, 239, 0.94);
+  box-shadow: var(--shadow);
+}
+
+.stat-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stat-card strong {
+  color: var(--ink);
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.rating-card {
+  background: linear-gradient(135deg, rgba(18, 18, 18, 0.98), rgba(44, 34, 25, 0.96));
+}
+
+.rating-card span,
+.rating-card strong {
+  color: #fff;
+}
+
+.home-featured {
+  margin-bottom: 34px;
+}
+
+.section-copy {
+  max-width: 680px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.featured-grid .vehicle-card img {
+  aspect-ratio: 16 / 10;
+}
+
+.trust-bar {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1px;
   padding: 0 clamp(18px, 6vw, 80px) 30px;
-  background: #f6efe5;
+  background: #f1e5d5;
 }
 
 .trust-bar span {
@@ -378,6 +512,130 @@ h2 {
   font-weight: 900;
   text-transform: uppercase;
   box-shadow: 0 10px 28px rgba(35, 25, 15, 0.08);
+}
+
+.lot-visit {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.74fr) minmax(0, 1.26fr);
+  gap: 28px;
+  align-items: stretch;
+  padding: clamp(34px, 5vw, 64px) clamp(18px, 6vw, 80px);
+  background: #fffaf3;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.lot-copy {
+  display: grid;
+  align-content: start;
+  padding-top: 12px;
+}
+
+.lot-copy h2 {
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.lot-copy p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.lot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.lot-gallery {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  grid-template-rows: repeat(2, minmax(150px, 1fr));
+  gap: 10px;
+  min-height: 360px;
+}
+
+.lot-gallery img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e8ded0;
+}
+
+.lot-gallery img:first-child {
+  grid-row: 1 / span 2;
+}
+
+.dealer-proof {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.05fr);
+  gap: 26px;
+  margin: 0 0 34px;
+}
+
+.dealer-story,
+.review-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.dealer-story {
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(18, 18, 18, 0.98), rgba(44, 34, 25, 0.96));
+  color: #fff;
+}
+
+.dealer-story p:not(.eyebrow) {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.7;
+}
+
+.dealer-story-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.review-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.review-card {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  background: #fff8ef;
+}
+
+.review-card.featured {
+  grid-column: 1 / -1;
+}
+
+.review-source {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.review-card strong {
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.review-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .vehicle-search {
@@ -397,11 +655,35 @@ h2 {
 .vehicle-search h2 {
   margin-bottom: 0;
   font-size: clamp(1.8rem, 3vw, 3rem);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .vehicle-search label {
   color: #fff;
+}
+
+.quick-filter-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-filter {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.quick-filter.active,
+.quick-filter:hover {
+  background: #fff;
+  color: #151515;
 }
 
 label {
@@ -436,6 +718,20 @@ textarea {
 .detail-notes,
 .not-found {
   padding: clamp(42px, 6vw, 76px) clamp(18px, 6vw, 80px);
+}
+
+#inventory,
+#manager,
+#contact,
+.home-featured,
+.lot-visit {
+  scroll-margin-top: 150px;
+}
+
+.vehicle-top,
+.detail-layout,
+.detail-notes {
+  scroll-margin-top: 118px;
 }
 
 .inventory {
@@ -474,7 +770,24 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: end;
   gap: 10px;
+}
+
+.sort-control {
+  min-width: 210px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.sort-control select {
+  min-height: 42px;
+  border-radius: 8px;
+  background: #fffaf3;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-transform: none;
 }
 
 .owner-login-trigger.button.small {
@@ -487,6 +800,38 @@ textarea {
 .owner-login-trigger.button.small:hover {
   border-color: rgba(215, 25, 32, 0.35);
   color: var(--accent);
+}
+
+.inventory-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.inventory-summary div {
+  min-height: 74px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.inventory-summary span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.inventory-summary strong {
+  color: var(--ink);
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  line-height: 1;
 }
 
 .vehicle-grid {
@@ -593,15 +938,15 @@ textarea {
   width: fit-content;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #fff0f1;
-  color: var(--accent);
+  background: var(--price-green-soft);
+  color: var(--price-green);
   font-size: 1.35rem;
   line-height: 1;
 }
 
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   padding: 0 20px 20px;
 }
@@ -611,6 +956,7 @@ textarea {
 }
 
 .card-link,
+.message-link,
 .details-link,
 .delete-button {
   display: flex;
@@ -625,6 +971,16 @@ textarea {
   background: #151515;
   color: #fff;
   text-align: center;
+}
+
+.message-link {
+  background: var(--price-green);
+  color: #fff;
+  text-align: center;
+}
+
+.message-link:hover {
+  background: var(--price-green-dark);
 }
 
 .details-link {
@@ -746,9 +1102,9 @@ textarea {
 .preview {
   min-height: 150px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
-  align-items: center;
+  align-items: start;
   overflow: hidden;
   border: 1px dashed #b8b8b8;
   border-radius: var(--radius);
@@ -814,6 +1170,10 @@ textarea {
   gap: 10px;
 }
 
+.contact-actions .message {
+  grid-column: 1 / -1;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -840,11 +1200,49 @@ textarea {
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.floating-contact-bar {
+  display: none;
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 40;
+  gap: 10px;
+}
+
+.floating-action {
+  min-width: 182px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 0 18px 34px rgba(17, 17, 17, 0.28);
+}
+
+.floating-action.call {
+  background: var(--accent);
+}
+
+.floating-action.text,
+.floating-action.schedule {
+  background: #151515;
+}
+
+.floating-action.whatsapp {
+  background: var(--price-green);
 }
 
 .login-modal {
@@ -937,7 +1335,7 @@ textarea {
 
 .vehicle-top-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 240px));
+  grid-template-columns: minmax(180px, 220px) minmax(260px, 300px) minmax(180px, 220px);
   gap: 8px;
 }
 
@@ -951,13 +1349,29 @@ textarea {
   border-radius: 4px;
   background: #0d62d7;
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 0;
 }
 
 .blue-action:hover {
   background: #084fb0;
+}
+
+.blue-action.message-action {
+  background: var(--price-green);
+}
+
+.blue-action.message-action:hover {
+  background: var(--price-green-dark);
+}
+
+.blue-action.directions-action {
+  background: #151515;
+}
+
+.blue-action.directions-action:hover {
+  background: #2a2a2a;
 }
 
 .vehicle-top-stats {
@@ -986,6 +1400,11 @@ textarea {
   font-size: clamp(1.8rem, 3vw, 2.8rem);
   font-weight: 900;
   line-height: 1;
+}
+
+.vehicle-top-stats div:first-child dd,
+.detail-price {
+  color: var(--price-green);
 }
 
 .gallery,
@@ -1136,7 +1555,7 @@ textarea {
 }
 
 .detail-price {
-  color: var(--accent);
+  color: var(--price-green);
   font-size: clamp(2.4rem, 4vw, 4rem);
   line-height: 1;
 }
@@ -1390,6 +1809,7 @@ textarea {
 .detail-notes p {
   color: var(--muted);
   line-height: 1.7;
+  white-space: pre-line;
 }
 
 .photo-lightbox {
@@ -1461,7 +1881,11 @@ textarea {
 
 @media (max-width: 1100px) {
   .site-header,
+  .quick-actions,
+  .dealer-stats,
+  .dealer-proof,
   .vehicle-search,
+  .lot-visit,
   .vehicle-form,
   .admin-login,
   .info-grid {
@@ -1480,7 +1904,19 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .inventory-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .review-stack {
+    grid-template-columns: 1fr;
+  }
+
   .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vehicle-top-main {
     grid-template-columns: 1fr;
   }
 
@@ -1494,6 +1930,10 @@ textarea {
 }
 
 @media (max-width: 760px) {
+  body {
+    padding-bottom: 92px;
+  }
+
   .promo-strip,
   .top-strip {
     align-items: flex-start;
@@ -1503,8 +1943,13 @@ textarea {
 
   .site-header,
   .quick-actions,
+  .dealer-stats,
   .trust-bar,
+  .inventory-summary,
   .vehicle-search,
+  .lot-visit,
+  .dealer-proof,
+  .review-stack,
   .contact,
   .vehicle-form,
   .admin-login,
@@ -1517,6 +1962,32 @@ textarea {
 
   .category-nav {
     position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .category-nav .filter,
+  .category-contact {
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 0 10px;
+    font-size: 0.86rem;
+  }
+
+  .site-header {
+    position: static;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+
+  .brand-logo {
+    width: min(100%, 330px);
+  }
+
+  .header-contact {
+    justify-content: flex-start;
+    font-size: 0.88rem;
   }
 
   .nav {
@@ -1524,8 +1995,46 @@ textarea {
     font-size: 0.92rem;
   }
 
+  #inventory,
+  #manager,
+  #contact,
+  .lot-visit,
+  .vehicle-top,
+  .detail-layout,
+  .detail-notes {
+    scroll-margin-top: 16px;
+  }
+
   .hero {
-    min-height: 560px;
+    min-height: auto;
+    padding-top: 72px;
+    padding-bottom: 80px;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    font-size: 2.55rem;
+    line-height: 1;
+  }
+
+  .hero-content p:not(.eyebrow) {
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-secondary-actions,
+  .dealer-story-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-badges span {
+    width: 100%;
+    justify-content: center;
   }
 
   .vehicle-grid {
@@ -1542,6 +2051,46 @@ textarea {
     flex-direction: column;
   }
 
+  .inventory-tools,
+  .sort-control {
+    width: 100%;
+  }
+
+  .lot-gallery {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    min-height: 0;
+  }
+
+  .lot-gallery img,
+  .lot-gallery img:first-child {
+    grid-row: auto;
+    height: 210px;
+  }
+
+  .vehicle-top {
+    padding: 16px 18px 18px;
+  }
+
+  .vehicle-top-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .vehicle-top-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .vehicle-top-stats div {
+    padding: 14px 10px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    border-left: 0;
+  }
+
+  .vehicle-top-stats dd {
+    font-size: 1.7rem;
+  }
+
   .wide {
     grid-column: span 1;
   }
@@ -1554,6 +2103,26 @@ textarea {
     flex-direction: column;
   }
 
+  .floating-contact-bar {
+    display: grid;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(17, 17, 17, 0.96);
+    backdrop-filter: blur(12px);
+  }
+
+  .floating-action {
+    min-width: 0;
+    min-height: 58px;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 0.72rem;
+  }
+
   .detail-hero {
     padding: 18px;
   }
@@ -1562,6 +2131,12 @@ textarea {
   .detail-lower {
     padding-right: 14px;
     padding-left: 14px;
+  }
+
+  .detail-notes,
+  .not-found {
+    margin-right: 14px;
+    margin-left: 14px;
   }
 
   .gallery-stage {
