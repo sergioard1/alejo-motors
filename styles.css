@@ -776,6 +776,13 @@ textarea {
     var(--paper);
 }
 
+.recently-sold {
+  padding: 0 clamp(18px, 6vw, 80px) clamp(42px, 6vw, 76px);
+  background:
+    linear-gradient(180deg, rgba(246, 239, 229, 0.96), rgba(255, 250, 243, 0.88)),
+    var(--paper);
+}
+
 .inventory-results {
   max-width: 1280px;
   margin: 0 auto;
@@ -876,6 +883,12 @@ textarea {
   gap: 26px;
 }
 
+.sold-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+}
+
 .vehicle-card {
   overflow: hidden;
   display: flex;
@@ -891,6 +904,59 @@ textarea {
   transform: translateY(-5px);
   border-color: rgba(215, 25, 32, 0.36);
   box-shadow: 0 26px 64px rgba(35, 25, 15, 0.2);
+}
+
+.sold-card {
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.sold-card-photo {
+  position: relative;
+  overflow: hidden;
+  background: #e8ded0;
+}
+
+.sold-card-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e8ded0;
+}
+
+.sold-watermark {
+  position: absolute;
+  top: 26px;
+  left: -52px;
+  min-width: 240px;
+  padding: 10px 18px;
+  border-top: 2px solid rgba(215, 25, 32, 0.68);
+  border-bottom: 2px solid rgba(215, 25, 32, 0.68);
+  background: rgba(255, 248, 239, 0.58);
+  color: rgba(215, 25, 32, 0.86);
+  font-family: "Sora", "Manrope", sans-serif;
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-26deg);
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.12);
+  pointer-events: none;
+}
+
+.sold-card-title {
+  margin: 0;
+  padding: 18px 20px 20px;
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1.15;
+  text-transform: uppercase;
 }
 
 .vehicle-photo-link,
@@ -994,6 +1060,7 @@ textarea {
 .card-link,
 .message-link,
 .details-link,
+.sold-button,
 .delete-button {
   display: flex;
   align-items: center;
@@ -1023,6 +1090,12 @@ textarea {
   border: 1px solid var(--line);
   color: var(--ink);
   background: #fffaf3;
+}
+
+.sold-button {
+  border: 1px solid rgba(215, 25, 32, 0.22);
+  background: #fff5f5;
+  color: var(--accent-dark);
 }
 
 .delete-button {
@@ -1943,6 +2016,10 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .sold-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .trust-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2081,6 +2158,10 @@ textarea {
   }
 
   .vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sold-grid {
     grid-template-columns: 1fr;
   }
 
