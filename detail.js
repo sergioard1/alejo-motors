@@ -5,6 +5,7 @@ const vehicleTop = document.querySelector("#vehicleTop");
 const breadcrumbVehicle = document.querySelector("#breadcrumbVehicle");
 const detailTitle = document.querySelector("#detailTitle");
 const detailSubtitle = document.querySelector("#detailSubtitle");
+const topText = document.querySelector("#topText");
 const topPrice = document.querySelector("#topPrice");
 const topMileage = document.querySelector("#topMileage");
 const detailContent = document.querySelector("#detailContent");
@@ -145,6 +146,12 @@ function buildApiUrl(url) {
   return `${apiBaseUrl}${url}`;
 }
 
+function buildSmsHref(title = "this vehicle") {
+  const message = `Hi Alejo Motors, I would like more information about ${title || "this vehicle"}.`;
+
+  return `sms:+16789271739?body=${encodeURIComponent(message)}`;
+}
+
 function saveLeadQuietly(lead) {
   fetch(buildApiUrl("/api/leads"), {
     method: "POST",
@@ -181,12 +188,13 @@ function renderVehicle(vehicle) {
   currentImages = images;
   currentIndex = 0;
   currentTitle = title;
-  document.title = `${title} | ALEJO MOTORS`;
+  document.title = `${title} for Sale in Fort Worth, TX | Alejo Motors`;
   detailTitle.textContent = title;
   detailSubtitle.textContent = buildSubtitle(vehicle);
   breadcrumbVehicle.textContent = [vehicle.make, vehicle.model].filter(Boolean).join(" / ") || "Vehicle";
-  topPrice.textContent = formatTopPrice(vehicle.price);
+  topPrice.textContent = formatPrice(vehicle.price, "Call");
   topMileage.textContent = formatMileage(vehicle.miles);
+  topText.href = buildSmsHref(title);
   photoCount.textContent = `Photos (${images.length})`;
   messageInput.value = `Could you provide more information about this ${title}?`;
 
@@ -308,6 +316,7 @@ function getVehicleImages(vehicle) {
 
 function renderVehicleInfo(vehicle) {
   const rows = [
+    { icon: "mileage", label: "Mileage", value: formatMileage(vehicle.miles, true) || "Call for information" },
     { icon: "car", label: "Condition", value: vehicle.condition || "Used" },
     { icon: "engine", label: "Engine", value: vehicle.engine || "Call for information" },
     { icon: "transmission", label: "Transmission", value: vehicle.transmission || "Call for information" },
@@ -368,13 +377,16 @@ function parseFuelEconomy(value) {
 }
 
 function buildSubtitle(vehicle) {
-  const bodyStyle = formatCategory(vehicle.category);
-  const model = vehicle.model || "";
+  const details = [
+    vehicle.condition,
+    formatCategory(vehicle.category),
+    vehicle.exteriorColor,
+  ];
 
-  return [model, bodyStyle].filter(Boolean).join(" ");
+  return details.filter(Boolean).join(" - ");
 }
 
-function formatMileage(value) {
+function formatMileage(value, includeUnit = false) {
   if (!value) return "Call";
 
   const number = Number(String(value).replace(/[^\d]/g, ""));
@@ -383,22 +395,33 @@ function formatMileage(value) {
     return value;
   }
 
-  return number.toLocaleString("en-US");
+  return `${number.toLocaleString("en-US")}${includeUnit ? " miles" : ""}`;
 }
 
-function formatTopPrice(value) {
-  if (!value) return "Call";
+function formatPrice(value, fallback = "Call for price") {
+  const cleanValue = String(value || "").trim();
 
-  if (String(value).trim().toLowerCase() === "call for price") {
-    return "Call";
+  if (!cleanValue || cleanValue.toLowerCase() === "call for price") {
+    return fallback;
   }
 
-  return value;
+  const number = Number(cleanValue.replace(/[^\d.]/g, ""));
+
+  if (!Number.isFinite(number) || number <= 0) {
+    return cleanValue;
+  }
+
+  return number.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
 }
 
 function renderIcon(name) {
   const icons = {
     car: '<svg viewBox="0 0 24 24"><path d="M5 11l2-5h10l2 5 1 1v5h-2v2h-3v-2H9v2H6v-2H4v-5l1-1zm3.3-3-1.1 3h9.6l-1.1-3H8.3zM7 14.5A1.5 1.5 0 1 0 7 17a1.5 1.5 0 0 0 0-2.5zm10 0A1.5 1.5 0 1 0 17 17a1.5 1.5 0 0 0 0-2.5z"/></svg>',
+    mileage: '<svg viewBox="0 0 24 24"><path d="M12 5a9 9 0 0 1 9 9c0 2-.7 3.9-1.9 5.4H4.9A8.8 8.8 0 0 1 3 14a9 9 0 0 1 9-9zm0 2a7 7 0 0 0-6.6 9.4l.4 1h12.4l.4-1A7 7 0 0 0 12 7zm4.7 3.3 1.4 1.4-4.9 4.9a2 2 0 1 1-1.4-1.4l4.9-4.9zM6.5 13H9v2H6.5v-2zm8.5 0h2.5v2H15v-2z"/></svg>',
     engine: '<svg viewBox="0 0 24 24"><path d="M7 7h5V5H9V3h8v2h-3v2h2l2 2h2v3h2v5h-4l-3 3H8l-3-3H2v-6h3l2-4zm1.2 3-1.4 3H5v2h1.8l2 2h5.4l2-2H18v-3h-1.2l-2-2H8.2z"/></svg>',
     transmission: '<svg viewBox="0 0 24 24"><path d="M11 4a3 3 0 1 1 2 2.8V11h3V8h2v8h-2v-3h-3v4.2a3 3 0 1 1-2 0V6.8A3 3 0 0 1 11 4zm1 15a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0-16a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>',
     drivetrain: '<svg viewBox="0 0 24 24"><path d="M4 4h5v5H7v2h10V9h-2V4h5v5h-1v6h1v5h-5v-5h2v-2H7v2h2v5H4v-5h1V9H4V4zm2 2v1h1V6H6zm11 0v1h1V6h-1zM6 17v1h1v-1H6zm11 0v1h1v-1h-1z"/></svg>',
