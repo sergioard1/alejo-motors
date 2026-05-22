@@ -3,11 +3,9 @@ const apiBaseUrl = window.ALEJO_API_BASE_URL || "";
 const photoLimit = 20;
 
 const vehicleGrid = document.querySelector("#vehicleGrid");
-const featuredGrid = document.querySelector("#featuredGrid");
 const vehicleTemplate = document.querySelector("#vehicleTemplate");
 const emptyState = document.querySelector("#emptyState");
 const resultCount = document.querySelector("#resultCount");
-const inventorySummary = document.querySelector("#inventorySummary");
 const inventorySearch = document.querySelector("#inventorySearch");
 const bodyStyleSelect = document.querySelector("#bodyStyleSelect");
 const sortSelect = document.querySelector("#sortSelect");
@@ -29,22 +27,16 @@ const ownerLoginTriggers = document.querySelectorAll(".owner-login-trigger");
 const closeOwnerLogin = document.querySelector("#closeOwnerLogin");
 const vehicleFormMessage = document.querySelector("#vehicleFormMessage");
 const saveVehicleButton = vehicleForm.querySelector('button[type="submit"]');
-const heroInventoryBadge = document.querySelector("#heroInventoryBadge");
-const heroPriceBadge = document.querySelector("#heroPriceBadge");
 const heroSection = document.querySelector(".dealer-hero");
-const statAvailable = document.querySelector("#statAvailable");
-const statAffordable = document.querySelector("#statAffordable");
-const statUtility = document.querySelector("#statUtility");
 
 let vehicles = [];
 let activeFilter = "all";
-let activeSort = "featured";
+let activeSort = "year-new";
 let activeQuickFilter = "all";
 let searchTerm = "";
 let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
-let statsAnimated = false;
 
 init();
 
@@ -159,7 +151,7 @@ adminLoginForm.addEventListener("submit", async (event) => {
   adminMessage.textContent = "";
 
   if (!apiAvailable) {
-    adminMessage.textContent = "Owner editing is available from the private local version.";
+    adminMessage.textContent = "Dealer login is temporarily unavailable. Please try again in a moment.";
     return;
   }
 
@@ -268,15 +260,17 @@ vehicleForm.addEventListener("submit", async (event) => {
   }
 });
 
-resetInventory.addEventListener("click", async () => {
-  if (!isAdmin) return;
-  if (!apiAvailable) return;
+if (resetInventory) {
+  resetInventory.addEventListener("click", async () => {
+    if (!isAdmin) return;
+    if (!apiAvailable) return;
 
-  vehicles = await apiRequest("/api/reset", { method: "POST" });
-  activeFilter = "all";
-  setActiveFilter("all");
-  renderVehicles();
-});
+    vehicles = await apiRequest("/api/reset", { method: "POST" });
+    activeFilter = "all";
+    setActiveFilter("all");
+    renderVehicles();
+  });
+}
 
 vehicleGrid.addEventListener("click", async (event) => {
   const button = event.target.closest(".delete-button");
@@ -307,13 +301,20 @@ async function loadVehicles() {
     apiAvailable = true;
   } catch {
     apiAvailable = false;
-    try {
-      const response = await fetch("data/inventory.json", { cache: "no-store" });
-      vehicles = await response.json();
-    } catch {
-      vehicles = [];
-      resultCount.textContent = "Inventory could not load. Please refresh the page.";
+    if (shouldUseStaticFallback()) {
+      try {
+        const response = await fetch("data/inventory.json", { cache: "no-store" });
+        vehicles = await response.json();
+        return;
+      } catch {
+        vehicles = [];
+        resultCount.textContent = "Inventory could not load. Please refresh the page.";
+        return;
+      }
     }
+
+    vehicles = [];
+    resultCount.textContent = "Live inventory is temporarily unavailable. Please refresh the page.";
   }
 }
 
@@ -343,6 +344,10 @@ async function apiRequest(url, options = {}) {
 
 function buildApiUrl(url) {
   return `${apiBaseUrl}${url}`;
+}
+
+function shouldUseStaticFallback() {
+  return window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
 }
 
 function scrollToCurrentHash() {
@@ -380,17 +385,12 @@ function renderVehicles() {
     return matchesCategory && matchesQuickFilter && (!searchTerm || searchable.includes(searchTerm));
   });
   const visibleVehicles = sortVehicles(filteredVehicles);
-  const featuredVehicles = getFeaturedVehicles();
 
   vehicleGrid.innerHTML = "";
   resultCount.textContent = `Showing ${visibleVehicles.length} of ${vehicles.length} vehicles`;
   emptyState.hidden = visibleVehicles.length > 0;
-  renderInventorySummary();
-  renderFeaturedVehicles(featuredVehicles);
   renderLotGallery();
-  updateHeroHighlights();
-  updateHeroBackground(featuredVehicles[0] || visibleVehicles[0] || vehicles[0]);
-  updateDealerStats();
+  updateHeroBackground(visibleVehicles[0] || vehicles[0]);
 
   visibleVehicles.forEach((vehicle) => {
     vehicleGrid.append(buildVehicleCard(vehicle));
@@ -439,45 +439,6 @@ function compareKnownNumbersDesc(first, second) {
   return 0;
 }
 
-function renderInventorySummary() {
-  const counts = vehicles.reduce(
-    (total, vehicle) => {
-      total[vehicle.category] = (total[vehicle.category] || 0) + 1;
-      return total;
-    },
-    { car: 0, suv: 0, pickup: 0 }
-  );
-  const prices = vehicles.map((vehicle) => parsePrice(vehicle.price)).filter(Number.isFinite);
-  const startingPrice = prices.length ? Math.min(...prices) : null;
-  const summaryItems = [
-    ["Available", String(vehicles.length)],
-    ["Cars", String(counts.car || 0)],
-    ["SUVs", String(counts.suv || 0)],
-    ["Trucks", String(counts.pickup || 0)],
-    ["Starting At", startingPrice ? formatPrice(startingPrice) : "Call"],
-  ];
-
-  inventorySummary.innerHTML = summaryItems
-    .map(
-      ([label, value]) => `
-        <div>
-          <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
-        </div>
-      `
-    )
-    .join("");
-}
-
-function updateHeroHighlights() {
-  const prices = vehicles.map((vehicle) => parsePrice(vehicle.price)).filter(Number.isFinite);
-  const startingPrice = prices.length ? Math.min(...prices) : null;
-  const label = vehicles.length === 1 ? "Vehicle" : "Vehicles";
-
-  heroInventoryBadge.textContent = vehicles.length ? `${vehicles.length} ${label} Available` : "Inventory Available";
-  heroPriceBadge.textContent = startingPrice ? `From ${formatPrice(startingPrice)}` : "Promotions Available";
-}
-
 function updateHeroBackground(vehicle) {
   if (!heroSection || !vehicle) return;
 
@@ -486,18 +447,6 @@ function updateHeroBackground(vehicle) {
   if (image) {
     heroSection.style.setProperty("--hero-image", `url("${image}")`);
   }
-}
-
-function renderFeaturedVehicles(items) {
-  if (!featuredGrid) return;
-
-  featuredGrid.innerHTML = "";
-
-  items.forEach((vehicle) => {
-    const card = buildVehicleCard(vehicle);
-    card.classList.add("featured-card");
-    featuredGrid.append(card);
-  });
 }
 
 function buildVehicleCard(vehicle) {
@@ -546,34 +495,6 @@ function buildFamilyPitch(vehicle) {
   return vehicle.condition || "Ready to drive";
 }
 
-function getFeaturedVehicles() {
-  return [...vehicles]
-    .sort((first, second) => scoreFeaturedVehicle(second) - scoreFeaturedVehicle(first))
-    .slice(0, 3);
-}
-
-function scoreFeaturedVehicle(vehicle) {
-  let score = 0;
-  const notes = String(vehicle.notes || "").toLowerCase();
-  const year = parseYear(vehicle.year);
-  const price = parsePrice(vehicle.price);
-  const drivetrain = String(vehicle.drivetrain || "").toLowerCase();
-
-  if (vehicle.category === "car") score += 4;
-  if (vehicle.category === "suv") score += 3;
-  if (year >= 2005) score += 3;
-  if (Number.isFinite(price) && price <= 6500) score += 3;
-  if (notes.includes("clean title")) score += 3;
-  if (notes.includes("daily driver")) score += 2;
-  if (notes.includes("good on gas")) score += 2;
-  if (notes.includes("family")) score += 2;
-  if (drivetrain.includes("awd")) score += 1;
-  if (notes.includes("classic") || notes.includes("vintage")) score -= 6;
-  if (year > 0 && year < 1998) score -= 5;
-
-  return score;
-}
-
 function matchesVehicleQuickFilter(vehicle) {
   if (activeQuickFilter === "all") {
     return true;
@@ -607,51 +528,6 @@ function matchesVehicleQuickFilter(vehicle) {
   return true;
 }
 
-function updateDealerStats() {
-  const affordableCount = vehicles.filter((vehicle) => parsePrice(vehicle.price) <= 5000).length;
-  const utilityCount = vehicles.filter(
-    (vehicle) => vehicle.category === "suv" || /\b(awd|4wd)\b/i.test(String(vehicle.drivetrain || ""))
-  ).length;
-
-  updateStatElement(statAvailable, vehicles.length);
-  updateStatElement(statAffordable, affordableCount);
-  updateStatElement(statUtility, utilityCount);
-}
-
-function updateStatElement(element, value) {
-  if (!element) return;
-
-  element.dataset.target = String(value);
-
-  if (statsAnimated) {
-    element.textContent = String(value);
-  } else {
-    animateStatElement(element, value);
-  }
-}
-
-function animateStatElement(element, target) {
-  const duration = 780;
-  const startTime = performance.now();
-
-  function tick(now) {
-    const progress = Math.min((now - startTime) / duration, 1);
-    const value = Math.round(target * (1 - Math.pow(1 - progress, 3)));
-
-    element.textContent = String(value);
-
-    if (progress < 1) {
-      requestAnimationFrame(tick);
-      return;
-    }
-
-    element.textContent = String(target);
-    statsAnimated = true;
-  }
-
-  requestAnimationFrame(tick);
-}
-
 function updateAdminUI() {
   const ownerMode = isOwnerMode();
 
@@ -677,6 +553,7 @@ function renderLotGallery() {
   if (!lotGallery) return;
 
   const photos = vehicles
+    .filter((vehicle) => !/mercedes/i.test(`${vehicle.make || ""} ${vehicle.model || ""}`))
     .map((vehicle) => ({ image: getVehicleImages(vehicle)[0], vehicle }))
     .filter(({ image }) => image && !image.includes("alejo-motors-logo.svg"))
     .slice(0, 3);
@@ -692,12 +569,20 @@ function renderLotGallery() {
   }
 
   photos.forEach(({ image: src, vehicle }) => {
+    const card = document.createElement("a");
     const image = document.createElement("img");
     const title = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
+    const label = document.createElement("span");
 
+    card.className = "lot-gallery-card";
+    card.href = `detail.html?id=${encodeURIComponent(vehicle.id)}`;
     image.src = src;
     image.alt = title ? `${title} at Alejo Motors` : "Vehicle at Alejo Motors";
-    lotGallery.append(image);
+    label.className = "lot-gallery-label";
+    label.textContent = title || "Available now";
+
+    card.append(image, label);
+    lotGallery.append(card);
   });
 }
 
