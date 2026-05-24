@@ -196,9 +196,23 @@
           </div>
 
           <form class="vehicle-form" id="vehicleForm">
+            <div class="form-mode-banner wide" id="editModeBanner" hidden>
+              <div>
+                <strong>Editing vehicle</strong>
+                <p id="editVehicleLabel">Update the details below and save when ready.</p>
+              </div>
+              <button class="button quiet" id="cancelEditButton" type="button" hidden>Cancel Edit</button>
+            </div>
+
             <label>
               Photos (up to 20)
               <input id="photoInput" type="file" accept="image/*" multiple />
+              <small id="photoHelpText">Upload up to 20 photos for a new vehicle.</small>
+            </label>
+
+            <label class="replace-photos wide" id="replacePhotosWrap" hidden>
+              <input id="replacePhotosInput" type="checkbox" />
+              <span>Replace current photos instead of adding more</span>
             </label>
 
             <label>
@@ -294,7 +308,10 @@
               <span>Photo preview</span>
             </div>
 
-            <button class="button primary wide" type="submit">Save Vehicle</button>
+            <div class="vehicle-form-actions wide">
+              <button class="button primary" type="submit">Save Vehicle</button>
+              <button class="button quiet" id="resetVehicleForm" type="button">Clear Form</button>
+            </div>
             <p class="form-message wide" id="vehicleFormMessage" role="status"></p>
           </form>
         </div>
@@ -373,6 +390,7 @@
           <a class="details-link" href="#">View Details</a>
           <a class="card-link" href="tel:+16789271739">Call</a>
           <a class="message-link" href="sms:+16789271739">Text Us</a>
+          <button class="edit-button owner-only" type="button" hidden>Edit</button>
           <button class="sold-button owner-only" type="button" hidden>Mark Sold</button>
           <button class="delete-button owner-only" type="button" hidden>Remove</button>
         </div>
