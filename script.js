@@ -14,6 +14,9 @@ const quickFilterButtons = document.querySelectorAll(".quick-filter");
 const vehicleForm = document.querySelector("#vehicleForm");
 const photoInput = document.querySelector("#photoInput");
 const photoPreview = document.querySelector("#photoPreview");
+const photoHelpText = document.querySelector("#photoHelpText");
+const replacePhotosWrap = document.querySelector("#replacePhotosWrap");
+const replacePhotosInput = document.querySelector("#replacePhotosInput");
 const lotGallery = document.querySelector("#lotGallery");
 const resetInventory = document.querySelector("#resetInventory");
 const filterButtons = document.querySelectorAll(".filter");
@@ -28,7 +31,30 @@ const ownerLoginTriggers = document.querySelectorAll(".owner-login-trigger");
 const closeOwnerLogin = document.querySelector("#closeOwnerLogin");
 const vehicleFormMessage = document.querySelector("#vehicleFormMessage");
 const saveVehicleButton = vehicleForm.querySelector('button[type="submit"]');
+const resetVehicleFormButton = document.querySelector("#resetVehicleForm");
+const editModeBanner = document.querySelector("#editModeBanner");
+const editVehicleLabel = document.querySelector("#editVehicleLabel");
+const cancelEditButton = document.querySelector("#cancelEditButton");
 const heroSection = document.querySelector(".dealer-hero");
+const vehicleFormFields = {
+  year: document.querySelector("#yearInput"),
+  make: document.querySelector("#makeInput"),
+  model: document.querySelector("#modelInput"),
+  category: document.querySelector("#categoryInput"),
+  miles: document.querySelector("#milesInput"),
+  price: document.querySelector("#priceInput"),
+  stockNumber: document.querySelector("#stockNumberInput"),
+  vin: document.querySelector("#vinInput"),
+  engine: document.querySelector("#engineInput"),
+  transmission: document.querySelector("#transmissionInput"),
+  exteriorColor: document.querySelector("#exteriorColorInput"),
+  interiorColor: document.querySelector("#interiorColorInput"),
+  drivetrain: document.querySelector("#drivetrainInput"),
+  fuelEconomy: document.querySelector("#fuelEconomyInput"),
+  condition: document.querySelector("#conditionInput"),
+  damage: document.querySelector("#damageInput"),
+  notes: document.querySelector("#notesInput"),
+};
 
 let vehicles = [];
 let activeFilter = "all";
@@ -39,6 +65,10 @@ let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
 let authToken = window.localStorage.getItem("alejo_owner_token") || "";
+let editingVehicleId = "";
+let editingVehicleImages = [];
+let editingVehicleStatus = "available";
+let editingVehicleSoldAt = "";
 
 init();
 
@@ -52,6 +82,9 @@ async function init() {
   await loadVehicles();
   updateAdminUI();
   renderVehicles();
+  if (!isEditingVehicle()) {
+    resetVehicleFormState();
+  }
   requestAnimationFrame(scrollToCurrentHash);
 }
 
@@ -122,29 +155,52 @@ photoInput.addEventListener("change", async () => {
 
   if (!files.length) {
     selectedPhotos = [];
-    renderPhotoPreview([]);
+    renderPhotoPreview(getPhotoPreviewImages());
     setVehicleFormMessage("");
+    return;
+  }
+
+  const availableSlots = getAvailablePhotoSlots();
+
+  if (availableSlots <= 0) {
+    selectedPhotos = [];
+    photoInput.value = "";
+    renderPhotoPreview(getPhotoPreviewImages());
+    setVehicleFormMessage("This vehicle already has 20 photos. Turn on replace photos to swap them.", "error");
     return;
   }
 
   setVehicleFormMessage("Preparing photos...");
 
   try {
-    const photos = files.slice(0, photoLimit);
+    const photos = files.slice(0, availableSlots);
     selectedPhotos = await Promise.all(photos.map(resizeImage));
-    renderPhotoPreview(selectedPhotos);
+    renderPhotoPreview(getPhotoPreviewImages());
     setVehicleFormMessage(
-      files.length > photoLimit
-        ? `${photoLimit} photos ready. Extra photos were skipped so the vehicle saves faster.`
-        : `${selectedPhotos.length} photo${selectedPhotos.length === 1 ? "" : "s"} ready.`,
+      files.length > availableSlots
+        ? `${selectedPhotos.length} photo${selectedPhotos.length === 1 ? "" : "s"} ready. Extra photos were skipped to stay within the 20 photo limit.`
+        : buildPhotoReadyMessage(),
       "success"
     );
   } catch {
     selectedPhotos = [];
     photoInput.value = "";
-    renderPhotoPreview([]);
+    renderPhotoPreview(getPhotoPreviewImages());
     setVehicleFormMessage("Those photos could not be prepared. Try different photos.", "error");
   }
+});
+
+replacePhotosInput.addEventListener("change", () => {
+  selectedPhotos = [];
+  photoInput.value = "";
+  renderPhotoPreview(getPhotoPreviewImages());
+  setVehicleFormMessage(
+    isEditingVehicle()
+      ? replacePhotosInput.checked
+        ? "Upload new photos to replace the current gallery."
+        : "Upload new photos to add to the current gallery."
+      : ""
+  );
 });
 
 adminLoginForm.addEventListener("submit", async (event) => {
@@ -170,6 +226,7 @@ adminLoginForm.addEventListener("submit", async (event) => {
     authToken = String(session.token || authToken || "");
     syncStoredAuthToken();
     adminPasswordInput.value = "";
+    resetVehicleFormState();
     closeLoginModal();
     openOwnerArea();
     updateAdminUI();
@@ -184,6 +241,7 @@ logoutAdmin.addEventListener("click", async () => {
   isAdmin = false;
   authToken = "";
   syncStoredAuthToken();
+  resetVehicleFormState();
   if (window.location.hash === "#manager") {
     window.location.hash = "inventory";
   }
@@ -218,52 +276,53 @@ vehicleForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  const vehicle = {
-    year: document.querySelector("#yearInput").value.trim(),
-    make: document.querySelector("#makeInput").value.trim(),
-    model: document.querySelector("#modelInput").value.trim(),
-    category: document.querySelector("#categoryInput").value,
-    miles: document.querySelector("#milesInput").value.trim(),
-    price: document.querySelector("#priceInput").value.trim() || "Call for price",
-    stockNumber: document.querySelector("#stockNumberInput").value.trim(),
-    vin: document.querySelector("#vinInput").value.trim(),
-    engine: document.querySelector("#engineInput").value.trim(),
-    transmission: document.querySelector("#transmissionInput").value.trim(),
-    exteriorColor: document.querySelector("#exteriorColorInput").value.trim(),
-    interiorColor: document.querySelector("#interiorColorInput").value.trim(),
-    drivetrain: document.querySelector("#drivetrainInput").value.trim(),
-    fuelEconomy: document.querySelector("#fuelEconomyInput").value.trim(),
-    condition: document.querySelector("#conditionInput").value.trim(),
-    damage: document.querySelector("#damageInput").value.trim(),
-    notes: document.querySelector("#notesInput").value.trim(),
-    images: selectedPhotos.length ? selectedPhotos : ["assets/alejo-motors-logo.svg"],
-  };
+  const vehicle = buildVehiclePayload();
+  const requestPath = isEditingVehicle()
+    ? `/api/vehicles/${encodeURIComponent(editingVehicleId)}`
+    : "/api/vehicles";
+  const requestMethod = isEditingVehicle() ? "PUT" : "POST";
 
   saveVehicleButton.disabled = true;
   saveVehicleButton.textContent = "Saving...";
-  setVehicleFormMessage("Saving vehicle...");
+  setVehicleFormMessage(isEditingVehicle() ? "Updating vehicle..." : "Saving vehicle...");
 
   try {
-    await apiRequest("/api/vehicles", {
-      method: "POST",
+    await apiRequest(requestPath, {
+      method: requestMethod,
       body: vehicle,
     });
 
     await loadVehicles();
-    vehicleForm.reset();
-    selectedPhotos = [];
-    renderPhotoPreview([]);
+    resetVehicleFormState();
     activeFilter = "all";
     setActiveFilter("all");
     renderVehicles();
-    setVehicleFormMessage("Vehicle saved. It is now live in inventory.", "success");
+    setVehicleFormMessage(
+      requestMethod === "PUT"
+        ? "Vehicle updated. The inventory now shows the latest details."
+        : "Vehicle saved. It is now live in inventory.",
+      "success"
+    );
     document.querySelector("#inventory").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
-    setVehicleFormMessage(error.message || "The vehicle could not be saved. Try again.", "error");
+    setVehicleFormMessage(
+      error.message || (requestMethod === "PUT" ? "The vehicle could not be updated. Try again." : "The vehicle could not be saved. Try again."),
+      "error"
+    );
   } finally {
     saveVehicleButton.disabled = false;
-    saveVehicleButton.textContent = "Save Vehicle";
+    saveVehicleButton.textContent = getVehicleSubmitLabel();
   }
+});
+
+resetVehicleFormButton.addEventListener("click", () => {
+  resetVehicleFormState();
+  setVehicleFormMessage("");
+});
+
+cancelEditButton.addEventListener("click", () => {
+  resetVehicleFormState();
+  setVehicleFormMessage("Edit canceled. You can add a new vehicle now.", "success");
 });
 
 if (resetInventory) {
@@ -279,11 +338,17 @@ if (resetInventory) {
 }
 
 vehicleGrid.addEventListener("click", async (event) => {
+  const editButton = event.target.closest(".edit-button");
   const soldButton = event.target.closest(".sold-button");
   const deleteButton = event.target.closest(".delete-button");
 
-  if ((!soldButton && !deleteButton) || !isAdmin) return;
+  if ((!editButton && !soldButton && !deleteButton) || !isAdmin) return;
   if (!apiAvailable) return;
+
+  if (editButton) {
+    startEditingVehicle(editButton.dataset.id);
+    return;
+  }
 
   if (soldButton) {
     const title = soldButton.dataset.title || "this vehicle";
@@ -312,6 +377,10 @@ vehicleGrid.addEventListener("click", async (event) => {
 
   if (!confirmDelete) {
     return;
+  }
+
+  if (editingVehicleId && deleteButton.dataset.id === editingVehicleId) {
+    resetVehicleFormState();
   }
 
   await apiRequest(`/api/vehicles/${encodeURIComponent(deleteButton.dataset.id)}`, { method: "DELETE" });
@@ -525,7 +594,7 @@ function updateHeroBackground(vehicle) {
 
 function buildVehicleCard(vehicle) {
   const card = vehicleTemplate.content.firstElementChild.cloneNode(true);
-  const title = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
+  const title = getVehicleTitle(vehicle);
   const sold = isSoldVehicle(vehicle);
   const subtitleParts = [buildFamilyPitch(vehicle), formatCategory(vehicle.category)];
   const subtitle = subtitleParts.filter(Boolean).join(" - ");
@@ -538,6 +607,7 @@ function buildVehicleCard(vehicle) {
   const callLink = card.querySelector(".card-link");
   const messageLink = card.querySelector(".message-link");
   const cardActions = card.querySelector(".card-actions");
+  const editButton = card.querySelector(".edit-button");
   const deleteButton = card.querySelector(".delete-button");
   const soldButton = card.querySelector(".sold-button");
 
@@ -560,6 +630,8 @@ function buildVehicleCard(vehicle) {
 
   soldButton.dataset.id = vehicle.id;
   soldButton.dataset.title = title || "this vehicle";
+  editButton.dataset.id = vehicle.id;
+  editButton.dataset.title = title || "this vehicle";
   deleteButton.dataset.id = vehicle.id;
   deleteButton.dataset.title = title || "this vehicle";
 
@@ -585,6 +657,7 @@ function buildVehicleCard(vehicle) {
     soldButton.hidden = !isAdmin;
   }
 
+  editButton.hidden = !isAdmin;
   deleteButton.hidden = !isAdmin;
   cardActions.hidden = [...cardActions.children].every((element) => element.hidden);
 
@@ -757,6 +830,189 @@ function buildSmsHref(title = "this vehicle") {
   const message = `Hi Alejo Motors, I would like more information about ${title || "this vehicle"}.`;
 
   return `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+}
+
+function buildVehiclePayload() {
+  return {
+    year: vehicleFormFields.year.value.trim(),
+    make: vehicleFormFields.make.value.trim(),
+    model: vehicleFormFields.model.value.trim(),
+    category: vehicleFormFields.category.value,
+    miles: vehicleFormFields.miles.value.trim(),
+    price: vehicleFormFields.price.value.trim() || "Call for price",
+    stockNumber: vehicleFormFields.stockNumber.value.trim(),
+    vin: vehicleFormFields.vin.value.trim(),
+    engine: vehicleFormFields.engine.value.trim(),
+    transmission: vehicleFormFields.transmission.value.trim(),
+    exteriorColor: vehicleFormFields.exteriorColor.value.trim(),
+    interiorColor: vehicleFormFields.interiorColor.value.trim(),
+    drivetrain: vehicleFormFields.drivetrain.value.trim(),
+    fuelEconomy: vehicleFormFields.fuelEconomy.value.trim(),
+    condition: vehicleFormFields.condition.value.trim(),
+    damage: vehicleFormFields.damage.value.trim(),
+    notes: vehicleFormFields.notes.value.trim(),
+    status: editingVehicleStatus,
+    soldAt: editingVehicleSoldAt,
+    images: getVehicleImagesForSubmit(),
+  };
+}
+
+function getVehicleImagesForSubmit() {
+  const baseImages = isEditingVehicle() && !replacePhotosInput.checked ? editingVehicleImages : [];
+  const combinedImages = [...baseImages, ...selectedPhotos].slice(0, photoLimit);
+
+  if (combinedImages.length) {
+    return combinedImages;
+  }
+
+  if (isEditingVehicle() && editingVehicleImages.length) {
+    return editingVehicleImages;
+  }
+
+  return ["assets/alejo-motors-logo.svg"];
+}
+
+function getPhotoPreviewImages() {
+  if (selectedPhotos.length) {
+    return getVehicleImagesForSubmit();
+  }
+
+  if (isEditingVehicle() && editingVehicleImages.length) {
+    return editingVehicleImages;
+  }
+
+  return [];
+}
+
+function getAvailablePhotoSlots() {
+  if (!isEditingVehicle() || replacePhotosInput.checked) {
+    return photoLimit;
+  }
+
+  return Math.max(photoLimit - editingVehicleImages.length, 0);
+}
+
+function buildPhotoReadyMessage() {
+  if (!isEditingVehicle()) {
+    return `${selectedPhotos.length} photo${selectedPhotos.length === 1 ? "" : "s"} ready.`;
+  }
+
+  if (replacePhotosInput.checked) {
+    return `${selectedPhotos.length} replacement photo${selectedPhotos.length === 1 ? "" : "s"} ready.`;
+  }
+
+  const totalPhotos = Math.min(editingVehicleImages.length + selectedPhotos.length, photoLimit);
+  return `${selectedPhotos.length} new photo${selectedPhotos.length === 1 ? "" : "s"} ready. This vehicle will have ${totalPhotos} photos total.`;
+}
+
+function isEditingVehicle() {
+  return Boolean(editingVehicleId);
+}
+
+function getVehicleSubmitLabel() {
+  return isEditingVehicle() ? "Update Vehicle" : "Save Vehicle";
+}
+
+function getVehicleTitle(vehicle) {
+  return [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
+}
+
+function startEditingVehicle(vehicleId) {
+  const vehicle = vehicles.find((item) => item.id === vehicleId);
+
+  if (!vehicle) {
+    setVehicleFormMessage("That vehicle could not be found for editing.", "error");
+    return;
+  }
+
+  editingVehicleId = vehicle.id;
+  editingVehicleImages = getVehicleImages(vehicle);
+  editingVehicleStatus = vehicle.status || "available";
+  editingVehicleSoldAt = vehicle.soldAt || "";
+  selectedPhotos = [];
+  photoInput.value = "";
+  replacePhotosInput.checked = false;
+
+  vehicleFormFields.year.value = vehicle.year || "";
+  vehicleFormFields.make.value = vehicle.make || "";
+  vehicleFormFields.model.value = vehicle.model || "";
+  vehicleFormFields.category.value = vehicle.category || "car";
+  vehicleFormFields.miles.value = vehicle.miles || "";
+  vehicleFormFields.price.value = vehicle.price || "";
+  vehicleFormFields.stockNumber.value = vehicle.stockNumber || "";
+  vehicleFormFields.vin.value = vehicle.vin || "";
+  vehicleFormFields.engine.value = vehicle.engine || "";
+  vehicleFormFields.transmission.value = vehicle.transmission || "";
+  vehicleFormFields.exteriorColor.value = vehicle.exteriorColor || "";
+  vehicleFormFields.interiorColor.value = vehicle.interiorColor || "";
+  vehicleFormFields.drivetrain.value = vehicle.drivetrain || "";
+  vehicleFormFields.fuelEconomy.value = vehicle.fuelEconomy || "";
+  vehicleFormFields.condition.value = vehicle.condition || "";
+  vehicleFormFields.damage.value = vehicle.damage || "";
+  vehicleFormFields.notes.value = vehicle.notes || "";
+
+  updateVehicleFormUI();
+  renderPhotoPreview(getPhotoPreviewImages());
+  openOwnerArea();
+  setVehicleFormMessage(`Editing ${getVehicleTitle(vehicle) || "vehicle"}. Update what you want and save when ready.`, "success");
+}
+
+function resetVehicleFormState() {
+  clearVehicleFormFields();
+  selectedPhotos = [];
+  editingVehicleId = "";
+  editingVehicleImages = [];
+  editingVehicleStatus = "available";
+  editingVehicleSoldAt = "";
+  photoInput.value = "";
+  replacePhotosInput.checked = false;
+  updateVehicleFormUI();
+  renderPhotoPreview([]);
+}
+
+function clearVehicleFormFields() {
+  vehicleFormFields.year.value = "";
+  vehicleFormFields.make.value = "";
+  vehicleFormFields.model.value = "";
+  vehicleFormFields.category.value = "car";
+  vehicleFormFields.miles.value = "";
+  vehicleFormFields.price.value = "";
+  vehicleFormFields.stockNumber.value = "";
+  vehicleFormFields.vin.value = "";
+  vehicleFormFields.engine.value = "";
+  vehicleFormFields.transmission.value = "";
+  vehicleFormFields.exteriorColor.value = "";
+  vehicleFormFields.interiorColor.value = "";
+  vehicleFormFields.drivetrain.value = "";
+  vehicleFormFields.fuelEconomy.value = "";
+  vehicleFormFields.condition.value = "";
+  vehicleFormFields.damage.value = "";
+  vehicleFormFields.notes.value = "";
+}
+
+function updateVehicleFormUI() {
+  const editing = isEditingVehicle();
+
+  editModeBanner.hidden = !editing;
+  cancelEditButton.hidden = !editing;
+  replacePhotosWrap.hidden = !editing;
+  saveVehicleButton.textContent = getVehicleSubmitLabel();
+
+  if (editing) {
+    const vehicleTitle = getVehicleTitle({
+      year: vehicleFormFields.year.value,
+      make: vehicleFormFields.make.value,
+      model: vehicleFormFields.model.value,
+    });
+    editVehicleLabel.textContent = vehicleTitle
+      ? `${vehicleTitle} is loaded below. Change any details, then save.`
+      : "Change the details below, then save.";
+    photoHelpText.textContent = "Leave photos empty to keep the current gallery. Upload more to add photos, or turn on replace photos to swap them out.";
+    return;
+  }
+
+  editVehicleLabel.textContent = "Update the details below and save when ready.";
+  photoHelpText.textContent = "Upload up to 20 photos for a new vehicle.";
 }
 
 function renderSpecs(specs) {
