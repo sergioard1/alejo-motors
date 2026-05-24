@@ -1049,6 +1049,7 @@ textarea {
 .card-link,
 .message-link,
 .details-link,
+.edit-button,
 .sold-button,
 .delete-button {
   display: flex;
@@ -1079,6 +1080,12 @@ textarea {
   border: 1px solid var(--line);
   color: var(--ink);
   background: #fffaf3;
+}
+
+.edit-button {
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  background: #f2efe9;
+  color: var(--dark);
 }
 
 .sold-button {
@@ -1197,6 +1204,59 @@ textarea {
   grid-column: span 2;
 }
 
+.form-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(18, 130, 68, 0.24);
+  border-radius: var(--radius);
+  background: var(--price-green-soft);
+}
+
+.form-mode-banner strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--price-green-dark);
+  text-transform: uppercase;
+}
+
+.form-mode-banner p {
+  margin-bottom: 0;
+  color: var(--ink);
+}
+
+.vehicle-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.vehicle-form small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.replace-photos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fbf7f1;
+}
+
+.replace-photos input {
+  width: 18px;
+  height: 18px;
+}
+
+.replace-photos span {
+  font-weight: 800;
+}
+
 .preview {
   min-height: 150px;
   display: grid;
@@ -1222,6 +1282,16 @@ textarea {
   height: 110px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+.vehicle-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vehicle-form-actions .button {
+  min-width: 170px;
 }
 
 .contact {
@@ -2153,6 +2223,12 @@ textarea {
   .section-heading,
   .results-header {
     align-items: start;
+    flex-direction: column;
+  }
+
+  .form-mode-banner,
+  .vehicle-form-actions {
+    align-items: stretch;
     flex-direction: column;
   }
 
