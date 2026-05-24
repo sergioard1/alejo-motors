@@ -18,6 +18,7 @@ const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const githubInventoryPath = process.env.GITHUB_INVENTORY_PATH || "data/inventory.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
+const photoLimit = 20;
 
 const sampleVehicles = [
   {
@@ -181,6 +182,26 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (request.method === "PUT" && url.pathname.startsWith("/api/vehicles/")) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+
+    const id = decodeURIComponent(url.pathname.replace("/api/vehicles/", ""));
+    const updatedVehicle = await readJson(request);
+    const vehicles = await readInventory();
+    const vehicleIndex = vehicles.findIndex((vehicle) => vehicle.id === id);
+
+    if (vehicleIndex < 0) {
+      sendJson(response, 404, { error: "Vehicle not found" });
+      return;
+    }
+
+    vehicles[vehicleIndex] = await normalizeVehicleUpdate(vehicles[vehicleIndex], updatedVehicle);
+    await writeInventory(vehicles);
+    sendJson(response, 200, migrateVehicle(vehicles[vehicleIndex]));
+    return;
+  }
+
   if (request.method === "POST" && url.pathname.endsWith("/sold") && url.pathname.startsWith("/api/vehicles/")) {
     requireAuth(request, response);
     if (response.writableEnded) return;
@@ -255,7 +276,7 @@ function handleCors(request, response) {
   }
 
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
 
   if (request.method === "OPTIONS") {
     response.writeHead(204);
@@ -296,7 +317,7 @@ function readJson(request) {
 
       raw += chunk;
 
-      if (raw.length > 24_000_000) {
+      if (raw.length > 36_000_000) {
         tooLarge = true;
         raw = "";
       }
@@ -498,11 +519,48 @@ async function normalizeVehicle(vehicle) {
   };
 }
 
+async function normalizeVehicleUpdate(existingVehicle, vehicle) {
+  const currentVehicle = migrateVehicle(existingVehicle);
+  const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+  const uploadedImages = images.length
+    ? await prepareVehicleImages(currentVehicle.id, images)
+    : getVehicleImages(currentVehicle);
+  const status = String(vehicle.status || currentVehicle.status || "available").trim().toLowerCase() === "sold"
+    ? "sold"
+    : "available";
+
+  return {
+    id: currentVehicle.id,
+    year: String(vehicle.year || "").trim(),
+    make: String(vehicle.make || "").trim(),
+    model: String(vehicle.model || "").trim(),
+    category: ["car", "suv", "pickup"].includes(vehicle.category) ? vehicle.category : currentVehicle.category,
+    miles: String(vehicle.miles || "").trim(),
+    price: String(vehicle.price || "Call for price").trim(),
+    notes: String(vehicle.notes || "").trim(),
+    stockNumber: String(vehicle.stockNumber || "").trim(),
+    vin: String(vehicle.vin || "").trim(),
+    condition: String(vehicle.condition || "").trim(),
+    engine: String(vehicle.engine || "").trim(),
+    transmission: String(vehicle.transmission || "").trim(),
+    exteriorColor: String(vehicle.exteriorColor || "").trim(),
+    interiorColor: String(vehicle.interiorColor || "").trim(),
+    drivetrain: String(vehicle.drivetrain || "").trim(),
+    fuelEconomy: String(vehicle.fuelEconomy || "").trim(),
+    damage: String(vehicle.damage || "").trim(),
+    status,
+    soldAt: status === "sold"
+      ? String(vehicle.soldAt || currentVehicle.soldAt || new Date().toISOString()).trim()
+      : "",
+    images: uploadedImages.length ? uploadedImages : ["assets/alejo-motors-logo.svg"]
+  };
+}
+
 async function prepareVehicleImages(vehicleId, images) {
   const cleanImages = images
     .map((image) => String(image || "").trim())
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, photoLimit);
 
   if (!hasGitHubStorage()) {
     return cleanImages;
@@ -572,10 +630,16 @@ async function uploadVehicleImage(vehicleId, dataUrl, index) {
   return `https://raw.githubusercontent.com/${githubRepo}/${githubBranch}/${path}`;
 }
 
-function migrateVehicle(vehicle) {
+function getVehicleImages(vehicle) {
   const images = Array.isArray(vehicle.images) && vehicle.images.length
     ? vehicle.images
     : [vehicle.image || "assets/alejo-motors-logo.svg"];
+
+  return images.map((image) => String(image || "").trim()).filter(Boolean);
+}
+
+function migrateVehicle(vehicle) {
+  const images = getVehicleImages(vehicle);
 
   return {
     id: String(vehicle.id || randomBytes(12).toString("hex")),
