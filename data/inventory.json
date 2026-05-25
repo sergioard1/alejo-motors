@@ -173,7 +173,7 @@
     "model": "PASSAT",
     "category": "car",
     "miles": "170300",
-    "price": "4500",
+    "price": "4400",
     "notes": "Automatic transmission\n170k miles\nCold A/C – Heater works\nClean interior\nSpacious interior and trunk\nGood on gas\nTinted windows\nSE package\nEmission inspection done\nClean title\nDaily driver ready\nCash deal\n\nReady to drive today",
     "stockNumber": "",
     "vin": "1VWBH7A31CC018476",
@@ -183,17 +183,24 @@
     "exteriorColor": "Grey",
     "interiorColor": "Black",
     "drivetrain": "FWD",
-    "fuelEconomy": "",
+    "fuelEconomy": "25 city/ 28 hwy",
     "damage": "",
     "status": "available",
     "soldAt": "",
     "images": [
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-1-1779396862470-45d8ebd9.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-2-1779396864463-16f414e0.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-3-1779396866147-83b6f472.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-4-1779396868097-1449c36b.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-5-1779396869641-8aecb65b.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-6-1779396870918-b04371f5.jpg"
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-1-1779750747760-e4a5d7a0.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-2-1779750749290-27a9d6e4.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-3-1779750750460-ced418cb.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-4-1779750751802-9c99e206.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-5-1779750753092-906bce2b.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-6-1779750754293-efaeef85.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-7-1779750755499-045d9fe8.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-8-1779750756920-94d033a1.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-9-1779750758045-f6c03872.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-10-1779750759002-eeecd7f5.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-11-1779750760199-da592103.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-12-1779750761559-4636b6ff.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-13-1779750762573-0df29c9a.jpg"
     ]
   }
 ]
