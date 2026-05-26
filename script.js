@@ -36,6 +36,7 @@ const editModeBanner = document.querySelector("#editModeBanner");
 const editVehicleLabel = document.querySelector("#editVehicleLabel");
 const cancelEditButton = document.querySelector("#cancelEditButton");
 const heroSection = document.querySelector(".dealer-hero");
+const heroSoldCount = document.querySelector("#heroSoldCount");
 const vehicleFormFields = {
   year: document.querySelector("#yearInput"),
   make: document.querySelector("#makeInput"),
@@ -69,6 +70,7 @@ let editingVehicleId = "";
 let editingVehicleImages = [];
 let editingVehicleStatus = "available";
 let editingVehicleSoldAt = "";
+let siteData = { vehiclesSold: 50 };
 
 init();
 
@@ -79,7 +81,7 @@ if (window.location.hash === "#owner-login") {
 async function init() {
   applyUrlCategory();
   await loadSession();
-  await loadVehicles();
+  await Promise.all([loadVehicles(), loadSiteData()]);
   updateAdminUI();
   renderVehicles();
   if (!isEditingVehicle()) {
@@ -331,6 +333,7 @@ if (resetInventory) {
     if (!apiAvailable) return;
 
     vehicles = await apiRequest("/api/reset", { method: "POST" });
+    await loadSiteData();
     activeFilter = "all";
     setActiveFilter("all");
     renderVehicles();
@@ -362,7 +365,7 @@ vehicleGrid.addEventListener("click", async (event) => {
 
     try {
       await apiRequest(`/api/vehicles/${encodeURIComponent(soldButton.dataset.id)}/sold`, { method: "POST" });
-      await loadVehicles();
+      await Promise.all([loadVehicles(), loadSiteData()]);
       renderVehicles();
       setVehicleFormMessage(`${title} was marked as sold.`, "success");
     } catch (error) {
@@ -426,6 +429,30 @@ async function loadVehicles() {
     vehicles = [];
     resultCount.textContent = "Live inventory is temporarily unavailable. Please refresh the page.";
   }
+}
+
+async function loadSiteData() {
+  try {
+    siteData = sanitizeSiteData(await apiRequest("/api/site"));
+    updateHeroStats();
+    return;
+  } catch {
+    if (shouldUseStaticFallback()) {
+      try {
+        const response = await fetch("data/site.json", { cache: "no-store" });
+        siteData = sanitizeSiteData(await response.json());
+        updateHeroStats();
+        return;
+      } catch {
+        siteData = sanitizeSiteData({});
+        updateHeroStats();
+        return;
+      }
+    }
+  }
+
+  siteData = sanitizeSiteData({});
+  updateHeroStats();
 }
 
 async function apiRequest(url, options = {}) {
@@ -525,6 +552,7 @@ function renderVehicles() {
   emptyState.hidden = visibleVehicles.length > 0;
   renderLotGallery(availableVehicles);
   updateHeroBackground(visibleVehicles[0] || availableVehicles[0] || vehicles[0]);
+  updateHeroStats();
 
   visibleVehicles.forEach((vehicle) => {
     vehicleGrid.append(buildVehicleCard(vehicle));
@@ -590,6 +618,14 @@ function updateHeroBackground(vehicle) {
   if (image) {
     heroSection.style.setProperty("--hero-image", `url("${image}")`);
   }
+}
+
+function updateHeroStats() {
+  if (!heroSoldCount) {
+    return;
+  }
+
+  heroSoldCount.textContent = `${formatWholeNumber(siteData.vehiclesSold)}+ Vehicles Sold`;
 }
 
 function buildVehicleCard(vehicle) {
@@ -1072,6 +1108,18 @@ function formatMileage(value, includeUnit = false) {
   }
 
   return `${mileage.toLocaleString("en-US")}${includeUnit ? " miles" : ""}`;
+}
+
+function formatWholeNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.floor(number)).toLocaleString("en-US") : "50";
+}
+
+function sanitizeSiteData(data) {
+  const count = Number(data.vehiclesSold);
+  return {
+    vehiclesSold: Number.isFinite(count) ? Math.max(50, Math.floor(count)) : 50,
+  };
 }
 
 function escapeHtml(value) {
