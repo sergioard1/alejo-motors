@@ -105,6 +105,7 @@ function applyUrlCategory() {
 filterButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeFilter = button.dataset.filter;
+    resetQuickFilters();
     setActiveFilter(activeFilter);
     renderVehicles();
   });
@@ -117,6 +118,7 @@ inventorySearch.addEventListener("input", () => {
 
 bodyStyleSelect.addEventListener("change", () => {
   activeFilter = bodyStyleSelect.value;
+  resetQuickFilters();
   setActiveFilter(activeFilter);
   renderVehicles();
 });
@@ -524,7 +526,8 @@ function scrollToCurrentHash() {
 
 function renderVehicles() {
   const availableVehicles = vehicles.filter((vehicle) => !isSoldVehicle(vehicle));
-  const filteredVehicles = vehicles.filter((vehicle) => {
+  const filterableVehicles = vehicles.filter((vehicle) => shouldShowVehicleInCurrentInventoryView(vehicle));
+  const filteredVehicles = filterableVehicles.filter((vehicle) => {
     const matchesCategory = activeFilter === "all" || vehicle.category === activeFilter;
     const matchesQuickFilter = matchesVehicleQuickFilter(vehicle);
     const searchable = [
@@ -548,7 +551,7 @@ function renderVehicles() {
   const visibleVehicles = sortVehicles(filteredVehicles);
 
   vehicleGrid.innerHTML = "";
-  resultCount.textContent = `Showing ${visibleVehicles.length} of ${vehicles.length} vehicles`;
+  resultCount.textContent = `Showing ${visibleVehicles.length} of ${filterableVehicles.length} vehicles`;
   emptyState.hidden = visibleVehicles.length > 0;
   renderLotGallery(availableVehicles);
   updateHeroBackground(visibleVehicles[0] || availableVehicles[0] || vehicles[0]);
@@ -712,6 +715,10 @@ function buildFamilyPitch(vehicle) {
 }
 
 function matchesVehicleQuickFilter(vehicle) {
+  if (isSoldVehicle(vehicle) && activeQuickFilter !== "all") {
+    return false;
+  }
+
   if (activeQuickFilter === "all") {
     return true;
   }
@@ -804,6 +811,19 @@ function renderLotGallery(availableVehicles = vehicles.filter((vehicle) => !isSo
 
 function isSoldVehicle(vehicle) {
   return String(vehicle.status || "").toLowerCase() === "sold";
+}
+
+function shouldShowVehicleInCurrentInventoryView(vehicle) {
+  if (!isSoldVehicle(vehicle)) {
+    return true;
+  }
+
+  return activeFilter === "all" && activeQuickFilter === "all";
+}
+
+function resetQuickFilters() {
+  activeQuickFilter = "all";
+  setActiveQuickFilter("all");
 }
 
 function isOwnerMode() {
