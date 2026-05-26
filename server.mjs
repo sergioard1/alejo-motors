@@ -12,13 +12,16 @@ const contactPhone = process.env.CONTACT_PHONE || "+16789271739";
 const dataRoot = process.env.DATA_DIR ? resolve(process.env.DATA_DIR) : join(root, "data");
 const inventoryPath = join(dataRoot, "inventory.json");
 const leadsPath = join(dataRoot, "leads.json");
+const sitePath = join(dataRoot, "site.json");
 const githubRepo = process.env.GITHUB_REPO || "";
 const githubBranch = process.env.GITHUB_BRANCH || "main";
 const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const githubInventoryPath = process.env.GITHUB_INVENTORY_PATH || "data/inventory.json";
+const githubSitePath = process.env.GITHUB_SITE_PATH || "data/site.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
 const photoLimit = 20;
+const defaultSiteData = { vehiclesSold: 50 };
 
 const sampleVehicles = [
   {
@@ -80,6 +83,7 @@ const types = {
 
 ensureInventoryFile();
 ensureLeadsFile();
+ensureSiteFile();
 
 createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://localhost:${port}`);
@@ -148,6 +152,11 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/api/site") {
+    sendJson(response, 200, await readSiteData());
+    return;
+  }
+
   if (request.method === "POST" && url.pathname === "/api/leads") {
     const lead = normalizeLead(await readJson(request));
     saveLead(lead);
@@ -209,19 +218,25 @@ async function handleApi(request, response, url) {
     const id = decodeURIComponent(url.pathname.replace("/api/vehicles/", "").replace("/sold", ""));
     const vehicles = await readInventory();
     const vehicleIndex = vehicles.findIndex((vehicle) => vehicle.id === id);
+    const siteData = await readSiteData();
 
     if (vehicleIndex < 0) {
       sendJson(response, 404, { error: "Vehicle not found" });
       return;
     }
 
+    const wasSold = String(vehicles[vehicleIndex].status || "").trim().toLowerCase() === "sold";
+
     vehicles[vehicleIndex] = {
       ...vehicles[vehicleIndex],
       status: "sold",
-      soldAt: new Date().toISOString()
+      soldAt: String(vehicles[vehicleIndex].soldAt || "").trim() || new Date().toISOString()
     };
 
     await writeInventory(vehicles);
+    if (!wasSold) {
+      await writeSiteData({ vehiclesSold: siteData.vehiclesSold + 1 });
+    }
     sendJson(response, 200, migrateVehicle(vehicles[vehicleIndex]));
     return;
   }
@@ -242,6 +257,7 @@ async function handleApi(request, response, url) {
     if (response.writableEnded) return;
 
     await writeInventory(sampleVehicles);
+    await writeSiteData(defaultSiteData);
     sendJson(response, 200, sampleVehicles);
     return;
   }
@@ -363,12 +379,28 @@ function ensureLeadsFile() {
   }
 }
 
+function ensureSiteFile() {
+  mkdirSync(dirname(sitePath), { recursive: true });
+
+  if (!existsSync(sitePath)) {
+    writeLocalSiteData(defaultSiteData);
+  }
+}
+
 async function readInventory() {
   if (hasGitHubStorage()) {
     return readGitHubInventory();
   }
 
   return readLocalInventory();
+}
+
+async function readSiteData() {
+  if (hasGitHubStorage()) {
+    return readGitHubSiteData();
+  }
+
+  return readLocalSiteData();
 }
 
 function readLocalInventory() {
@@ -394,9 +426,37 @@ async function writeInventory(vehicles) {
   writeLocalInventory(cleanVehicles);
 }
 
+async function writeSiteData(siteData) {
+  const cleanSiteData = migrateSiteData(siteData);
+
+  if (hasGitHubStorage()) {
+    await writeGitHubSiteData(cleanSiteData);
+    return;
+  }
+
+  writeLocalSiteData(cleanSiteData);
+}
+
 function writeLocalInventory(vehicles) {
   mkdirSync(dirname(inventoryPath), { recursive: true });
   writeFileSync(inventoryPath, JSON.stringify(Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [], null, 2));
+}
+
+function readLocalSiteData() {
+  ensureSiteFile();
+
+  try {
+    const data = JSON.parse(readFileSync(sitePath, "utf-8"));
+    return migrateSiteData(data);
+  } catch {
+    writeLocalSiteData(defaultSiteData);
+    return migrateSiteData(defaultSiteData);
+  }
+}
+
+function writeLocalSiteData(siteData) {
+  mkdirSync(dirname(sitePath), { recursive: true });
+  writeFileSync(sitePath, JSON.stringify(migrateSiteData(siteData), null, 2));
 }
 
 function saveLead(lead) {
@@ -425,6 +485,20 @@ async function readGitHubInventory() {
   return Array.isArray(vehicles) ? vehicles.map(migrateVehicle) : [];
 }
 
+async function readGitHubSiteData() {
+  const data = await githubApi(
+    `repos/${githubRepo}/contents/${encodePath(githubSitePath)}?ref=${encodeURIComponent(githubBranch)}`,
+    { allowNotFound: true }
+  );
+
+  if (!data) {
+    return migrateSiteData(defaultSiteData);
+  }
+
+  const json = await readGitHubFileContent(data);
+  return migrateSiteData(JSON.parse(json));
+}
+
 async function writeGitHubInventory(vehicles) {
   const endpoint = `repos/${githubRepo}/contents/${encodePath(githubInventoryPath)}`;
   const existing = await githubApi(`${endpoint}?ref=${encodeURIComponent(githubBranch)}`);
@@ -439,6 +513,26 @@ async function writeGitHubInventory(vehicles) {
       branch: githubBranch,
       sha: existing.sha
     }
+  });
+}
+
+async function writeGitHubSiteData(siteData) {
+  const endpoint = `repos/${githubRepo}/contents/${encodePath(githubSitePath)}`;
+  const existing = await githubApi(`${endpoint}?ref=${encodeURIComponent(githubBranch)}`, { allowNotFound: true });
+  const content = Buffer.from(JSON.stringify(migrateSiteData(siteData), null, 2)).toString("base64");
+  const body = {
+    message: "Update Alejo Motors site data",
+    content,
+    branch: githubBranch,
+  };
+
+  if (existing?.sha) {
+    body.sha = existing.sha;
+  }
+
+  await githubApi(endpoint, {
+    method: "PUT",
+    body,
   });
 }
 
@@ -476,7 +570,13 @@ async function githubApi(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || `GitHub API failed with ${response.status}`);
+    if (response.status === 404 && options.allowNotFound) {
+      return null;
+    }
+
+    const error = new Error(data.message || `GitHub API failed with ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   return data;
@@ -487,6 +587,14 @@ function encodePath(value) {
     .split("/")
     .map((part) => encodeURIComponent(part))
     .join("/");
+}
+
+function migrateSiteData(siteData) {
+  const vehiclesSold = Number(siteData?.vehiclesSold);
+
+  return {
+    vehiclesSold: Number.isFinite(vehiclesSold) ? Math.max(50, Math.floor(vehiclesSold)) : 50,
+  };
 }
 
 async function normalizeVehicle(vehicle) {
