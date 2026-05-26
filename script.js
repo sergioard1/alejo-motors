@@ -98,7 +98,9 @@ function applyUrlCategory() {
   }
 
   activeFilter = category;
-  bodyStyleSelect.value = category;
+  if (bodyStyleSelect) {
+    bodyStyleSelect.value = category;
+  }
   setActiveFilter(category);
 }
 
@@ -111,17 +113,21 @@ filterButtons.forEach((button) => {
   });
 });
 
-inventorySearch.addEventListener("input", () => {
-  searchTerm = inventorySearch.value.trim().toLowerCase();
-  renderVehicles();
-});
+if (inventorySearch) {
+  inventorySearch.addEventListener("input", () => {
+    searchTerm = inventorySearch.value.trim().toLowerCase();
+    renderVehicles();
+  });
+}
 
-bodyStyleSelect.addEventListener("change", () => {
-  activeFilter = bodyStyleSelect.value;
-  resetQuickFilters();
-  setActiveFilter(activeFilter);
-  renderVehicles();
-});
+if (bodyStyleSelect) {
+  bodyStyleSelect.addEventListener("change", () => {
+    activeFilter = bodyStyleSelect.value;
+    resetQuickFilters();
+    setActiveFilter(activeFilter);
+    renderVehicles();
+  });
+}
 
 sortSelect.addEventListener("change", () => {
   activeSort = sortSelect.value;
@@ -854,7 +860,9 @@ function closeLoginModal() {
 }
 
 function setActiveFilter(filter) {
-  bodyStyleSelect.value = filter;
+  if (bodyStyleSelect) {
+    bodyStyleSelect.value = filter;
+  }
 
   filterButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.filter === filter);
