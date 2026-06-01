@@ -116,8 +116,8 @@
     "drivetrain": "RWD",
     "fuelEconomy": "30 city/ 35 hwy",
     "damage": "Rebuilt title",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-06-01T23:29:43.037Z",
     "images": [
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-1-1779650355866-09860155.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/d400e8dea34d33f93841fd46/photo-2-1779650357090-d678ff35.jpg",
