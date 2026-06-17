@@ -185,8 +185,8 @@
     "drivetrain": "FWD",
     "fuelEconomy": "25 city/ 28 hwy",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-06-17T15:59:28.892Z",
     "images": [
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-1-1779750747760-e4a5d7a0.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c1d4a5e92b53e6d641337d6f/photo-2-1779750749290-27a9d6e4.jpg",
