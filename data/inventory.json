@@ -155,8 +155,8 @@
     "drivetrain": "AWD",
     "fuelEconomy": "22 city/ 26 hwy",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-07-14T17:23:01.533Z",
     "images": [
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-1-1779397953988-900c4e2a.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/de6ef661e19dd69c2c6d0f16/photo-2-1779397955643-7354ff0e.jpg",
