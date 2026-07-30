@@ -201,7 +201,7 @@ async function handleApi(request, response, url) {
 
     const vehicle = await readJson(request);
     const vehicles = await readInventory();
-    const cleanVehicle = await normalizeVehicle(vehicle);
+    const cleanVehicle = await normalizeVehicle(vehicle, vehicles);
     vehicles.unshift(cleanVehicle);
     await writeInventory(vehicles);
     sendJson(response, 201, cleanVehicle);
@@ -222,7 +222,7 @@ async function handleApi(request, response, url) {
       return;
     }
 
-    vehicles[vehicleIndex] = await normalizeVehicleUpdate(vehicles[vehicleIndex], updatedVehicle);
+    vehicles[vehicleIndex] = await normalizeVehicleUpdate(vehicles[vehicleIndex], updatedVehicle, vehicles);
     await writeInventory(vehicles);
     sendJson(response, 200, migrateVehicle(vehicles[vehicleIndex]));
     return;
@@ -813,10 +813,11 @@ function cleanDecodedValue(value) {
   return text;
 }
 
-async function normalizeVehicle(vehicle) {
+async function normalizeVehicle(vehicle, existingVehicles = []) {
   const id = randomBytes(12).toString("hex");
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
   const uploadedImages = await prepareVehicleImages(id, images);
+  const stockNumber = buildAutomaticStockNumber(existingVehicles);
 
   return {
     id,
@@ -827,7 +828,7 @@ async function normalizeVehicle(vehicle) {
     miles: String(vehicle.miles || "").trim(),
     price: String(vehicle.price || "Call for price").trim(),
     notes: String(vehicle.notes || "").trim(),
-    stockNumber: String(vehicle.stockNumber || "").trim(),
+    stockNumber,
     vin: String(vehicle.vin || "").trim(),
     condition: String(vehicle.condition || "").trim(),
     engine: String(vehicle.engine || "").trim(),
@@ -843,7 +844,7 @@ async function normalizeVehicle(vehicle) {
   };
 }
 
-async function normalizeVehicleUpdate(existingVehicle, vehicle) {
+async function normalizeVehicleUpdate(existingVehicle, vehicle, existingVehicles = []) {
   const currentVehicle = migrateVehicle(existingVehicle);
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
   const uploadedImages = images.length
@@ -852,6 +853,8 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle) {
   const status = String(vehicle.status || currentVehicle.status || "available").trim().toLowerCase() === "sold"
     ? "sold"
     : "available";
+  const stockNumber = String(currentVehicle.stockNumber || "").trim()
+    || buildAutomaticStockNumber(existingVehicles, currentVehicle.id);
 
   return {
     id: currentVehicle.id,
@@ -862,7 +865,7 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle) {
     miles: String(vehicle.miles || "").trim(),
     price: String(vehicle.price || "Call for price").trim(),
     notes: String(vehicle.notes || "").trim(),
-    stockNumber: String(vehicle.stockNumber || "").trim(),
+    stockNumber,
     vin: String(vehicle.vin || "").trim(),
     condition: String(vehicle.condition || "").trim(),
     engine: String(vehicle.engine || "").trim(),
@@ -878,6 +881,22 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle) {
       : "",
     images: uploadedImages.length ? uploadedImages : ["assets/alejo-motors-logo.svg"]
   };
+}
+
+function buildAutomaticStockNumber(vehicles, excludeVehicleId = "") {
+  const numericValues = (Array.isArray(vehicles) ? vehicles : [])
+    .map(migrateVehicle)
+    .filter((vehicle) => vehicle.id !== excludeVehicleId)
+    .map((vehicle) => String(vehicle.stockNumber || "").trim())
+    .filter((value) => /^\d+$/.test(value))
+    .map((value) => Number(value))
+    .filter(Number.isFinite);
+
+  const nextNumber = numericValues.length
+    ? Math.max(...numericValues) + 1
+    : 100001;
+
+  return String(nextNumber);
 }
 
 async function prepareVehicleImages(vehicleId, images) {
