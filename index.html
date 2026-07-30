@@ -188,6 +188,7 @@
               </div>
             </div>
             <div>
+              <a class="button primary" href="#deal-desk">Open Deal Desk</a>
               <button class="button quiet" id="logoutAdmin" type="button">Lock</button>
             </div>
           </div>
@@ -330,6 +331,12 @@
         </div>
       </section>
 
+      <section class="deal-desk-section owner-only" id="deal-desk" hidden>
+        <div id="dealDeskApp" aria-live="polite">
+          <p class="deal-desk-loading">Loading the private Deal Desk...</p>
+        </div>
+      </section>
+
       <section class="contact" id="contact">
         <div class="contact-copy">
           <p class="eyebrow">Call or text</p>
@@ -411,5 +418,6 @@
     </template>
 
     <script src="script.js"></script>
+    <script type="module" src="deal-desk.js"></script>
   </body>
 </html>

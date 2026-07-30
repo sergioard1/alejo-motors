@@ -2511,3 +2511,789 @@ textarea {
     font-size: 2.3rem;
   }
 }
+
+/* Private dealer Deal Desk */
+.deal-desk-section {
+  scroll-margin-top: 150px;
+  padding: clamp(42px, 6vw, 76px) clamp(18px, 4vw, 64px);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(215, 25, 32, 0.08), transparent 28rem),
+    #f2ede6;
+}
+
+#dealDeskApp {
+  width: min(1520px, 100%);
+  margin: 0 auto;
+}
+
+.deal-desk-loading,
+.deal-status {
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.deal-status:empty {
+  display: none;
+}
+
+.deal-status.success {
+  border-color: rgba(18, 130, 68, 0.24);
+  background: var(--price-green-soft);
+  color: var(--price-green-dark);
+}
+
+.deal-status.error {
+  border-color: rgba(215, 25, 32, 0.26);
+  background: #fff0f0;
+  color: var(--accent-dark);
+}
+
+.deal-desk-heading,
+.deal-desk-heading-actions,
+.deal-card-heading > div,
+.deal-panel-title,
+.deal-save-actions,
+.fees-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deal-desk-heading {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.deal-desk-heading h2 {
+  margin: 3px 0 8px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  letter-spacing: -0.045em;
+}
+
+.deal-desk-heading p:not(.eyebrow) {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.deal-desk-heading-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.deal-desk-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.saved-deals-panel,
+.deal-card {
+  border: 1px solid rgba(70, 51, 34, 0.16);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(35, 25, 15, 0.08);
+}
+
+.saved-deals-panel {
+  position: sticky;
+  top: 144px;
+  max-height: calc(100vh - 168px);
+  overflow: hidden;
+  padding: 18px;
+}
+
+.deal-panel-title {
+  justify-content: space-between;
+}
+
+.deal-panel-title h3 {
+  margin: 3px 0 0;
+  font-size: 1.25rem;
+}
+
+.deal-kicker {
+  color: var(--accent-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.deal-count {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--dark);
+  color: #fff;
+  font-weight: 900;
+}
+
+.deal-search,
+.deal-field,
+.fees-editor-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.deal-search {
+  margin: 16px 0 12px;
+}
+
+.deal-search input,
+.deal-field input,
+.deal-field select,
+.deal-field textarea,
+.fees-editor-grid input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #cfc4b6;
+  border-radius: 9px;
+  background: #fffdfa;
+  color: var(--ink);
+  padding: 10px 12px;
+  font-weight: 700;
+  outline: none;
+}
+
+.deal-field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.deal-search input:focus,
+.deal-field input:focus,
+.deal-field select:focus,
+.deal-field textarea:focus,
+.fees-editor-grid input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.12);
+}
+
+.saved-deals-list {
+  display: grid;
+  gap: 8px;
+  max-height: calc(100vh - 305px);
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.saved-deal {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffaf4;
+  padding: 12px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.saved-deal:hover,
+.saved-deal.active {
+  border-color: var(--accent);
+  background: #fff1f1;
+}
+
+.saved-deal span {
+  color: var(--accent-dark);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.saved-deal strong {
+  font-size: 0.94rem;
+}
+
+.saved-deal small,
+.empty-deals,
+.empty-payment {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.empty-deals,
+.empty-payment {
+  margin: 0;
+  padding: 12px 4px;
+}
+
+.deal-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.deal-card {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.deal-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.deal-card-heading h3 {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+}
+
+.deal-card-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.deal-step {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--dark);
+  color: #fff;
+  font-weight: 900;
+}
+
+.live-inventory-badge {
+  flex: 0 0 auto;
+  border: 1px solid rgba(18, 130, 68, 0.22);
+  border-radius: 999px;
+  background: var(--price-green-soft);
+  color: var(--price-green-dark);
+  padding: 7px 11px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.deal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.deal-wide {
+  grid-column: span 2;
+}
+
+.deal-divider {
+  height: 1px;
+  margin: 24px 0;
+  background: var(--line);
+}
+
+.pricing-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pricing-mode-button {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf7f2;
+  padding: 14px 16px;
+  color: var(--ink);
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pricing-mode-button small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.pricing-mode-button.active {
+  border-color: var(--accent);
+  background: #fff0f0;
+  color: var(--accent-dark);
+  box-shadow: 0 0 0 2px rgba(215, 25, 32, 0.08);
+}
+
+.calculator-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.82fr) minmax(340px, 1.18fr);
+  gap: 18px;
+}
+
+.calculator-input-panel,
+.price-breakdown {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 18px;
+  background: #fbf8f3;
+}
+
+.calculator-amount {
+  font-size: 0.95rem;
+}
+
+.money-input {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  min-height: 64px;
+  border: 2px solid var(--dark);
+  border-radius: 11px;
+  background: #fff;
+  padding-left: 16px;
+}
+
+.money-input > span {
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.money-input input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  font-size: 1.75rem;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.money-input input:focus {
+  box-shadow: none;
+}
+
+.fee-switch {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.fee-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fee-switch-control {
+  position: relative;
+  width: 48px;
+  height: 27px;
+  border-radius: 999px;
+  background: #aaa;
+  transition: 0.2s ease;
+}
+
+.fee-switch-control::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #fff;
+  transition: 0.2s ease;
+}
+
+.fee-switch input:checked + .fee-switch-control {
+  background: var(--price-green);
+}
+
+.fee-switch input:checked + .fee-switch-control::after {
+  transform: translateX(21px);
+}
+
+.fee-switch strong,
+.fee-switch small {
+  display: block;
+}
+
+.fee-switch small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.price-breakdown {
+  background: #fff;
+}
+
+.price-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 0;
+  border-bottom: 1px solid #ece5db;
+  font-size: 0.9rem;
+}
+
+.price-line strong {
+  white-space: nowrap;
+}
+
+.price-line.emphasized {
+  font-size: 1rem;
+}
+
+.price-line.fees-total {
+  border-top: 1px solid var(--dark);
+  font-weight: 900;
+}
+
+.price-line.out-the-door {
+  align-items: center;
+  margin: 12px -8px -6px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--dark);
+  color: #fff;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.price-line.out-the-door strong {
+  color: #ffd36a;
+  font-size: 1.45rem;
+}
+
+.default-fees-editor {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.fees-editor-heading {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 13px;
+}
+
+.fees-editor-heading small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.fees-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fees-editor-actions {
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.payment-entry {
+  display: grid;
+  grid-template-columns: 0.8fr 0.8fr 1fr 1.4fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.payment-entry .button {
+  min-height: 46px;
+}
+
+.payments-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.payment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfaf7;
+  padding: 11px 13px;
+}
+
+.payment-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.payment-row span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.payment-row button {
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.payment-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.payment-summary > div {
+  display: grid;
+  gap: 5px;
+  min-height: 72px;
+  border-radius: 10px;
+  background: #f2eee8;
+  padding: 12px;
+}
+
+.payment-summary span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.payment-summary strong {
+  font-size: 1.08rem;
+}
+
+.payment-summary .balance {
+  background: var(--dark);
+  color: #fff;
+}
+
+.payment-summary .balance span {
+  color: #ddd;
+}
+
+.primary-documents {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.document-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: linear-gradient(160deg, #fff 0%, #f8f3ec 100%);
+  padding: 18px;
+}
+
+.document-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--accent);
+}
+
+.document-number {
+  color: var(--accent-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.document-card h4 {
+  margin: 18px 0 8px;
+  font: 800 1.05rem/1.25 "Sora", "Manrope", sans-serif;
+}
+
+.document-card p {
+  flex: 1;
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.supporting-documents {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf7f2;
+  padding: 14px 16px;
+}
+
+.supporting-documents summary {
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.supporting-document-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.supporting-document-links a {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.deal-final-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.deal-save-actions {
+  justify-content: flex-end;
+  padding-bottom: 1px;
+}
+
+@media (max-width: 1180px) {
+  .deal-desk-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-deals-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .saved-deals-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: 290px;
+  }
+
+  .deal-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .payment-entry {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .payment-entry .button {
+    grid-column: 1 / -1;
+  }
+
+  .payment-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .primary-documents {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .deal-desk-section {
+    scroll-margin-top: 16px;
+    padding: 36px 14px;
+  }
+
+  .deal-desk-heading,
+  .deal-card-heading,
+  .deal-final-actions {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .deal-desk-heading,
+  .deal-card-heading {
+    display: grid;
+  }
+
+  .deal-desk-heading-actions,
+  .fees-editor-actions,
+  .deal-save-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .deal-desk-heading-actions .button,
+  .fees-editor-actions .button,
+  .deal-save-actions .button {
+    width: 100%;
+  }
+
+  .deal-card-heading > div {
+    align-items: flex-start;
+  }
+
+  .live-inventory-badge {
+    width: max-content;
+  }
+
+  .saved-deals-list,
+  .deal-form-grid,
+  .pricing-mode,
+  .calculator-grid,
+  .fees-editor-grid,
+  .payment-entry,
+  .payment-summary,
+  .primary-documents,
+  .supporting-document-links {
+    grid-template-columns: 1fr;
+  }
+
+  .deal-wide {
+    grid-column: auto;
+  }
+
+  .payment-entry .button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .document-card {
+    min-height: 205px;
+  }
+
+  .payment-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .payment-row button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

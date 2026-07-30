@@ -4,7 +4,7 @@ services:
     # Keep this service tied to the latest public inventory build.
     runtime: node
     plan: free
-    buildCommand: ""
+    buildCommand: "npm install"
     startCommand: "npm start"
     envVars:
       - key: NODE_ENV
@@ -23,5 +23,9 @@ services:
         value: main
       - key: GITHUB_INVENTORY_PATH
         value: data/inventory.json
+      - key: GITHUB_DEALS_PATH
+        value: data/deals.json
+      - key: GITHUB_DEAL_SETTINGS_PATH
+        value: data/deal-settings.json
       - key: GITHUB_TOKEN
         sync: false

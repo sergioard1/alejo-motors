@@ -300,7 +300,7 @@ logoutAdmin.addEventListener("click", async () => {
   authToken = "";
   syncStoredAuthToken();
   resetVehicleFormState();
-  if (window.location.hash === "#manager") {
+  if (["#manager", "#deal-desk"].includes(window.location.hash)) {
     window.location.hash = "inventory";
   }
   updateAdminUI();
@@ -897,7 +897,7 @@ function updateAdminUI() {
 
   document.body.classList.toggle("owner-mode", ownerMode);
 
-  if (!ownerMode && window.location.hash === "#manager") {
+  if (!ownerMode && ["#manager", "#deal-desk"].includes(window.location.hash)) {
     history.replaceState(null, "", "#inventory");
   }
 
@@ -911,6 +911,15 @@ function updateAdminUI() {
   ownerLoginTriggers.forEach((button) => {
     button.hidden = ownerMode;
   });
+
+  window.dispatchEvent(
+    new CustomEvent("alejo:dealer-state", {
+      detail: {
+        authenticated: isAdmin,
+        ownerMode,
+      },
+    })
+  );
 }
 
 function renderLotGallery(availableVehicles = vehicles.filter((vehicle) => !isSoldVehicle(vehicle))) {
@@ -968,7 +977,7 @@ function resetQuickFilters() {
 }
 
 function isOwnerMode() {
-  return isAdmin && window.location.hash === "#manager";
+  return isAdmin && ["#manager", "#deal-desk"].includes(window.location.hash);
 }
 
 function openLoginModal() {

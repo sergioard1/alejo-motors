@@ -1,7 +1,14 @@
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes, createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { dirname, extname, join, normalize, resolve } from "node:path";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import {
+  DEFAULT_DEAL_SETTINGS,
+  calculateDealPricing,
+  calculatePayments,
+  normalizeDealSettings,
+} from "./deal-math.mjs";
 
 const root = resolve(".");
 const port = Number(process.env.PORT || 8080);
@@ -13,13 +20,19 @@ const dataRoot = process.env.DATA_DIR ? resolve(process.env.DATA_DIR) : join(roo
 const inventoryPath = join(dataRoot, "inventory.json");
 const leadsPath = join(dataRoot, "leads.json");
 const sitePath = join(dataRoot, "site.json");
+const dealsPath = join(dataRoot, "deals.json");
+const dealSettingsPath = join(dataRoot, "deal-settings.json");
+const form130UPath = join(root, "assets", "dealer-documents", "form-130-u.pdf");
 const githubRepo = process.env.GITHUB_REPO || "";
 const githubBranch = process.env.GITHUB_BRANCH || "main";
 const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const githubInventoryPath = process.env.GITHUB_INVENTORY_PATH || "data/inventory.json";
 const githubSitePath = process.env.GITHUB_SITE_PATH || "data/site.json";
+const githubDealsPath = process.env.GITHUB_DEALS_PATH || "data/deals.json";
+const githubDealSettingsPath = process.env.GITHUB_DEAL_SETTINGS_PATH || "data/deal-settings.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
+const revokedSessions = new Set();
 const photoLimit = 20;
 const defaultSiteData = { vehiclesSold: 50, pageVisits: 0 };
 const vinDecodeBaseUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
@@ -72,19 +85,25 @@ const sampleVehicles = [
 
 const types = {
   ".css": "text/css; charset=utf-8",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
+  ".pdf": "application/pdf",
   ".svg": "image/svg+xml",
-  ".webp": "image/webp"
+  ".webp": "image/webp",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".mjs": "text/javascript; charset=utf-8"
 };
 
 ensureInventoryFile();
 ensureLeadsFile();
 ensureSiteFile();
+ensureDealsFile();
+ensureDealSettingsFile();
 
 createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://localhost:${port}`);
@@ -133,7 +152,7 @@ async function handleApi(request, response, url) {
       return;
     }
 
-    const token = randomBytes(32).toString("hex");
+    const token = createSessionToken(28800);
     sessions.add(token);
     response.setHeader("Set-Cookie", buildSessionCookie(request, token, 28800));
     sendJson(response, 200, { authenticated: true, token });
@@ -142,7 +161,10 @@ async function handleApi(request, response, url) {
 
   if (request.method === "POST" && url.pathname === "/api/logout") {
     const token = getAuthToken(request);
-    if (token) sessions.delete(token);
+    if (token) {
+      sessions.delete(token);
+      revokedSessions.add(token);
+    }
     response.setHeader("Set-Cookie", buildSessionCookie(request, "", 0));
     sendJson(response, 200, { authenticated: false });
     return;
@@ -193,6 +215,104 @@ async function handleApi(request, response, url) {
     saveLead(lead);
     const delivery = await sendLeadNotifications(lead);
     sendJson(response, 200, { ok: true, stored: true, ...delivery });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/deal-settings") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    sendJson(response, 200, await readDealSettings());
+    return;
+  }
+
+  if (request.method === "PUT" && url.pathname === "/api/deal-settings") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const settings = normalizeDealSettings(await readJson(request));
+    await writeDealSettings(settings);
+    sendJson(response, 200, settings);
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/deal-settings/reset") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    await writeDealSettings(DEFAULT_DEAL_SETTINGS);
+    sendJson(response, 200, DEFAULT_DEAL_SETTINGS);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/deals") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    sendJson(response, 200, await readDeals());
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/deals") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const deals = await readDeals();
+    const deal = normalizeDeal(await readJson(request), await readDealSettings());
+    deals.unshift(deal);
+    await writeDeals(deals);
+    sendJson(response, 201, deal);
+    return;
+  }
+
+  const form130UMatch = url.pathname.match(/^\/api\/deals\/([^/]+)\/form-130-u\.pdf$/);
+  if (request.method === "GET" && form130UMatch) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const dealId = decodeURIComponent(form130UMatch[1]);
+    const deal = (await readDeals()).find((entry) => entry.id === dealId);
+
+    if (!deal) {
+      sendJson(response, 404, { error: "Deal not found" });
+      return;
+    }
+
+    const pdf = await createForm130U(deal);
+    response.writeHead(200, {
+      "content-type": "application/pdf",
+      "content-disposition": `inline; filename="${safeFilename(deal.dealNumber || deal.id)}-form-130-u.pdf"`,
+      "cache-control": "no-store",
+    });
+    response.end(pdf);
+    return;
+  }
+
+  const dealMatch = url.pathname.match(/^\/api\/deals\/([^/]+)$/);
+  if (request.method === "PUT" && dealMatch) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const dealId = decodeURIComponent(dealMatch[1]);
+    const deals = await readDeals();
+    const dealIndex = deals.findIndex((entry) => entry.id === dealId);
+
+    if (dealIndex < 0) {
+      sendJson(response, 404, { error: "Deal not found" });
+      return;
+    }
+
+    const deal = {
+      ...normalizeDeal({ ...(await readJson(request)), id: dealId }, await readDealSettings()),
+      createdAt: deals[dealIndex].createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    deals[dealIndex] = deal;
+    await writeDeals(deals);
+    sendJson(response, 200, deal);
+    return;
+  }
+
+  if (request.method === "DELETE" && dealMatch) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const dealId = decodeURIComponent(dealMatch[1]);
+    const deals = (await readDeals()).filter((entry) => entry.id !== dealId);
+    await writeDeals(deals);
+    sendJson(response, 200, { ok: true });
     return;
   }
 
@@ -418,6 +538,22 @@ function ensureSiteFile() {
   }
 }
 
+function ensureDealsFile() {
+  mkdirSync(dirname(dealsPath), { recursive: true });
+
+  if (!existsSync(dealsPath)) {
+    writeFileSync(dealsPath, JSON.stringify([], null, 2));
+  }
+}
+
+function ensureDealSettingsFile() {
+  mkdirSync(dirname(dealSettingsPath), { recursive: true });
+
+  if (!existsSync(dealSettingsPath)) {
+    writeFileSync(dealSettingsPath, JSON.stringify(DEFAULT_DEAL_SETTINGS, null, 2));
+  }
+}
+
 async function readInventory() {
   if (hasGitHubStorage()) {
     return readGitHubInventory();
@@ -505,6 +641,64 @@ function saveLead(lead) {
   writeFileSync(leadsPath, JSON.stringify(leads.slice(0, 500), null, 2));
 }
 
+async function readDeals() {
+  if (hasGitHubStorage()) {
+    const data = await readGitHubJson(githubDealsPath, []);
+    return Array.isArray(data) ? data.map((deal) => normalizeStoredDeal(deal)) : [];
+  }
+
+  ensureDealsFile();
+  try {
+    const data = JSON.parse(readFileSync(dealsPath, "utf-8"));
+    return Array.isArray(data) ? data.map((deal) => normalizeStoredDeal(deal)) : [];
+  } catch {
+    writeFileSync(dealsPath, JSON.stringify([], null, 2));
+    return [];
+  }
+}
+
+async function writeDeals(deals) {
+  const cleanDeals = Array.isArray(deals) ? deals.map((deal) => normalizeStoredDeal(deal)).slice(0, 1000) : [];
+
+  if (hasGitHubStorage()) {
+    await writeGitHubJson(githubDealsPath, cleanDeals, "Update Alejo Motors dealer deals");
+    return;
+  }
+
+  ensureDealsFile();
+  writeFileSync(dealsPath, JSON.stringify(cleanDeals, null, 2));
+}
+
+async function readDealSettings() {
+  if (hasGitHubStorage()) {
+    return normalizeDealSettings(await readGitHubJson(githubDealSettingsPath, DEFAULT_DEAL_SETTINGS));
+  }
+
+  ensureDealSettingsFile();
+  try {
+    return normalizeDealSettings(JSON.parse(readFileSync(dealSettingsPath, "utf-8")));
+  } catch {
+    writeFileSync(dealSettingsPath, JSON.stringify(DEFAULT_DEAL_SETTINGS, null, 2));
+    return normalizeDealSettings(DEFAULT_DEAL_SETTINGS);
+  }
+}
+
+async function writeDealSettings(settings) {
+  const cleanSettings = normalizeDealSettings(settings);
+
+  if (hasGitHubStorage()) {
+    await writeGitHubJson(
+      githubDealSettingsPath,
+      cleanSettings,
+      "Update Alejo Motors dealer fee settings"
+    );
+    return;
+  }
+
+  ensureDealSettingsFile();
+  writeFileSync(dealSettingsPath, JSON.stringify(cleanSettings, null, 2));
+}
+
 function hasGitHubStorage() {
   return Boolean(githubRepo && githubToken);
 }
@@ -565,6 +759,39 @@ async function writeGitHubSiteData(siteData) {
     method: "PUT",
     body,
   });
+}
+
+async function readGitHubJson(path, fallback) {
+  const data = await githubApi(
+    `repos/${githubRepo}/contents/${encodePath(path)}?ref=${encodeURIComponent(githubBranch)}`,
+    { allowNotFound: true }
+  );
+
+  if (!data) return fallback;
+
+  try {
+    return JSON.parse(await readGitHubFileContent(data));
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeGitHubJson(path, value, message) {
+  const endpoint = `repos/${githubRepo}/contents/${encodePath(path)}`;
+  const existing = await githubApi(`${endpoint}?ref=${encodeURIComponent(githubBranch)}`, {
+    allowNotFound: true,
+  });
+  const body = {
+    message,
+    content: Buffer.from(JSON.stringify(value, null, 2)).toString("base64"),
+    branch: githubBranch,
+  };
+
+  if (existing?.sha) {
+    body.sha = existing.sha;
+  }
+
+  await githubApi(endpoint, { method: "PUT", body });
 }
 
 async function readGitHubFileContent(data) {
@@ -1040,6 +1267,193 @@ function normalizeLead(lead) {
   };
 }
 
+function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, preserveTimestamps = false) {
+  const now = new Date().toISOString();
+  const settings = normalizeDealSettings(input.settings || fallbackSettings);
+  const requestedMode = input.pricing?.mode === "otd" ? "otd" : "base";
+  const requestedAmount =
+    requestedMode === "otd" ? input.pricing?.outTheDoor : input.pricing?.basePrice;
+  const pricing = calculateDealPricing({
+    mode: requestedMode,
+    amount: requestedAmount,
+    includeDealerProcessingFee: input.pricing?.includeDealerProcessingFee !== false,
+    settings,
+  });
+  const payments = Array.isArray(input.payments)
+    ? input.payments.slice(0, 200).map((payment) => ({
+        id: safeText(payment.id, 80) || randomBytes(8).toString("hex"),
+        type: payment.type === "deposit" ? "deposit" : "payment",
+        amount: Math.max(0, safeMoney(payment.amount)),
+        date: safeText(payment.date, 10),
+        note: safeText(payment.note, 200),
+      }))
+    : [];
+  const paymentTotals = calculatePayments(payments, pricing.outTheDoor);
+  const vehicleCost = Math.max(0, safeMoney(input.vehicleCost));
+  const id = safeText(input.id, 80) || randomBytes(12).toString("hex");
+  const createdAt =
+    preserveTimestamps && safeText(input.createdAt, 40) ? safeText(input.createdAt, 40) : now;
+
+  return {
+    id,
+    dealNumber: safeText(input.dealNumber, 60) || createDealNumber(id),
+    status: input.status === "completed" ? "completed" : "open",
+    createdAt,
+    updatedAt:
+      preserveTimestamps && safeText(input.updatedAt, 40) ? safeText(input.updatedAt, 40) : now,
+    vehicleId: safeText(input.vehicleId, 100),
+    vehicle: {
+      year: safeText(input.vehicle?.year, 4),
+      make: safeText(input.vehicle?.make, 80),
+      model: safeText(input.vehicle?.model, 120),
+      vin: safeText(input.vehicle?.vin, 17).toUpperCase(),
+      stockNumber: safeText(input.vehicle?.stockNumber, 60),
+      miles: safeText(input.vehicle?.miles, 60),
+      color: safeText(input.vehicle?.color, 80),
+      bodyStyle: safeText(input.vehicle?.bodyStyle, 80),
+    },
+    customer: {
+      fullName: safeText(input.customer?.fullName, 180),
+      phone: safeText(input.customer?.phone, 50),
+      email: safeText(input.customer?.email, 180),
+      identification: safeText(input.customer?.identification, 120),
+      idState: safeText(input.customer?.idState, 2).toUpperCase(),
+      address: safeText(input.customer?.address, 180),
+      city: safeText(input.customer?.city, 100),
+      state: safeText(input.customer?.state, 2).toUpperCase() || "TX",
+      zip: safeText(input.customer?.zip, 10),
+      county: safeText(input.customer?.county, 80),
+    },
+    saleDate: safeText(input.saleDate, 10) || now.slice(0, 10),
+    settings,
+    pricing,
+    payments,
+    paymentTotals,
+    vehicleCost,
+    estimatedProfit: vehicleCost > 0 ? Math.round((pricing.basePrice - vehicleCost) * 100) / 100 : null,
+    notes: safeText(input.notes, 2000),
+  };
+}
+
+function normalizeStoredDeal(input = {}) {
+  return normalizeDeal(input, input.settings || DEFAULT_DEAL_SETTINGS, true);
+}
+
+function safeText(value, maxLength = 300) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function safeMoney(value) {
+  const parsed = Number(String(value ?? "").replace(/[$,\s]/g, ""));
+  return Number.isFinite(parsed) ? Math.round((parsed + Number.EPSILON) * 100) / 100 : 0;
+}
+
+function createDealNumber(id) {
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  return `AM-${date}-${String(id).slice(-6).toUpperCase()}`;
+}
+
+async function createForm130U(deal) {
+  if (!existsSync(form130UPath)) {
+    throw Object.assign(new Error("Form 130-U template is unavailable."), { status: 500 });
+  }
+
+  const pdf = await PDFDocument.load(readFileSync(form130UPath));
+  const form = pdf.getForm();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const address = [
+    deal.customer.address,
+    deal.customer.city,
+    deal.customer.state,
+    deal.customer.zip,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const date = formatUsDate(deal.saleDate);
+  const mileage = String(deal.vehicle.miles || "").replace(/\D/g, "");
+  const money = (value) =>
+    Number(value || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  setPdfText(form, "1 Vehicle Identification Number", deal.vehicle.vin);
+  setPdfText(form, "2 Year", deal.vehicle.year);
+  setPdfText(form, "3 Make", deal.vehicle.make);
+  setPdfText(form, "4 Body Style", deal.vehicle.bodyStyle);
+  setPdfText(form, "5 Model", deal.vehicle.model, 7);
+  setPdfText(form, "6 Major Color", deal.vehicle.color);
+  setPdfText(form, "9 Odometer Reading no tenths", mileage);
+  setPdfText(form, "14 Applicant Photo ID Number or FEINEIN", deal.customer.identification);
+  setPdfText(
+    form,
+    "16 Applicant First Name or Entity Name Middle Name Last Name Suffix if any",
+    deal.customer.fullName
+  );
+  setPdfText(form, "18 Applicant Mailing Address City State Zip", address);
+  setPdfText(form, "19 Applicant County of Residence", deal.customer.county);
+  setPdfText(form, "20 Previous Owner Name or Entity Name City State", "ALEJO MOTORS, FORT WORTH, TX");
+  setPdfText(form, "22. Unit Number (if applicable)", deal.vehicle.stockNumber);
+  setPdfText(form, "25 Applicant Phone Number optional", deal.customer.phone);
+  setPdfText(form, "26 Email optional", deal.customer.email);
+  setPdfText(form, "Seller  Name", "ALEJO MOTORS");
+  setPdfText(form, "Applicant Owner", deal.customer.fullName);
+  setPdfText(form, "Date", date);
+  setPdfText(form, "Date_2", date);
+  setPdfText(form, "State Taxes Were Paid To", "Texas");
+  setPdfText(form, "Sales Price Minus Rebate Amount", money(deal.pricing.basePrice));
+  setPdfText(form, "Taxable Amount", money(deal.pricing.basePrice));
+  setPdfText(form, "6.25% Tax on Taxable Amount", money(deal.pricing.taxAmount));
+  setPdfText(form, "Amount of Tax and Penalty Due", money(deal.pricing.taxAmount));
+  setPdfText(form, "State of ID/DL", deal.customer.idState || deal.customer.state);
+
+  setPdfCheck(form, "Title  Registration");
+  setPdfCheck(form, "Individual");
+  setPdfCheck(form, "U.S. Driver License/ID Card");
+  setPdfCheck(form, "Sales and Use Tax");
+
+  form.updateFieldAppearances(font);
+  return Buffer.from(await pdf.save());
+}
+
+function setPdfText(form, fieldName, value, fontSizeOverride) {
+  const text = String(value || "").trim();
+  if (!text) return;
+
+  try {
+    const field = form.getTextField(fieldName);
+    const maximum = field.getMaxLength();
+    field.setText(maximum ? text.slice(0, maximum) : text);
+    const fontSize =
+      fontSizeOverride || (text.length > 45 ? 6 : text.length > 28 ? 7 : text.length > 18 ? 8 : 9);
+    const appearance = `/Helvetica ${fontSize} Tf 0 g`;
+    field.acroField.setDefaultAppearance(appearance);
+    field.acroField.getWidgets().forEach((widget) => widget.setDefaultAppearance(appearance));
+  } catch {
+    // A form revision may omit an optional field; remaining fields still generate safely.
+  }
+}
+
+function setPdfCheck(form, fieldName) {
+  try {
+    form.getCheckBox(fieldName).check();
+  } catch {
+    // A form revision may omit an optional checkbox.
+  }
+}
+
+function formatUsDate(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[2]}/${match[3]}/${match[1]}` : "";
+}
+
+function safeFilename(value) {
+  return String(value || "alejo-motors")
+    .replace(/[^a-z0-9_-]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
 async function sendLeadNotifications(lead) {
   const [emailResult, smsResult] = await Promise.allSettled([
     sendLeadEmail(lead),
@@ -1122,7 +1536,11 @@ function requireAuth(request, response) {
 
 function isAuthenticated(request) {
   const token = getAuthToken(request);
-  return Boolean(token && sessions.has(token));
+  return Boolean(
+    token &&
+      !revokedSessions.has(token) &&
+      (sessions.has(token) || verifySessionToken(token))
+  );
 }
 
 function getAuthToken(request) {
@@ -1155,4 +1573,39 @@ function isSecureRequest(request) {
 
 function hashValue(value) {
   return createHash("sha256").update(String(value || "")).digest("hex");
+}
+
+function createSessionToken(maxAgeSeconds) {
+  const payload = Buffer.from(
+    JSON.stringify({
+      expiresAt: Date.now() + maxAgeSeconds * 1000,
+      nonce: randomBytes(16).toString("hex"),
+    })
+  ).toString("base64url");
+  const signature = createHmac("sha256", adminPasswordHash).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function verifySessionToken(token) {
+  if (!adminPasswordHash) return false;
+
+  const [payload, providedSignature, extra] = String(token || "").split(".");
+  if (!payload || !providedSignature || extra) return false;
+
+  const expectedSignature = createHmac("sha256", adminPasswordHash)
+    .update(payload)
+    .digest("base64url");
+  const provided = Buffer.from(providedSignature);
+  const expected = Buffer.from(expectedSignature);
+
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+    return false;
+  }
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8"));
+    return Number(data.expiresAt) > Date.now();
+  } catch {
+    return false;
+  }
 }
