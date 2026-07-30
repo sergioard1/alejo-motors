@@ -239,10 +239,23 @@
               <input id="stockNumberInput" type="text" placeholder="44906649" />
             </label>
 
-            <label>
-              VIN
-              <input id="vinInput" type="text" placeholder="3N1BC1CP6AL411912" />
-            </label>
+            <div class="vin-lookup wide">
+              <label for="vinInput">VIN</label>
+              <div class="vin-lookup-row">
+                <input
+                  id="vinInput"
+                  type="text"
+                  placeholder="3N1BC1CP6AL411912"
+                  maxlength="17"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                />
+                <button class="button quiet" id="decodeVinButton" type="button">Autofill VIN</button>
+              </div>
+              <small id="vinDecodeMessage">
+                Enter a 17-character VIN and we will fill year, make, model, body style, engine, and more.
+              </small>
+            </div>
 
             <label>
               Engine
