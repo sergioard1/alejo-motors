@@ -1278,6 +1278,40 @@ textarea {
   gap: 8px;
 }
 
+.vin-lookup {
+  display: grid;
+  gap: 8px;
+}
+
+.vin-lookup > label {
+  display: block;
+  font-weight: 700;
+}
+
+.vin-lookup-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.vin-lookup-row .button {
+  min-width: 148px;
+  min-height: 52px;
+}
+
+.vin-lookup.is-loading .button {
+  opacity: 0.75;
+}
+
+.vin-lookup small.success {
+  color: var(--price-green-dark);
+}
+
+.vin-lookup small.error {
+  color: #c5342f;
+}
+
 .vehicle-form small {
   color: var(--muted);
   line-height: 1.45;
