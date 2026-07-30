@@ -1220,7 +1220,7 @@ function clearVehicleFormFields() {
   vehicleFormFields.category.value = "car";
   vehicleFormFields.miles.value = "";
   vehicleFormFields.price.value = "";
-  vehicleFormFields.stockNumber.value = "";
+  vehicleFormFields.stockNumber.value = "Generated automatically when you save";
   vehicleFormFields.vin.value = "";
   vehicleFormFields.engine.value = "";
   vehicleFormFields.transmission.value = "";
@@ -1251,11 +1251,13 @@ function updateVehicleFormUI() {
       ? `${vehicleTitle} is loaded below. Change any details, then save.`
       : "Change the details below, then save.";
     photoHelpText.textContent = "Leave photos empty to keep the current gallery. Upload more to add photos, or turn on replace photos to swap them out.";
+    vehicleFormFields.stockNumber.readOnly = true;
     return;
   }
 
   editVehicleLabel.textContent = "Update the details below and save when ready.";
   photoHelpText.textContent = "Upload up to 20 photos for a new vehicle.";
+  vehicleFormFields.stockNumber.readOnly = true;
 }
 
 function renderSpecs(specs) {
