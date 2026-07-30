@@ -30,6 +30,9 @@ const loginModal = document.querySelector("#loginModal");
 const ownerLoginTriggers = document.querySelectorAll(".owner-login-trigger");
 const closeOwnerLogin = document.querySelector("#closeOwnerLogin");
 const vehicleFormMessage = document.querySelector("#vehicleFormMessage");
+const vinLookupWrap = document.querySelector(".vin-lookup");
+const decodeVinButton = document.querySelector("#decodeVinButton");
+const vinDecodeMessage = document.querySelector("#vinDecodeMessage");
 const saveVehicleButton = vehicleForm.querySelector('button[type="submit"]');
 const resetVehicleFormButton = document.querySelector("#resetVehicleForm");
 const editModeBanner = document.querySelector("#editModeBanner");
@@ -71,6 +74,8 @@ let editingVehicleImages = [];
 let editingVehicleStatus = "available";
 let editingVehicleSoldAt = "";
 let siteData = { vehiclesSold: 50 };
+let lastDecodedVin = "";
+let vinLookupRequestId = 0;
 
 init();
 
@@ -211,6 +216,43 @@ replacePhotosInput.addEventListener("change", () => {
         : "Upload new photos to add to the current gallery."
       : ""
   );
+});
+
+vehicleFormFields.vin.addEventListener("input", () => {
+  const normalizedVin = normalizeVinValue(vehicleFormFields.vin.value);
+
+  if (vehicleFormFields.vin.value !== normalizedVin) {
+    vehicleFormFields.vin.value = normalizedVin;
+  }
+
+  if (!normalizedVin) {
+    lastDecodedVin = "";
+    setVinDecodeMessage("Enter a 17-character VIN and we will fill year, make, model, body style, engine, and more.");
+    return;
+  }
+
+  if (normalizedVin.length < 17) {
+    if (normalizedVin !== lastDecodedVin) {
+      setVinDecodeMessage("Keep typing until you have all 17 VIN characters.");
+    }
+    return;
+  }
+
+  if (normalizedVin !== lastDecodedVin) {
+    setVinDecodeMessage("VIN looks ready. Click Autofill VIN or tab out to load the vehicle details.");
+  }
+});
+
+vehicleFormFields.vin.addEventListener("blur", async () => {
+  const normalizedVin = normalizeVinValue(vehicleFormFields.vin.value);
+
+  if (normalizedVin.length === 17 && normalizedVin !== lastDecodedVin) {
+    await lookupVinAndPopulate();
+  }
+});
+
+decodeVinButton.addEventListener("click", async () => {
+  await lookupVinAndPopulate({ force: true });
 });
 
 adminLoginForm.addEventListener("submit", async (event) => {
@@ -896,6 +938,105 @@ function buildSmsHref(title = "this vehicle") {
   return `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
 }
 
+function normalizeVinValue(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 17);
+}
+
+async function lookupVinAndPopulate(options = {}) {
+  const vin = normalizeVinValue(vehicleFormFields.vin.value);
+  vehicleFormFields.vin.value = vin;
+
+  if (!isAdmin) {
+    setVinDecodeMessage("Unlock dealer mode first to autofill from VIN.", "error");
+    return;
+  }
+
+  if (!apiAvailable) {
+    setVinDecodeMessage("VIN autofill is temporarily unavailable. Try again in a moment.", "error");
+    return;
+  }
+
+  if (vin.length !== 17) {
+    setVinDecodeMessage("Enter a full 17-character VIN before trying to autofill.", "error");
+    vehicleFormFields.vin.focus();
+    return;
+  }
+
+  if (!options.force && vin === lastDecodedVin) {
+    setVinDecodeMessage("That VIN is already loaded in the form.", "success");
+    return;
+  }
+
+  const yearHint = /^\d{4}$/.test(vehicleFormFields.year.value.trim())
+    ? vehicleFormFields.year.value.trim()
+    : "";
+  const requestId = ++vinLookupRequestId;
+
+  vinLookupWrap.classList.add("is-loading");
+  decodeVinButton.disabled = true;
+  decodeVinButton.textContent = "Decoding...";
+  setVinDecodeMessage("Decoding VIN and loading official vehicle details...");
+
+  try {
+    const query = new URLSearchParams({ vin });
+    if (yearHint) {
+      query.set("year", yearHint);
+    }
+
+    const decoded = await apiRequest(`/api/vin-decode?${query.toString()}`);
+
+    if (requestId !== vinLookupRequestId) {
+      return;
+    }
+
+    applyDecodedVinFields(decoded.fields || {});
+    lastDecodedVin = vin;
+
+    const missingColor = (decoded.missingFields || []).includes("exteriorColor") || (decoded.missingFields || []).includes("interiorColor");
+    setVinDecodeMessage(
+      missingColor
+        ? "VIN loaded. Core vehicle details are filled in. Color may still need to be added manually."
+        : "VIN loaded. Vehicle details are ready for photos, miles, price, and condition.",
+      "success"
+    );
+    setVehicleFormMessage(
+      `${decoded.title || "Vehicle details"} loaded from VIN. Add photos, miles, price, and condition, then save.`,
+      "success"
+    );
+  } catch (error) {
+    setVinDecodeMessage(error.message || "The VIN could not be decoded. Check it and try again.", "error");
+  } finally {
+    if (requestId === vinLookupRequestId) {
+      vinLookupWrap.classList.remove("is-loading");
+      decodeVinButton.disabled = false;
+      decodeVinButton.textContent = "Autofill VIN";
+    }
+  }
+}
+
+function applyDecodedVinFields(fields) {
+  vehicleFormFields.year.value = fields.year || vehicleFormFields.year.value;
+  vehicleFormFields.make.value = fields.make || vehicleFormFields.make.value;
+  vehicleFormFields.model.value = fields.model || vehicleFormFields.model.value;
+  vehicleFormFields.category.value = fields.category || vehicleFormFields.category.value || "car";
+  vehicleFormFields.engine.value = fields.engine || vehicleFormFields.engine.value;
+  vehicleFormFields.transmission.value = fields.transmission || vehicleFormFields.transmission.value;
+  vehicleFormFields.drivetrain.value = fields.drivetrain || vehicleFormFields.drivetrain.value;
+  vehicleFormFields.exteriorColor.value = fields.exteriorColor || vehicleFormFields.exteriorColor.value;
+  vehicleFormFields.interiorColor.value = fields.interiorColor || vehicleFormFields.interiorColor.value;
+  vehicleFormFields.fuelEconomy.value = fields.fuelEconomy || vehicleFormFields.fuelEconomy.value;
+  updateVehicleFormUI();
+}
+
+function setVinDecodeMessage(message, tone = "") {
+  vinDecodeMessage.textContent = message;
+  vinDecodeMessage.classList.toggle("success", tone === "success");
+  vinDecodeMessage.classList.toggle("error", tone === "error");
+}
+
 function buildVehiclePayload() {
   return {
     year: vehicleFormFields.year.value.trim(),
@@ -993,6 +1134,7 @@ function startEditingVehicle(vehicleId) {
   editingVehicleImages = getVehicleImages(vehicle);
   editingVehicleStatus = vehicle.status || "available";
   editingVehicleSoldAt = vehicle.soldAt || "";
+  lastDecodedVin = normalizeVinValue(vehicle.vin || "");
   selectedPhotos = [];
   photoInput.value = "";
   replacePhotosInput.checked = false;
@@ -1017,6 +1159,7 @@ function startEditingVehicle(vehicleId) {
 
   updateVehicleFormUI();
   renderPhotoPreview(getPhotoPreviewImages());
+  setVinDecodeMessage("VIN is loaded. Click Autofill VIN if you want to refresh the decoded vehicle details.");
   openOwnerArea();
   setVehicleFormMessage(`Editing ${getVehicleTitle(vehicle) || "vehicle"}. Update what you want and save when ready.`, "success");
 }
@@ -1028,10 +1171,12 @@ function resetVehicleFormState() {
   editingVehicleImages = [];
   editingVehicleStatus = "available";
   editingVehicleSoldAt = "";
+  lastDecodedVin = "";
   photoInput.value = "";
   replacePhotosInput.checked = false;
   updateVehicleFormUI();
   renderPhotoPreview([]);
+  setVinDecodeMessage("Enter a 17-character VIN and we will fill year, make, model, body style, engine, and more.");
 }
 
 function clearVehicleFormFields() {
