@@ -22,6 +22,7 @@ const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
 const photoLimit = 20;
 const defaultSiteData = { vehiclesSold: 50 };
+const vinDecodeBaseUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
 
 const sampleVehicles = [
   {
@@ -154,6 +155,22 @@ async function handleApi(request, response, url) {
 
   if (request.method === "GET" && url.pathname === "/api/site") {
     sendJson(response, 200, await readSiteData());
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/vin-decode") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+
+    const vin = normalizeVinLookupInput(url.searchParams.get("vin"));
+    const yearHint = normalizeModelYearHint(url.searchParams.get("year"));
+
+    if (vin.length !== 17) {
+      sendJson(response, 400, { error: "Enter a full 17-character VIN to autofill vehicle details." });
+      return;
+    }
+
+    sendJson(response, 200, await decodeVinDetails(vin, yearHint));
     return;
   }
 
@@ -595,6 +612,205 @@ function migrateSiteData(siteData) {
   return {
     vehiclesSold: Number.isFinite(vehiclesSold) ? Math.max(50, Math.floor(vehiclesSold)) : 50,
   };
+}
+
+function normalizeVinLookupInput(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 17);
+}
+
+function normalizeModelYearHint(value) {
+  const year = String(value || "").trim();
+  return /^\d{4}$/.test(year) ? year : "";
+}
+
+async function decodeVinDetails(vin, modelYear = "") {
+  const params = new URLSearchParams({ format: "json" });
+
+  if (modelYear) {
+    params.set("modelyear", modelYear);
+  }
+
+  const response = await fetch(`${vinDecodeBaseUrl}/${encodeURIComponent(vin)}?${params.toString()}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "alejo-motors-backend"
+    }
+  });
+
+  if (!response.ok) {
+    throw Object.assign(new Error("The VIN service is unavailable right now. Please try again in a moment."), {
+      status: 502
+    });
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  const decoded = Array.isArray(payload.Results) ? payload.Results[0] || {} : {};
+  const fields = mapVinDecodedFields(decoded);
+
+  if (!fields.year || !fields.make || !fields.model) {
+    throw Object.assign(new Error("That VIN could not be decoded. Check the 17 characters and try again."), {
+      status: 400
+    });
+  }
+
+  const filledFields = Object.entries(fields)
+    .filter(([, value]) => String(value || "").trim())
+    .map(([key]) => key);
+  const allFields = [
+    "year",
+    "make",
+    "model",
+    "category",
+    "engine",
+    "transmission",
+    "drivetrain",
+    "exteriorColor",
+    "interiorColor",
+    "fuelEconomy"
+  ];
+
+  return {
+    vin,
+    source: "NHTSA vPIC",
+    title: [fields.year, fields.make, fields.model].filter(Boolean).join(" "),
+    fields,
+    filledFields,
+    missingFields: allFields.filter((field) => !String(fields[field] || "").trim()),
+    warnings: buildVinWarnings(decoded)
+  };
+}
+
+function mapVinDecodedFields(decoded) {
+  const year = cleanDecodedValue(decoded.ModelYear);
+  const make = formatMake(cleanDecodedValue(decoded.Make));
+  const model = [cleanDecodedValue(decoded.Model), cleanDecodedValue(decoded.Trim), cleanDecodedValue(decoded.Series)]
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index)
+    .join(" ");
+  const category = deriveCategoryFromVin(decoded);
+  const engine = buildEngineLabel(decoded);
+  const transmission = buildTransmissionLabel(decoded);
+  const drivetrain = cleanDecodedValue(decoded.DriveType);
+  const exteriorColor = cleanDecodedValue(decoded.ExteriorColor);
+  const interiorColor = cleanDecodedValue(decoded.InteriorTrim);
+
+  return {
+    year,
+    make,
+    model,
+    category,
+    engine,
+    transmission,
+    drivetrain,
+    exteriorColor,
+    interiorColor,
+    fuelEconomy: ""
+  };
+}
+
+function buildVinWarnings(decoded) {
+  const warnings = [];
+  const errorText = cleanDecodedValue(decoded.ErrorText);
+
+  if (errorText && errorText !== "0 - VIN decoded clean. Check Digit (9th position) is correct") {
+    warnings.push(errorText);
+  }
+
+  if (!cleanDecodedValue(decoded.ExteriorColor) && !cleanDecodedValue(decoded.InteriorTrim)) {
+    warnings.push("Color details were not included in the VIN response.");
+  }
+
+  return warnings;
+}
+
+function deriveCategoryFromVin(decoded) {
+  const bodyClass = cleanDecodedValue(decoded.BodyClass).toLowerCase();
+  const vehicleType = cleanDecodedValue(decoded.VehicleType).toLowerCase();
+
+  if (/(pickup|truck)/.test(bodyClass) || vehicleType.includes("truck")) {
+    return "pickup";
+  }
+
+  if (bodyClass.includes("sport utility") || bodyClass.includes("suv") || bodyClass.includes("crossover") || bodyClass.includes("mpv")) {
+    return "suv";
+  }
+
+  return "car";
+}
+
+function buildEngineLabel(decoded) {
+  const model = cleanDecodedValue(decoded.EngineModel);
+  const displacement = formatDisplacement(cleanDecodedValue(decoded.DisplacementL));
+  const cylinders = buildCylinderLabel(cleanDecodedValue(decoded.EngineConfiguration), cleanDecodedValue(decoded.EngineCylinders));
+  const horsepower = cleanDecodedValue(decoded.EngineHP);
+  const parts = [model, [displacement, cylinders].filter(Boolean).join(" "), horsepower ? `${horsepower} hp` : ""]
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index);
+
+  return parts.join(" ").trim();
+}
+
+function buildTransmissionLabel(decoded) {
+  const style = cleanDecodedValue(decoded.TransmissionStyle);
+  const speeds = cleanDecodedValue(decoded.TransmissionSpeeds);
+
+  if (style && speeds) {
+    return `${style} ${speeds}-speed`;
+  }
+
+  return style || "";
+}
+
+function formatDisplacement(value) {
+  if (!value) return "";
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number <= 0) {
+    return value;
+  }
+
+  return `${number.toFixed(number % 1 === 0 ? 0 : 1)}L`;
+}
+
+function buildCylinderLabel(configuration, cylinders) {
+  const count = Number(cylinders);
+
+  if (!Number.isFinite(count) || count <= 0) {
+    return "";
+  }
+
+  const layout = configuration.toLowerCase();
+
+  if (layout.includes("v-shaped")) return `V${count}`;
+  if (layout.includes("flat")) return `H${count}`;
+  if (layout.includes("w")) return `W${count}`;
+  return `I${count}`;
+}
+
+function formatMake(value) {
+  if (!value) return "";
+
+  const preservedMakes = new Set(["BMW", "GMC", "RAM", "MG", "BYD"]);
+  if (preservedMakes.has(value.toUpperCase())) {
+    return value.toUpperCase();
+  }
+
+  return value
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (match) => match.toUpperCase());
+}
+
+function cleanDecodedValue(value) {
+  const text = String(value || "").trim();
+
+  if (!text || text.toLowerCase() === "not applicable") {
+    return "";
+  }
+
+  return text;
 }
 
 async function normalizeVehicle(vehicle) {
