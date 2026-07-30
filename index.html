@@ -200,6 +200,31 @@
               <span>Replace current photos instead of adding more</span>
             </label>
 
+            <div class="preview wide" id="photoPreview">
+              <span>Photo preview</span>
+            </div>
+
+            <div class="vin-lookup wide">
+              <label for="vinInput">VIN</label>
+              <p class="vin-lookup-copy">
+                After adding photos, enter the 17-character VIN and load the vehicle details automatically.
+              </p>
+              <div class="vin-lookup-row">
+                <input
+                  id="vinInput"
+                  type="text"
+                  placeholder="3N1BC1CP6AL411912"
+                  maxlength="17"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                />
+                <button class="button quiet" id="decodeVinButton" type="button">Load Info</button>
+              </div>
+              <small id="vinDecodeMessage">
+                Enter the full 17-character VIN, then tap Load Info to fill year, make, model, body style, engine, and more.
+              </small>
+            </div>
+
             <label>
               Year
               <input id="yearInput" type="number" min="1900" max="2100" placeholder="2015" required />
@@ -238,24 +263,6 @@
               Stock #
               <input id="stockNumberInput" type="text" placeholder="44906649" />
             </label>
-
-            <div class="vin-lookup wide">
-              <label for="vinInput">VIN</label>
-              <div class="vin-lookup-row">
-                <input
-                  id="vinInput"
-                  type="text"
-                  placeholder="3N1BC1CP6AL411912"
-                  maxlength="17"
-                  autocapitalize="characters"
-                  spellcheck="false"
-                />
-                <button class="button quiet" id="decodeVinButton" type="button">Autofill VIN</button>
-              </div>
-              <small id="vinDecodeMessage">
-                Enter a 17-character VIN and we will fill year, make, model, body style, engine, and more.
-              </small>
-            </div>
 
             <label>
               Engine
@@ -301,10 +308,6 @@
               Notes
               <textarea id="notesInput" rows="3" placeholder="Run & Drive, VIN, title, damage, or promotion"></textarea>
             </label>
-
-            <div class="preview wide" id="photoPreview">
-              <span>Photo preview</span>
-            </div>
 
             <div class="vehicle-form-actions wide">
               <button class="button primary" type="submit">Save Vehicle</button>
