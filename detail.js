@@ -129,6 +129,15 @@ async function loadVehicle() {
     return;
   }
 
+  if (isStaticPublicHost()) {
+    const loadedFromStatic = await loadStaticVehicle();
+
+    if (loadedFromStatic) {
+      refreshVehicleFromApiInBackground();
+      return;
+    }
+  }
+
   try {
     const response = await fetch(buildApiUrl(`/api/vehicles/${encodeURIComponent(vehicleId)}`));
 
@@ -157,7 +166,13 @@ function buildApiUrl(url) {
 }
 
 function shouldUseStaticFallback() {
-  return window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  return isStaticPublicHost()
+    || window.location.protocol === "file:"
+    || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
+function isStaticPublicHost() {
+  return window.location.hostname === "sergioard1.github.io";
 }
 
 function buildSmsHref(title = "this vehicle") {
@@ -192,12 +207,29 @@ async function loadStaticVehicle() {
 
     if (!vehicle) {
       showNotFound();
-      return;
+      return false;
     }
 
     renderVehicle(vehicle);
+    return true;
   } catch {
     showNotFound();
+    return false;
+  }
+}
+
+async function refreshVehicleFromApiInBackground() {
+  try {
+    const response = await fetch(buildApiUrl(`/api/vehicles/${encodeURIComponent(vehicleId)}`));
+
+    if (!response.ok) {
+      return;
+    }
+
+    const vehicle = await response.json();
+    renderVehicle(vehicle);
+  } catch {
+    // Keep the static version on screen if the live API is sleeping.
   }
 }
 

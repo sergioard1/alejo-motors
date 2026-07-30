@@ -465,6 +465,16 @@ async function loadSession() {
 async function loadVehicles() {
   resultCount.textContent = "Loading inventory...";
 
+  if (isStaticPublicHost()) {
+    const staticLoaded = await loadStaticVehicles();
+
+    if (staticLoaded) {
+      resultCount.textContent = "";
+      refreshVehiclesFromApiInBackground();
+      return;
+    }
+  }
+
   try {
     vehicles = await apiRequest("/api/vehicles");
     apiAvailable = true;
@@ -472,8 +482,12 @@ async function loadVehicles() {
     apiAvailable = false;
     if (shouldUseStaticFallback()) {
       try {
-        const response = await fetch("data/inventory.json", { cache: "no-store" });
-        vehicles = await response.json();
+        const staticLoaded = await loadStaticVehicles();
+
+        if (staticLoaded) {
+          resultCount.textContent = "";
+          return;
+        }
         return;
       } catch {
         vehicles = [];
@@ -488,6 +502,15 @@ async function loadVehicles() {
 }
 
 async function loadSiteData() {
+  if (isStaticPublicHost()) {
+    const staticLoaded = await loadStaticSiteData();
+
+    if (staticLoaded) {
+      refreshSiteDataFromApiInBackground();
+      return;
+    }
+  }
+
   try {
     siteData = sanitizeSiteData(await apiRequest("/api/site"));
     updateHeroStats();
@@ -495,9 +518,11 @@ async function loadSiteData() {
   } catch {
     if (shouldUseStaticFallback()) {
       try {
-        const response = await fetch("data/site.json", { cache: "no-store" });
-        siteData = sanitizeSiteData(await response.json());
-        updateHeroStats();
+        const staticLoaded = await loadStaticSiteData();
+
+        if (staticLoaded) {
+          return;
+        }
         return;
       } catch {
         siteData = sanitizeSiteData({});
@@ -576,7 +601,48 @@ function buildApiUrl(url) {
 }
 
 function shouldUseStaticFallback() {
-  return window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  return isStaticPublicHost()
+    || window.location.protocol === "file:"
+    || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
+function isStaticPublicHost() {
+  return window.location.hostname === "sergioard1.github.io";
+}
+
+async function loadStaticVehicles() {
+  const response = await fetch("data/inventory.json", { cache: "no-store" });
+  vehicles = await response.json();
+  apiAvailable = false;
+  return true;
+}
+
+async function loadStaticSiteData() {
+  const response = await fetch("data/site.json", { cache: "no-store" });
+  siteData = sanitizeSiteData(await response.json());
+  updateHeroStats();
+  return true;
+}
+
+async function refreshVehiclesFromApiInBackground() {
+  try {
+    const liveVehicles = await apiRequest("/api/vehicles");
+    vehicles = liveVehicles;
+    apiAvailable = true;
+    renderVehicles();
+  } catch {
+    apiAvailable = false;
+  }
+}
+
+async function refreshSiteDataFromApiInBackground() {
+  try {
+    siteData = sanitizeSiteData(await apiRequest("/api/site"));
+    apiAvailable = true;
+    updateHeroStats();
+  } catch {
+    apiAvailable = false;
+  }
 }
 
 function scrollToCurrentHash() {
