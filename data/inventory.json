@@ -1,5 +1,35 @@
 [
   {
+    "id": "c02a0b4c6de08455da3fe062",
+    "year": "2009",
+    "make": "Subaru",
+    "model": "Forester 2.5XS PLUS",
+    "category": "suv",
+    "miles": "170000",
+    "price": "3500",
+    "notes": "",
+    "stockNumber": "",
+    "vin": "JF2SH63649H779052",
+    "condition": "",
+    "engine": "2.5L",
+    "transmission": "Automatic 4-speed",
+    "exteriorColor": "Green",
+    "interiorColor": "Gray",
+    "drivetrain": "AWD/All-Wheel Drive",
+    "fuelEconomy": "",
+    "damage": "",
+    "status": "available",
+    "soldAt": "",
+    "images": [
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-1-1785427585066-5f063079.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-2-1785427586608-309380ce.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-3-1785427587859-fcc12e92.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-4-1785427589308-00ecdd7d.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-5-1785427590632-8658c3e8.jpg",
+      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-6-1785427592019-a506977c.jpg"
+    ]
+  },
+  {
     "id": "e6df299acde17174a38871b7",
     "year": "2010",
     "make": "HONDA",
