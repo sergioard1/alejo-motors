@@ -18,8 +18,8 @@
     "drivetrain": "AWD/All-Wheel Drive",
     "fuelEconomy": "",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-07-30T16:07:05.380Z",
     "images": [
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-1-1785427585066-5f063079.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/c02a0b4c6de08455da3fe062/photo-2-1785427586608-309380ce.jpg",
