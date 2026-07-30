@@ -2798,6 +2798,25 @@ textarea {
   grid-column: span 2;
 }
 
+.county-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.county-input-row .button {
+  min-height: 46px;
+  padding-inline: 14px;
+}
+
+.county-field small {
+  min-height: 2.5em;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .deal-divider {
   height: 1px;
   margin: 24px 0;
@@ -3065,7 +3084,7 @@ textarea {
 
 .payment-summary {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-top: 18px;
 }
@@ -3101,7 +3120,7 @@ textarea {
 
 .primary-documents {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -3144,36 +3163,6 @@ textarea {
   font-size: 0.84rem;
   font-weight: 700;
   line-height: 1.5;
-}
-
-.supporting-documents {
-  margin-top: 16px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #faf7f2;
-  padding: 14px 16px;
-}
-
-.supporting-documents summary {
-  cursor: pointer;
-  font-weight: 900;
-}
-
-.supporting-document-links {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
-  margin-top: 14px;
-}
-
-.supporting-document-links a {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  padding: 10px;
-  color: var(--accent-dark);
-  font-size: 0.82rem;
-  font-weight: 800;
 }
 
 .deal-final-actions {
@@ -3270,8 +3259,7 @@ textarea {
   .fees-editor-grid,
   .payment-entry,
   .payment-summary,
-  .primary-documents,
-  .supporting-document-links {
+  .primary-documents {
     grid-template-columns: 1fr;
   }
 

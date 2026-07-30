@@ -19,6 +19,7 @@ const state = {
   includeDealerProcessingFee: true,
   payments: [],
 };
+let countyLookupTimer = 0;
 
 if (app) {
   renderShell();
@@ -164,10 +165,6 @@ function renderShell() {
               Sale date
               <input id="dealSaleDate" type="date" />
             </label>
-            <label class="deal-field">
-              Vehicle cost (optional)
-              <input id="dealVehicleCost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="For estimated profit" />
-            </label>
           </div>
 
           <div class="deal-divider"></div>
@@ -186,15 +183,27 @@ function renderShell() {
               <input id="buyerEmail" type="email" autocomplete="email" />
             </label>
             <label class="deal-field">
-              Driver license / ID
-              <input id="buyerIdentification" type="text" />
+              Identification type
+              <select id="buyerIdentificationType">
+                <option value="U.S. Driver License/ID Card">U.S. Driver License / ID Card</option>
+                <option value="Passport">Passport</option>
+                <option value="U.S. Military ID">U.S. Military ID</option>
+                <option value="U.S. Department of State ID">U.S. Department of State ID</option>
+                <option value="U.S. Department of Homeland Security ID">U.S. Department of Homeland Security ID</option>
+                <option value="U.S. Citizenship & Immigration Services/DOJ ID">U.S. Citizenship & Immigration Services / DOJ ID</option>
+                <option value="Other government photo ID">Other government photo ID</option>
+              </select>
             </label>
             <label class="deal-field">
-              ID state
-              <input id="buyerIdState" type="text" maxlength="2" value="TX" autocapitalize="characters" />
+              Identification number
+              <input id="buyerIdentificationNumber" type="text" />
+            </label>
+            <label class="deal-field">
+              Issuing state
+              <input id="buyerIdentificationState" type="text" maxlength="2" value="TX" autocapitalize="characters" />
             </label>
             <label class="deal-field deal-wide">
-              Street address
+              Street number & name
               <input id="buyerAddress" type="text" autocomplete="street-address" />
             </label>
             <label class="deal-field">
@@ -209,10 +218,14 @@ function renderShell() {
               ZIP
               <input id="buyerZip" type="text" maxlength="10" autocomplete="postal-code" />
             </label>
-            <label class="deal-field">
-              County
-              <input id="buyerCounty" type="text" placeholder="Tarrant" />
-            </label>
+            <div class="deal-field county-field">
+              <label for="buyerCounty">County</label>
+              <span class="county-input-row">
+                <input id="buyerCounty" type="text" placeholder="Filled automatically" />
+                <button class="button quiet" id="lookupCounty" type="button">Find</button>
+              </span>
+              <small id="countyLookupStatus">Completa número y calle, ciudad, estado y ZIP.</small>
+            </div>
           </div>
         </section>
 
@@ -284,7 +297,7 @@ function renderShell() {
               <div class="price-line"><span>State Inspection</span><strong id="summaryInspection">$25.00</strong></div>
               <div class="price-line"><span>Sticker Shipping</span><strong id="summarySticker">$10.00</strong></div>
               <div class="price-line" id="summaryDealerRow"><span>Dealer Processing Fee</span><strong id="summaryDealer">$50.00</strong></div>
-              <div class="price-line"><span>Title, Registration & State Fees (TxDMV)</span><strong id="summaryTitle">$120.00</strong></div>
+              <div class="price-line"><span>Title, Registration & State Fees</span><strong id="summaryTitle">$120.00</strong></div>
               <div class="price-line"><span>Buyer Plate Fee</span><strong id="summaryPlate">$10.00</strong></div>
               <div class="price-line fees-total"><span>Total charges</span><strong id="summaryFees">$215.00</strong></div>
               <div class="price-line out-the-door"><span>Total Out the Door</span><strong id="summaryOtd">$0.00</strong></div>
@@ -323,7 +336,6 @@ function renderShell() {
             <div><span>Other payments</span><strong id="summaryOtherPayments">$0.00</strong></div>
             <div><span>Total received</span><strong id="summaryReceived">$0.00</strong></div>
             <div class="balance"><span>Balance due</span><strong id="summaryBalance">$0.00</strong></div>
-            <div id="profitSummary" hidden><span>Estimated profit</span><strong id="summaryProfit">$0.00</strong></div>
           </div>
         </section>
 
@@ -333,7 +345,7 @@ function renderShell() {
               <span class="deal-step">4</span>
               <div>
                 <h3>Primary Documents</h3>
-                <p>Estos son los cuatro documentos principales del expediente.</p>
+                <p>Únicamente los tres documentos del cliente, completados con la información del expediente.</p>
               </div>
             </div>
           </div>
@@ -342,13 +354,13 @@ function renderShell() {
               <span class="document-number">01</span>
               <h4>Vehicle Purchase Agreement</h4>
               <p>English agreement with buyer, vehicle, price and payment details filled in.</p>
-              <button class="button quiet document-action" data-document="agreement" type="button">Preview / Print</button>
+              <button class="button quiet document-action" data-document="vehicle-purchase-agreement" type="button">Generate Filled Word</button>
             </article>
             <article class="document-card primary-document">
               <span class="document-number">02</span>
               <h4>Bill of Sale</h4>
               <p>English bill of sale based on Alejo Motors' current document.</p>
-              <button class="button quiet document-action" data-document="bill-of-sale" type="button">Preview / Print</button>
+              <button class="button quiet document-action" data-document="bill-of-sale" type="button">Generate Filled Word</button>
             </article>
             <article class="document-card primary-document">
               <span class="document-number">03</span>
@@ -356,25 +368,7 @@ function renderShell() {
               <p>Official Texas form with vehicle, buyer, sales price and tax fields completed.</p>
               <button class="button quiet document-action" data-document="form-130-u" type="button">Open Filled PDF</button>
             </article>
-            <article class="document-card primary-document">
-              <span class="document-number">04</span>
-              <h4>Invoice</h4>
-              <p>Itemized Out the Door invoice with payments received and balance due.</p>
-              <button class="button quiet document-action" data-document="invoice" type="button">Preview / Print</button>
-            </article>
           </div>
-
-          <details class="supporting-documents">
-            <summary>Supporting documents (English only)</summary>
-            <div class="supporting-document-links">
-              <a href="assets/dealer-documents/temporary-permits-vtr-66.pdf" target="_blank">Temporary Permits - VTR-66</a>
-              <a href="assets/dealer-documents/rebuilt-motor-vehicle-notice.pdf" target="_blank">Rebuilt Motor Vehicle Notice</a>
-              <a href="assets/dealer-documents/salvage-motor-vehicle-notice.pdf" target="_blank">Salvage Motor Vehicle Notice</a>
-              <a href="assets/dealer-documents/non-operational-bill-of-sale.docx">Non-Operational Bill of Sale</a>
-              <a href="assets/dealer-documents/vehicle-sale-receipt.xlsx">Vehicle Sale Receipt</a>
-              <a href="assets/dealer-documents/office-notice.docx">Office Notice</a>
-            </div>
-          </details>
         </section>
 
         <section class="deal-card deal-final-actions">
@@ -434,6 +428,7 @@ function bindEvents() {
       if (event.target.closest("#addPayment")) addPayment();
       if (event.target.closest("#saveDeal")) await saveDeal();
       if (event.target.closest("#copyBreakdown")) await copyBreakdown();
+      if (event.target.closest("#lookupCounty")) await lookupBuyerCounty();
       if (event.target.closest("#toggleDealSettings")) {
         const editor = document.querySelector("#defaultFeesEditor");
         editor.hidden = !editor.hidden;
@@ -454,14 +449,17 @@ function bindEvents() {
       state.includeDealerProcessingFee = event.target.checked;
       renderPricing();
     }
-    if (event.target.id === "dealVehicleCost") {
-      renderPricing();
-    }
     if (event.target.id === "dealSearch") {
       renderDealList(event.target.value);
     }
     if (event.target.id === "dealVin") {
       event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17);
+    }
+    if (["buyerState", "buyerIdentificationState"].includes(event.target.id)) {
+      event.target.value = event.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+    }
+    if (["buyerAddress", "buyerCity", "buyerState", "buyerZip"].includes(event.target.id)) {
+      scheduleCountyLookup();
     }
   });
 
@@ -522,6 +520,67 @@ function fillVehicle(vehicleId) {
   setStatus("Vehicle information filled from the live inventory.", "success");
 }
 
+function scheduleCountyLookup() {
+  window.clearTimeout(countyLookupTimer);
+  setValue("buyerCounty", "");
+  const street = getValue("buyerAddress");
+  const city = getValue("buyerCity");
+  const stateCode = getValue("buyerState").toUpperCase();
+  const zip = getValue("buyerZip");
+
+  if (!street || !city || stateCode.length !== 2 || zip.length < 5) {
+    setText("countyLookupStatus", "Completa número y calle, ciudad, estado y ZIP.");
+    return;
+  }
+
+  setText("countyLookupStatus", "Buscando condado...");
+  countyLookupTimer = window.setTimeout(() => {
+    void lookupBuyerCounty({ quiet: true });
+  }, 700);
+}
+
+async function lookupBuyerCounty({ quiet = false } = {}) {
+  window.clearTimeout(countyLookupTimer);
+  const street = getValue("buyerAddress");
+  const city = getValue("buyerCity");
+  const stateCode = getValue("buyerState").toUpperCase();
+  const zip = getValue("buyerZip");
+  const requestedAddress = [street, city, stateCode, zip].join("|");
+
+  if (!street || !city || stateCode.length !== 2 || zip.length < 5) {
+    setText("countyLookupStatus", "Completa número y calle, ciudad, estado y ZIP.");
+    if (!quiet) {
+      setStatus("Complete la dirección antes de buscar el condado.", "error");
+    }
+    return;
+  }
+
+  setText("countyLookupStatus", "Buscando condado...");
+  try {
+    const query = new URLSearchParams({
+      street,
+      city,
+      state: stateCode,
+      zip,
+    });
+    const result = await dealerApi(`/api/county-lookup?${query.toString()}`);
+    const currentAddress = [
+      getValue("buyerAddress"),
+      getValue("buyerCity"),
+      getValue("buyerState").toUpperCase(),
+      getValue("buyerZip"),
+    ].join("|");
+    if (currentAddress !== requestedAddress) return;
+    setValue("buyerCounty", result.county);
+    setText("countyLookupStatus", `${result.county} County · U.S. Census`);
+  } catch (error) {
+    setText("countyLookupStatus", error.message || "No se encontró el condado.");
+    if (!quiet) {
+      setStatus(error.message || "No se encontró el condado para esta dirección.", "error");
+    }
+  }
+}
+
 function getPricing() {
   return calculateDealPricing({
     mode: state.pricingMode,
@@ -534,8 +593,6 @@ function getPricing() {
 function renderPricing() {
   const pricing = getPricing();
   const paymentTotals = calculatePayments(state.payments, pricing.outTheDoor);
-  const vehicleCost = parseMoney(getValue("dealVehicleCost"));
-  const profit = vehicleCost > 0 ? pricing.basePrice - vehicleCost : null;
 
   document.querySelectorAll("[data-pricing-mode]").forEach((button) => {
     button.classList.toggle("active", button.dataset.pricingMode === state.pricingMode);
@@ -560,15 +617,13 @@ function renderPricing() {
     "dealerFeeSwitchAmount",
     pricing.includeDealerProcessingFee
       ? `${formatMoney(state.activeSettings.dealerProcessingFee)} included`
-      : "$0.00 - removed from invoice"
+      : "$0.00 - removed from calculation"
   );
 
   setText("summaryDeposits", formatMoney(paymentTotals.deposits));
   setText("summaryOtherPayments", formatMoney(paymentTotals.otherPayments));
   setText("summaryReceived", formatMoney(paymentTotals.received));
   setText("summaryBalance", formatMoney(paymentTotals.balance));
-  document.querySelector("#profitSummary").hidden = profit === null;
-  setText("summaryProfit", profit === null ? "$0.00" : formatMoney(profit));
   renderPayments();
 }
 
@@ -634,9 +689,10 @@ function buildDraft() {
       fullName: getValue("buyerFullName"),
       phone: getValue("buyerPhone"),
       email: getValue("buyerEmail"),
-      identification: getValue("buyerIdentification"),
-      idState: getValue("buyerIdState"),
-      address: getValue("buyerAddress"),
+      identificationType: getValue("buyerIdentificationType"),
+      identificationNumber: getValue("buyerIdentificationNumber"),
+      identificationState: getValue("buyerIdentificationState"),
+      streetAddress: getValue("buyerAddress"),
       city: getValue("buyerCity"),
       state: getValue("buyerState"),
       zip: getValue("buyerZip"),
@@ -646,7 +702,6 @@ function buildDraft() {
     settings: state.activeSettings,
     pricing,
     payments: state.payments,
-    vehicleCost: parseMoney(getValue("dealVehicleCost")),
     notes: getValue("dealNotes"),
     status: state.currentDeal?.status || "open",
   };
@@ -700,17 +755,32 @@ function loadSavedDeal(dealId) {
   setValue("dealColor", deal.vehicle.color);
   setValue("dealBodyStyle", deal.vehicle.bodyStyle);
   setValue("dealSaleDate", deal.saleDate);
-  setValue("dealVehicleCost", deal.vehicleCost || "");
   setValue("buyerFullName", deal.customer.fullName);
   setValue("buyerPhone", deal.customer.phone);
   setValue("buyerEmail", deal.customer.email);
-  setValue("buyerIdentification", deal.customer.identification);
-  setValue("buyerIdState", deal.customer.idState || "TX");
-  setValue("buyerAddress", deal.customer.address);
+  setValue(
+    "buyerIdentificationType",
+    deal.customer.identificationType || "U.S. Driver License/ID Card"
+  );
+  setValue(
+    "buyerIdentificationNumber",
+    deal.customer.identificationNumber || deal.customer.identification || ""
+  );
+  setValue(
+    "buyerIdentificationState",
+    deal.customer.identificationState || deal.customer.idState || "TX"
+  );
+  setValue("buyerAddress", deal.customer.streetAddress || deal.customer.address || "");
   setValue("buyerCity", deal.customer.city);
   setValue("buyerState", deal.customer.state || "TX");
   setValue("buyerZip", deal.customer.zip);
   setValue("buyerCounty", deal.customer.county);
+  setText(
+    "countyLookupStatus",
+    deal.customer.county
+      ? `${deal.customer.county} County · saved with this deal`
+      : "Completa número y calle, ciudad, estado y ZIP."
+  );
   setValue("pricingAmount", Number(state.pricingAmount || 0).toFixed(2));
   setValue("dealNotes", deal.notes);
   renderPricing();
@@ -735,20 +805,21 @@ function startNewDeal() {
     "dealMiles",
     "dealColor",
     "dealBodyStyle",
-    "dealVehicleCost",
     "buyerFullName",
     "buyerPhone",
     "buyerEmail",
-    "buyerIdentification",
+    "buyerIdentificationNumber",
     "buyerAddress",
     "buyerCity",
     "buyerZip",
     "buyerCounty",
     "dealNotes",
   ].forEach((id) => setValue(id, ""));
-  setValue("buyerIdState", "TX");
+  setValue("buyerIdentificationType", "U.S. Driver License/ID Card");
+  setValue("buyerIdentificationState", "TX");
   setValue("buyerState", "TX");
   setValue("pricingAmount", "0.00");
+  setText("countyLookupStatus", "Completa número y calle, ciudad, estado y ZIP.");
   setTodayDefaults();
   renderPricing();
   setStatus("New calculation ready.", "success");
@@ -835,195 +906,70 @@ async function openDocument(type) {
   if (!draft.customer.fullName) missing.push("buyer name");
   if (!draft.vehicle.vin) missing.push("VIN");
   if (!draft.vehicle.year || !draft.vehicle.make || !draft.vehicle.model) missing.push("vehicle details");
-  if (type === "form-130-u" && !draft.customer.address) missing.push("buyer address");
+  if (
+    !draft.customer.streetAddress ||
+    !draft.customer.city ||
+    !draft.customer.state ||
+    !draft.customer.zip
+  ) {
+    missing.push("complete buyer address");
+  }
+  if (!draft.customer.identificationNumber) missing.push("identification number");
+  if (type === "form-130-u" && !draft.customer.county) missing.push("buyer county");
 
   if (missing.length) {
     setStatus(`Complete ${missing.join(", ")} before generating this document.`, "error");
     return;
   }
 
-  const preview = window.open("", "_blank");
-  if (!preview) {
-    setStatus("Allow pop-ups for Alejo Motors to open printable documents.", "error");
+  const preview = type === "form-130-u" ? window.open("", "_blank") : null;
+  if (type === "form-130-u" && !preview) {
+    setStatus("Allow pop-ups for Alejo Motors to open Form 130-U.", "error");
     return;
   }
-  preview.document.write("<p style='font:16px Arial;padding:24px'>Preparing document...</p>");
+  if (preview) {
+    preview.document.write("<p style='font:16px Arial;padding:24px'>Preparing document...</p>");
+  }
 
   try {
     const deal = await saveDeal({ quiet: true });
-    if (type === "form-130-u") {
-      const pdfUrl = `/api/deals/${encodeURIComponent(deal.id)}/form-130-u.pdf`;
-      const token = window.localStorage.getItem("alejo_owner_token") || "";
-      const response = await fetch(pdfUrl, {
-        credentials: "same-origin",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Form 130-U could not be generated.");
-      }
-      const objectUrl = URL.createObjectURL(await response.blob());
+    const extension = type === "form-130-u" ? "pdf" : "docx";
+    const endpoint = `/api/deals/${encodeURIComponent(deal.id)}/${type}.${extension}`;
+    const response = await fetchPrivateFile(endpoint);
+    const objectUrl = URL.createObjectURL(await response.blob());
+
+    if (type === "form-130-u" && preview) {
       preview.location.href = objectUrl;
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 120_000);
       setStatus("Filled Form 130-U opened in a private tab.", "success");
       return;
     }
 
-    preview.document.open();
-    preview.document.write(buildPrintableDocument(type, deal));
-    preview.document.close();
-    setStatus(`${documentLabel(type)} ready to print or save as PDF.`, "success");
+    const download = document.createElement("a");
+    download.href = objectUrl;
+    download.download = `${deal.dealNumber}-${type}.docx`;
+    document.body.append(download);
+    download.click();
+    download.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 5_000);
+    setStatus(`${documentLabel(type)} downloaded with the deal information filled in.`, "success");
   } catch (error) {
-    preview.close();
+    preview?.close();
     setStatus(error.message || "The document could not be generated.", "error");
   }
 }
 
-function buildPrintableDocument(type, deal) {
-  if (type === "agreement") return printLayout("Vehicle Purchase Agreement", agreementBody(deal), deal);
-  if (type === "bill-of-sale") return printLayout("Bill of Sale", billOfSaleBody(deal), deal);
-  return printLayout("Invoice", invoiceBody(deal), deal);
-}
-
-function printLayout(title, body, deal) {
-  return `<!doctype html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <title>${escapeHtml(deal.dealNumber)} - ${escapeHtml(title)}</title>
-        <style>
-          *{box-sizing:border-box} body{margin:0;background:#ececec;color:#111;font:12px/1.45 Arial,sans-serif}
-          .toolbar{position:sticky;top:0;display:flex;justify-content:center;padding:12px;background:#111}
-          .toolbar button{border:0;border-radius:6px;background:#d71920;color:#fff;padding:11px 18px;font-weight:800;cursor:pointer}
-          .page{width:8.5in;min-height:11in;margin:20px auto;padding:.55in .65in;background:#fff;box-shadow:0 8px 24px #0002}
-          header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid #d71920;padding-bottom:14px;margin-bottom:20px}
-          h1{font-size:23px;line-height:1.1;margin:0;text-transform:uppercase} h2{font-size:13px;margin:18px 0 7px;text-transform:uppercase;border-bottom:1px solid #bbb;padding-bottom:4px}
-          h3{margin:0 0 5px}.brand{text-align:right}.brand strong{font-size:17px}.muted{color:#555}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
-          .field{border-bottom:1px solid #333;min-height:20px;padding:2px 3px}.field strong{display:inline-block;min-width:82px}
-          p{margin:0 0 10px;text-align:justify}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:38px}.signature{border-top:1px solid #111;padding-top:6px}
-          table{width:100%;border-collapse:collapse;margin:10px 0 16px}th,td{padding:7px;border-bottom:1px solid #ccc;text-align:left}th:last-child,td:last-child{text-align:right}
-          .total td{font-size:15px;font-weight:800;border-top:2px solid #111}.balance td{font-size:17px;color:#b20f17;font-weight:900}
-          .note{padding:10px;border:1px solid #aaa;background:#f7f7f7}.invoice-status{font-size:12px;text-transform:uppercase;font-weight:900;color:#b20f17}
-          @page{size:letter;margin:.35in}@media print{body{background:#fff}.toolbar{display:none}.page{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}}
-        </style>
-      </head>
-      <body>
-        <div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>
-        <main class="page">
-          <header>
-            <div><h1>${escapeHtml(title)}</h1><div class="muted">Agreement / Invoice No. ${escapeHtml(deal.dealNumber)}</div></div>
-            <div class="brand"><strong>ALEJO MOTORS</strong><br />5601 E Lancaster Ave<br />Fort Worth, TX 76112<br />(678) 927-1739</div>
-          </header>
-          ${body}
-        </main>
-      </body>
-    </html>`;
-}
-
-function agreementBody(deal) {
-  return `
-    <p>In the city of Fort Worth, Texas, on ${escapeHtml(longDate(deal.saleDate))}, this agreement is entered into between:</p>
-    <p><strong>Seller:</strong> ALEJO MOTORS, located at 5601 E Lancaster Ave, Fort Worth, TX 76112.</p>
-    ${buyerVehicleBlock(deal)}
-    <h2>Price and Payment Terms</h2>
-    <p>The total purchase price of the vehicle under this agreement is <strong>${formatMoney(deal.pricing.outTheDoor)}</strong>. Payments received total <strong>${formatMoney(deal.paymentTotals.received)}</strong>, leaving a balance of <strong>${formatMoney(deal.paymentTotals.balance)}</strong>. The Buyer acknowledges that no additional agreement changes the obligations stated here.</p>
-    <h2>Title Transfer Process</h2>
-    <p>For the Buyer's convenience, the Seller commits to handling the title transfer process through the Texas Department of Motor Vehicles. The Buyer understands that processing time may depend on agency appointments, document requirements, and administrative processing, and agrees to provide the information and payments required to complete the transfer.</p>
-    <h2>Taxes and Registration</h2>
-    <p>The Buyer acknowledges responsibility for the applicable taxes and title, registration, inspection, plate, and processing charges shown in the transaction invoice. Any fines, penalties, or added fees caused by delayed buyer documentation or payment remain the Buyer's responsibility.</p>
-    <h2>Vehicle Condition</h2>
-    <p>The Buyer has had the opportunity to inspect the vehicle and accepts it "as-is," without an additional warranty from the Seller. A pre-owned vehicle may show wear or imperfections consistent with its age and mileage. Future repairs and maintenance are the Buyer's responsibility.</p>
-    <h2>Vehicle Responsibility</h2>
-    <p>Upon delivery, the Buyer assumes responsibility for the vehicle's use, maintenance, traffic violations, damages, and other events arising from possession or operation. The Seller is released from liability after delivery except as required by law.</p>
-    ${signatureBlock(deal)}
-  `;
-}
-
-function billOfSaleBody(deal) {
-  return `
-    <p>This Bill of Sale is executed on ${escapeHtml(longDate(deal.saleDate))} between ALEJO MOTORS, 5601 E Lancaster Ave, Fort Worth, TX 76112, and the Buyer identified below.</p>
-    ${buyerVehicleBlock(deal)}
-    <h2>Sale Terms</h2>
-    <p>The total purchase price is <strong>${formatMoney(deal.pricing.outTheDoor)}</strong>. Amount received: <strong>${formatMoney(deal.paymentTotals.received)}</strong>. Balance due: <strong>${formatMoney(deal.paymentTotals.balance)}</strong>. The sale is final and the vehicle is transferred "as-is," with no warranties expressed or implied.</p>
-    <h2>Seller's Disclosure</h2>
-    <p>The Seller affirms legal ownership and the right to sell the vehicle and states that, to the best of the Seller's knowledge, it is free of undisclosed liens or legal disputes. The Buyer acknowledges the opportunity to inspect the vehicle and accepts its present condition.</p>
-    <h2>Liability Release</h2>
-    <p>Upon transfer of possession, the Buyer assumes responsibility for the vehicle. The Seller is released from claims or liabilities arising from the vehicle's use, operation, or maintenance after the transaction, except as required by law.</p>
-    ${signatureBlock(deal)}
-  `;
-}
-
-function invoiceBody(deal) {
-  const rows = [
-    ["Vehicle base price", deal.pricing.basePrice],
-    [`Texas Sales Tax (${formatNumber(deal.pricing.taxRate)}%)`, deal.pricing.taxAmount],
-    ["State Inspection", deal.pricing.stateInspection],
-    ["Sticker Shipping", deal.pricing.stickerShipping],
-    ...(deal.pricing.includeDealerProcessingFee
-      ? [["Dealer Processing Fee", deal.pricing.dealerProcessingFee]]
-      : []),
-    ["Title, Registration & State Fees (TxDMV)", deal.pricing.titleRegistrationFees],
-    ["Buyer Plate Fee", deal.pricing.buyerPlateFee],
-  ];
-  const paymentRows = (deal.payments || [])
-    .map(
-      (payment) =>
-        `<tr><td>${payment.type === "deposit" ? "Deposit" : "Payment received"} - ${escapeHtml(payment.date || "")}${payment.note ? ` (${escapeHtml(payment.note)})` : ""}</td><td>-${formatMoney(payment.amount)}</td></tr>`
-    )
-    .join("");
-
-  return `
-    <div class="meta">
-      <div class="field"><strong>Buyer:</strong> ${escapeHtml(deal.customer.fullName)}</div>
-      <div class="field"><strong>Date:</strong> ${escapeHtml(formatUsDate(deal.saleDate))}</div>
-      <div class="field"><strong>Vehicle:</strong> ${escapeHtml(vehicleTitle(deal))}</div>
-      <div class="field"><strong>VIN:</strong> ${escapeHtml(deal.vehicle.vin)}</div>
-      <div class="field"><strong>Stock #:</strong> ${escapeHtml(deal.vehicle.stockNumber || "-")}</div>
-      <div class="field"><strong>Mileage:</strong> ${escapeHtml(deal.vehicle.miles || "-")}</div>
-    </div>
-    <table>
-      <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-      <tbody>
-        ${rows.map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${formatMoney(value)}</td></tr>`).join("")}
-        <tr><td><strong>Total charges</strong></td><td><strong>${formatMoney(deal.pricing.totalFees)}</strong></td></tr>
-        <tr class="total"><td>Total Out the Door</td><td>${formatMoney(deal.pricing.outTheDoor)}</td></tr>
-        ${paymentRows}
-        <tr><td><strong>Total received</strong></td><td><strong>-${formatMoney(deal.paymentTotals.received)}</strong></td></tr>
-        <tr class="balance"><td>Balance due</td><td>${formatMoney(deal.paymentTotals.balance)}</td></tr>
-      </tbody>
-    </table>
-    <p class="note">Deposits and payments reduce only the balance due. They do not change the vehicle base price, sales tax, fees, or total Out the Door price.</p>
-    <div class="signatures"><div class="signature">Authorized Alejo Motors representative</div><div class="signature">${escapeHtml(deal.customer.fullName)} - Buyer</div></div>
-  `;
-}
-
-function buyerVehicleBlock(deal) {
-  return `
-    <h2>Buyer</h2>
-    <div class="meta">
-      <div class="field"><strong>Name:</strong> ${escapeHtml(deal.customer.fullName)}</div>
-      <div class="field"><strong>Phone:</strong> ${escapeHtml(deal.customer.phone || "-")}</div>
-      <div class="field"><strong>Address:</strong> ${escapeHtml(fullAddress(deal.customer) || "-")}</div>
-      <div class="field"><strong>ID:</strong> ${escapeHtml(deal.customer.identification || "-")}</div>
-    </div>
-    <h2>Vehicle Details</h2>
-    <div class="meta">
-      <div class="field"><strong>Vehicle:</strong> ${escapeHtml(vehicleTitle(deal))}</div>
-      <div class="field"><strong>VIN:</strong> ${escapeHtml(deal.vehicle.vin)}</div>
-      <div class="field"><strong>Mileage:</strong> ${escapeHtml(deal.vehicle.miles || "-")}</div>
-      <div class="field"><strong>Color:</strong> ${escapeHtml(deal.vehicle.color || "-")}</div>
-    </div>
-  `;
-}
-
-function signatureBlock(deal) {
-  return `
-    <h2>Signatures</h2>
-    <div class="signatures">
-      <div class="signature">ALEJO MOTORS - Seller / Date</div>
-      <div class="signature">${escapeHtml(deal.customer.fullName)} - Buyer / Date</div>
-    </div>
-  `;
+async function fetchPrivateFile(path) {
+  const token = window.localStorage.getItem("alejo_owner_token") || "";
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "The document could not be generated.");
+  }
+  return response;
 }
 
 async function copyBreakdown() {
@@ -1123,29 +1069,10 @@ function vehicleTitle(deal) {
   return [deal.vehicle?.year, deal.vehicle?.make, deal.vehicle?.model].filter(Boolean).join(" ");
 }
 
-function fullAddress(customer) {
-  return [customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(", ");
-}
-
 function documentLabel(type) {
-  if (type === "agreement") return "Vehicle Purchase Agreement";
+  if (type === "vehicle-purchase-agreement") return "Vehicle Purchase Agreement";
   if (type === "bill-of-sale") return "Bill of Sale";
-  return "Invoice";
-}
-
-function formatUsDate(value) {
-  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return match ? `${match[2]}/${match[3]}/${match[1]}` : "";
-}
-
-function longDate(value) {
-  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return "";
-  return new Date(`${value}T12:00:00`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return "Form 130-U";
 }
 
 function isSold(vehicle) {

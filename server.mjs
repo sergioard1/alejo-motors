@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { randomBytes, createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import PizZip from "pizzip";
 import {
   DEFAULT_DEAL_SETTINGS,
   calculateDealPricing,
@@ -23,6 +24,18 @@ const sitePath = join(dataRoot, "site.json");
 const dealsPath = join(dataRoot, "deals.json");
 const dealSettingsPath = join(dataRoot, "deal-settings.json");
 const form130UPath = join(root, "assets", "dealer-documents", "form-130-u.pdf");
+const purchaseAgreementTemplatePath = join(
+  root,
+  "assets",
+  "dealer-documents",
+  "vehicle-purchase-agreement-template.docx"
+);
+const billOfSaleTemplatePath = join(
+  root,
+  "assets",
+  "dealer-documents",
+  "bill-of-sale-template.docx"
+);
 const githubRepo = process.env.GITHUB_REPO || "";
 const githubBranch = process.env.GITHUB_BRANCH || "main";
 const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
@@ -36,6 +49,7 @@ const revokedSessions = new Set();
 const photoLimit = 20;
 const defaultSiteData = { vehiclesSold: 50, pageVisits: 0 };
 const vinDecodeBaseUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
+const censusGeocoderBaseUrl = "https://geocoding.geo.census.gov/geocoder/geographies/address";
 
 const sampleVehicles = [
   {
@@ -210,6 +224,28 @@ async function handleApi(request, response, url) {
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/api/county-lookup") {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+
+    const address = {
+      street: safeText(url.searchParams.get("street"), 180),
+      city: safeText(url.searchParams.get("city"), 100),
+      state: safeText(url.searchParams.get("state"), 2).toUpperCase(),
+      zip: safeText(url.searchParams.get("zip"), 10),
+    };
+
+    if (!address.street || !address.city || address.state.length !== 2) {
+      sendJson(response, 400, {
+        error: "Street number and name, city, and two-letter state are required.",
+      });
+      return;
+    }
+
+    sendJson(response, 200, await lookupCounty(address));
+    return;
+  }
+
   if (request.method === "POST" && url.pathname === "/api/leads") {
     const lead = normalizeLead(await readJson(request));
     saveLead(lead);
@@ -257,6 +293,37 @@ async function handleApi(request, response, url) {
     deals.unshift(deal);
     await writeDeals(deals);
     sendJson(response, 201, deal);
+    return;
+  }
+
+  const clientDocumentMatch = url.pathname.match(
+    /^\/api\/deals\/([^/]+)\/(vehicle-purchase-agreement|bill-of-sale)\.docx$/
+  );
+  if (request.method === "GET" && clientDocumentMatch) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const dealId = decodeURIComponent(clientDocumentMatch[1]);
+    const documentType = clientDocumentMatch[2];
+    const deal = (await readDeals()).find((entry) => entry.id === dealId);
+
+    if (!deal) {
+      sendJson(response, 404, { error: "Deal not found" });
+      return;
+    }
+
+    const document = createClientDocx(documentType, deal);
+    const suffix =
+      documentType === "vehicle-purchase-agreement"
+        ? "vehicle-purchase-agreement"
+        : "bill-of-sale";
+    response.writeHead(200, {
+      "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "content-disposition": `attachment; filename="${safeFilename(
+        deal.dealNumber || deal.id
+      )}-${suffix}.docx"`,
+      "cache-control": "no-store",
+    });
+    response.end(document);
     return;
   }
 
@@ -418,6 +485,11 @@ async function handleApi(request, response, url) {
 
 function serveStatic(request, response, url) {
   const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
+  if (requestedPath.startsWith("/assets/dealer-documents/")) {
+    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+    response.end("Not found");
+    return;
+  }
   const filePath = normalize(join(root, requestedPath));
 
   if (!filePath.startsWith(root) || !existsSync(filePath) || statSync(filePath).isDirectory()) {
@@ -1267,6 +1339,101 @@ function normalizeLead(lead) {
   };
 }
 
+async function lookupCounty({ street, city, state, zip }) {
+  const query = new URLSearchParams({
+    street,
+    city,
+    state,
+    zip,
+    benchmark: "Public_AR_Current",
+    vintage: "Current_Current",
+    layers: "Counties",
+    format: "json",
+  });
+  const geocoderResponse = await fetch(`${censusGeocoderBaseUrl}?${query.toString()}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "alejo-motors-backend",
+    },
+  });
+
+  if (!geocoderResponse.ok) {
+    throw Object.assign(new Error("County lookup is temporarily unavailable."), { status: 502 });
+  }
+
+  const data = await geocoderResponse.json().catch(() => ({}));
+  const match = data?.result?.addressMatches?.[0];
+  const county =
+    match?.geographies?.Counties?.[0] ||
+    match?.geographies?.["County Subdivisions"]?.[0] ||
+    null;
+  const countyName = safeText(county?.NAME || county?.BASENAME, 100)
+    .replace(/\s+County$/i, "")
+    .trim();
+
+  if (!countyName) {
+    throw Object.assign(
+      new Error("County was not found. Check the street, city, state, and ZIP code."),
+      { status: 404 }
+    );
+  }
+
+  return {
+    county: countyName,
+    matchedAddress: safeText(match?.matchedAddress, 240),
+    source: "U.S. Census Geocoder",
+  };
+}
+
+function createClientDocx(documentType, deal) {
+  const templatePath =
+    documentType === "vehicle-purchase-agreement"
+      ? purchaseAgreementTemplatePath
+      : billOfSaleTemplatePath;
+
+  if (!existsSync(templatePath)) {
+    throw Object.assign(new Error("Client document template is unavailable."), { status: 500 });
+  }
+
+  const zip = new PizZip(readFileSync(templatePath));
+  const documentPart = zip.file("word/document.xml");
+  if (!documentPart) {
+    throw Object.assign(new Error("Client document template is invalid."), { status: 500 });
+  }
+
+  const replacements = {
+    dealNumber: deal.dealNumber,
+    saleDateLong: formatLongUsDate(deal.saleDate),
+    totalPurchasePrice: formatDocumentMoney(deal.pricing.outTheDoor),
+    buyerName: deal.customer.fullName,
+    buyerAddress: formatCustomerAddress(deal.customer),
+    buyerPhone: deal.customer.phone,
+    buyerIdentification: formatCustomerIdentification(deal.customer),
+    vehicleMake: deal.vehicle.make,
+    vehicleModel: deal.vehicle.model,
+    vehicleYear: deal.vehicle.year,
+    vehicleVin: deal.vehicle.vin,
+    vehicleMileage: deal.vehicle.miles,
+    vehicleColor: deal.vehicle.color,
+  };
+  let xml = documentPart.asText();
+
+  for (const [key, value] of Object.entries(replacements)) {
+    xml = xml.replaceAll(`{${key}}`, escapeXml(value));
+  }
+
+  if (/\{[A-Za-z][A-Za-z0-9]*\}/.test(xml)) {
+    throw Object.assign(new Error("A client document field could not be completed."), { status: 500 });
+  }
+
+  zip.file("word/document.xml", xml);
+  return zip.generate({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+}
+
 function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, preserveTimestamps = false) {
   const now = new Date().toISOString();
   const settings = normalizeDealSettings(input.settings || fallbackSettings);
@@ -1289,7 +1456,6 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
       }))
     : [];
   const paymentTotals = calculatePayments(payments, pricing.outTheDoor);
-  const vehicleCost = Math.max(0, safeMoney(input.vehicleCost));
   const id = safeText(input.id, 80) || randomBytes(12).toString("hex");
   const createdAt =
     preserveTimestamps && safeText(input.createdAt, 40) ? safeText(input.createdAt, 40) : now;
@@ -1316,9 +1482,20 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
       fullName: safeText(input.customer?.fullName, 180),
       phone: safeText(input.customer?.phone, 50),
       email: safeText(input.customer?.email, 180),
-      identification: safeText(input.customer?.identification, 120),
-      idState: safeText(input.customer?.idState, 2).toUpperCase(),
-      address: safeText(input.customer?.address, 180),
+      identificationType:
+        safeText(input.customer?.identificationType, 80) || "U.S. Driver License/ID Card",
+      identificationNumber: safeText(
+        input.customer?.identificationNumber || input.customer?.identification,
+        120
+      ),
+      identificationState: safeText(
+        input.customer?.identificationState || input.customer?.idState,
+        2
+      ).toUpperCase(),
+      streetAddress: safeText(
+        input.customer?.streetAddress || input.customer?.address,
+        180
+      ),
       city: safeText(input.customer?.city, 100),
       state: safeText(input.customer?.state, 2).toUpperCase() || "TX",
       zip: safeText(input.customer?.zip, 10),
@@ -1329,8 +1506,6 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
     pricing,
     payments,
     paymentTotals,
-    vehicleCost,
-    estimatedProfit: vehicleCost > 0 ? Math.round((pricing.basePrice - vehicleCost) * 100) / 100 : null,
     notes: safeText(input.notes, 2000),
   };
 }
@@ -1353,6 +1528,45 @@ function createDealNumber(id) {
   return `AM-${date}-${String(id).slice(-6).toUpperCase()}`;
 }
 
+function formatLongUsDate(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "";
+  return new Date(`${value}T12:00:00`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Chicago",
+  });
+}
+
+function formatDocumentMoney(value) {
+  return Number(value || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatCustomerAddress(customer = {}) {
+  const stateAndZip = [customer.state, customer.zip].filter(Boolean).join(" ");
+  return [customer.streetAddress, customer.city, stateAndZip].filter(Boolean).join(", ");
+}
+
+function formatCustomerIdentification(customer = {}) {
+  const type = safeText(customer.identificationType, 80);
+  const state = safeText(customer.identificationState, 2).toUpperCase();
+  const number = safeText(customer.identificationNumber, 120);
+  return [type, state, number].filter(Boolean).join(" - ");
+}
+
+function escapeXml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
 async function createForm130U(deal) {
   if (!existsSync(form130UPath)) {
     throw Object.assign(new Error("Form 130-U template is unavailable."), { status: 500 });
@@ -1362,7 +1576,7 @@ async function createForm130U(deal) {
   const form = pdf.getForm();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const address = [
-    deal.customer.address,
+    deal.customer.streetAddress,
     deal.customer.city,
     deal.customer.state,
     deal.customer.zip,
@@ -1384,7 +1598,7 @@ async function createForm130U(deal) {
   setPdfText(form, "5 Model", deal.vehicle.model, 7);
   setPdfText(form, "6 Major Color", deal.vehicle.color);
   setPdfText(form, "9 Odometer Reading no tenths", mileage);
-  setPdfText(form, "14 Applicant Photo ID Number or FEINEIN", deal.customer.identification);
+  setPdfText(form, "14 Applicant Photo ID Number or FEINEIN", deal.customer.identificationNumber);
   setPdfText(
     form,
     "16 Applicant First Name or Entity Name Middle Name Last Name Suffix if any",
@@ -1405,11 +1619,15 @@ async function createForm130U(deal) {
   setPdfText(form, "Taxable Amount", money(deal.pricing.basePrice));
   setPdfText(form, "6.25% Tax on Taxable Amount", money(deal.pricing.taxAmount));
   setPdfText(form, "Amount of Tax and Penalty Due", money(deal.pricing.taxAmount));
-  setPdfText(form, "State of ID/DL", deal.customer.idState || deal.customer.state);
+  setPdfText(
+    form,
+    "State of ID/DL",
+    deal.customer.identificationState || deal.customer.state
+  );
 
   setPdfCheck(form, "Title  Registration");
   setPdfCheck(form, "Individual");
-  setPdfCheck(form, "U.S. Driver License/ID Card");
+  setIdentificationTypeOnForm130U(form, deal.customer);
   setPdfCheck(form, "Sales and Use Tax");
 
   form.updateFieldAppearances(font);
@@ -1440,6 +1658,38 @@ function setPdfCheck(form, fieldName) {
   } catch {
     // A form revision may omit an optional checkbox.
   }
+}
+
+function setIdentificationTypeOnForm130U(form, customer = {}) {
+  const type = String(customer.identificationType || "").toLowerCase();
+
+  if (type.includes("passport")) {
+    setPdfCheck(form, "Passport");
+    setPdfText(form, "Passport Issued", customer.identificationState || customer.state);
+    return;
+  }
+
+  if (type.includes("military")) {
+    setPdfCheck(form, "US Military ID");
+    return;
+  }
+
+  if (type.includes("homeland")) {
+    setPdfCheck(form, "US Dept of Homeland Security ID");
+    return;
+  }
+
+  if (type.includes("state")) {
+    setPdfCheck(form, "US Dept of State ID");
+    return;
+  }
+
+  if (type.includes("citizenship") || type.includes("immigration")) {
+    setPdfCheck(form, "U.S. Citizenship & Immigration Services/DOJ ID");
+    return;
+  }
+
+  setPdfCheck(form, "U.S. Driver License/ID Card");
 }
 
 function formatUsDate(value) {
