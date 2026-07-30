@@ -1,30 +1,5 @@
 [
   {
-    "id": "758107e188aa2691d6ef91be",
-    "year": "2016",
-    "make": "Audi",
-    "model": "A4 Premium",
-    "category": "car",
-    "miles": "",
-    "price": "Call for price",
-    "notes": "",
-    "stockNumber": "100001",
-    "vin": "WAUAFAFL5GN007062",
-    "condition": "",
-    "engine": "2L I4 220 hp",
-    "transmission": "Automatic",
-    "exteriorColor": "",
-    "interiorColor": "",
-    "drivetrain": "",
-    "fuelEconomy": "",
-    "damage": "",
-    "status": "available",
-    "soldAt": "",
-    "images": [
-      "assets/alejo-motors-logo.svg"
-    ]
-  },
-  {
     "id": "c02a0b4c6de08455da3fe062",
     "year": "2009",
     "make": "Subaru",
