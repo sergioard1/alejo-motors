@@ -1232,10 +1232,46 @@ textarea {
   font-weight: 900;
 }
 
+.admin-status {
+  display: grid;
+  gap: 12px;
+}
+
 .admin-bar div {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.dealer-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dealer-metric {
+  min-width: 132px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffaf3;
+}
+
+.dealer-metric small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dealer-metric strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .vehicle-form {

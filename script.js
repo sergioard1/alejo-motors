@@ -40,6 +40,8 @@ const editVehicleLabel = document.querySelector("#editVehicleLabel");
 const cancelEditButton = document.querySelector("#cancelEditButton");
 const heroSection = document.querySelector(".dealer-hero");
 const heroSoldCount = document.querySelector("#heroSoldCount");
+const dealerVisitCount = document.querySelector("#dealerVisitCount");
+const dealerSoldCount = document.querySelector("#dealerSoldCount");
 const vehicleFormFields = {
   year: document.querySelector("#yearInput"),
   make: document.querySelector("#makeInput"),
@@ -73,7 +75,7 @@ let editingVehicleId = "";
 let editingVehicleImages = [];
 let editingVehicleStatus = "available";
 let editingVehicleSoldAt = "";
-let siteData = { vehiclesSold: 50 };
+let siteData = { vehiclesSold: 50, pageVisits: 0 };
 let lastDecodedVin = "";
 let vinLookupRequestId = 0;
 
@@ -85,6 +87,7 @@ if (window.location.hash === "#owner-login") {
 
 async function init() {
   applyUrlCategory();
+  await registerPageVisit();
   await loadSession();
   await Promise.all([loadVehicles(), loadSiteData()]);
   updateAdminUI();
@@ -508,6 +511,19 @@ async function loadSiteData() {
   updateHeroStats();
 }
 
+async function registerPageVisit() {
+  if (window.sessionStorage.getItem("alejo_page_visit_recorded") === "true") {
+    return;
+  }
+
+  try {
+    await apiRequest("/api/site/visit", { method: "POST" });
+    window.sessionStorage.setItem("alejo_page_visit_recorded", "true");
+  } catch {
+    // Keep the page working even if the visit counter cannot be updated.
+  }
+}
+
 async function apiRequest(url, options = {}) {
   const headers = {};
 
@@ -680,6 +696,14 @@ function updateHeroStats() {
   }
 
   heroSoldCount.textContent = `${formatWholeNumber(siteData.vehiclesSold)}+ Vehicles Sold`;
+
+  if (dealerVisitCount) {
+    dealerVisitCount.textContent = formatWholeNumber(siteData.pageVisits);
+  }
+
+  if (dealerSoldCount) {
+    dealerSoldCount.textContent = formatWholeNumber(siteData.vehiclesSold);
+  }
 }
 
 function buildVehicleCard(vehicle) {
@@ -1077,7 +1101,7 @@ function buildVehiclePayload() {
     category: vehicleFormFields.category.value,
     miles: vehicleFormFields.miles.value.trim(),
     price: vehicleFormFields.price.value.trim() || "Call for price",
-    stockNumber: vehicleFormFields.stockNumber.value.trim(),
+    stockNumber: "",
     vin: vehicleFormFields.vin.value.trim(),
     engine: vehicleFormFields.engine.value.trim(),
     transmission: vehicleFormFields.transmission.value.trim(),
@@ -1326,8 +1350,10 @@ function formatWholeNumber(value) {
 
 function sanitizeSiteData(data) {
   const count = Number(data.vehiclesSold);
+  const pageVisits = Number(data.pageVisits);
   return {
     vehiclesSold: Number.isFinite(count) ? Math.max(50, Math.floor(count)) : 50,
+    pageVisits: Number.isFinite(pageVisits) ? Math.max(0, Math.floor(pageVisits)) : 0,
   };
 }
 

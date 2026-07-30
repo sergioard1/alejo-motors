@@ -21,7 +21,7 @@ const githubSitePath = process.env.GITHUB_SITE_PATH || "data/site.json";
 const allowedOrigins = parseAllowedOrigins();
 const sessions = new Set();
 const photoLimit = 20;
-const defaultSiteData = { vehiclesSold: 50 };
+const defaultSiteData = { vehiclesSold: 50, pageVisits: 0 };
 const vinDecodeBaseUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
 
 const sampleVehicles = [
@@ -155,6 +155,20 @@ async function handleApi(request, response, url) {
 
   if (request.method === "GET" && url.pathname === "/api/site") {
     sendJson(response, 200, await readSiteData());
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/site/visit") {
+    const siteData = await readSiteData();
+    const nextSiteData = {
+      ...siteData,
+      pageVisits: Number(siteData.pageVisits || 0) + 1,
+    };
+    await writeSiteData(nextSiteData);
+    sendJson(response, 200, {
+      ok: true,
+      pageVisits: nextSiteData.pageVisits,
+    });
     return;
   }
 
@@ -608,9 +622,11 @@ function encodePath(value) {
 
 function migrateSiteData(siteData) {
   const vehiclesSold = Number(siteData?.vehiclesSold);
+  const pageVisits = Number(siteData?.pageVisits);
 
   return {
     vehiclesSold: Number.isFinite(vehiclesSold) ? Math.max(50, Math.floor(vehiclesSold)) : 50,
+    pageVisits: Number.isFinite(pageVisits) ? Math.max(0, Math.floor(pageVisits)) : 0,
   };
 }
 
@@ -888,9 +904,9 @@ function buildAutomaticStockNumber(vehicles, excludeVehicleId = "") {
     .map(migrateVehicle)
     .filter((vehicle) => vehicle.id !== excludeVehicleId)
     .map((vehicle) => String(vehicle.stockNumber || "").trim())
-    .filter((value) => /^\d+$/.test(value))
+    .filter((value) => /^\d{6}$/.test(value))
     .map((value) => Number(value))
-    .filter(Number.isFinite);
+    .filter((value) => Number.isFinite(value) && value >= 100001);
 
   const nextNumber = numericValues.length
     ? Math.max(...numericValues) + 1

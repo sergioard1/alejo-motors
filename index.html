@@ -174,7 +174,19 @@
 
         <div class="admin-panel" id="adminPanel">
           <div class="admin-bar">
-            <span>Dealer mode is on</span>
+            <div class="admin-status">
+              <span>Dealer mode is on</span>
+              <div class="dealer-metrics">
+                <div class="dealer-metric">
+                  <small>Total visits</small>
+                  <strong id="dealerVisitCount">0</strong>
+                </div>
+                <div class="dealer-metric">
+                  <small>Vehicles sold</small>
+                  <strong id="dealerSoldCount">50</strong>
+                </div>
+              </div>
+            </div>
             <div>
               <button class="button quiet" id="logoutAdmin" type="button">Lock</button>
             </div>
