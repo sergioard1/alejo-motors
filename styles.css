@@ -1288,6 +1288,14 @@ textarea {
   font-weight: 700;
 }
 
+.vin-lookup-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .vin-lookup-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1298,6 +1306,18 @@ textarea {
 .vin-lookup-row .button {
   min-width: 148px;
   min-height: 52px;
+}
+
+.vin-lookup-row .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.vin-lookup.is-ready {
+  padding: 14px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .vin-lookup.is-loading .button {
