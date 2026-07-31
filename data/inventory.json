@@ -1,33 +1,5 @@
 [
   {
-    "id": "819431751f5178e3724b006c",
-    "year": "2016",
-    "make": "Bmw",
-    "model": "435i",
-    "trim": "xDrive",
-    "category": "car",
-    "miles": "0",
-    "price": "2000.00",
-    "notes": "Stock #AM-1015\n\nbmw",
-    "stockNumber": "AM-1015",
-    "vin": "WBA3R5C59GK371158",
-    "condition": "Used",
-    "engine": "3.0L · 6 cyl · 300 hp",
-    "transmission": "",
-    "exteriorColor": "",
-    "interiorColor": "",
-    "drivetrain": "AWD/All-Wheel Drive",
-    "fuelEconomy": "",
-    "fuelType": "Gasoline",
-    "titleType": "Clean",
-    "damage": "",
-    "status": "sold",
-    "soldAt": "2026-07-31T21:51:46.861Z",
-    "images": [
-      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F95%2FAfter%20repair%20photos%2Fb39ab7ab-b596-4f92-bc50-143af4c933f7.jpeg&sig=mpCcWJlrP4aYAaIKX6GsHesw4RRb2w00yUiG9EDurzs"
-    ]
-  },
-  {
     "id": "c02a0b4c6de08455da3fe062",
     "year": "2009",
     "make": "Subaru",
