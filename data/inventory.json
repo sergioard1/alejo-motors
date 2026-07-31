@@ -18,8 +18,8 @@
     "drivetrain": "RWD",
     "fuelEconomy": "24 CITY/ 36 HWY",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-07-31T16:16:56.333Z",
     "images": [
       "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F68%2FAfter%20repair%20photos%2F2761adb2-1723-4d99-a317-5decade80bc3.png&sig=q_Xh-DlIZ_3DVZ__h6SvW2BH8xS9LbtVPmK1rqL23Nk"
     ]
