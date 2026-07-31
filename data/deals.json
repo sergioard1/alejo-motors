@@ -4,30 +4,30 @@
     "dealNumber": "AM-20260731-0ED18A",
     "status": "open",
     "createdAt": "2026-07-31T13:25:54.514Z",
-    "updatedAt": "2026-07-31T13:27:09.277Z",
+    "updatedAt": "2026-07-31T15:02:55.696Z",
     "vehicleId": "e6df299acde17174a38871b7",
     "vehicle": {
       "year": "2010",
       "make": "HONDA",
-      "model": "Accord",
+      "model": "ACCORD",
       "vin": "1HGCP2F33AA080980",
       "stockNumber": "",
       "miles": "230000",
-      "color": "Grey",
-      "bodyStyle": "car"
+      "color": "GREY",
+      "bodyStyle": "CAR"
     },
     "customer": {
-      "fullName": "Sergio",
+      "fullName": "SERGIO",
       "phone": "789658964",
       "email": "sergio@gmail.com",
       "identificationType": "U.S. Driver License/ID Card",
       "identificationNumber": "1256987",
       "identificationState": "TX",
-      "streetAddress": "708 shady creek dr",
-      "city": "kennedale",
+      "streetAddress": "708 SHADY CREEK DR",
+      "city": "KENNEDALE",
       "state": "TX",
       "zip": "76112",
-      "county": "Tarrant"
+      "county": "TARRANT"
     },
     "saleDate": "2026-07-31",
     "settings": {
@@ -59,7 +59,7 @@
         "type": "payment",
         "amount": 3615,
         "date": "2026-07-31",
-        "note": "cash"
+        "note": "CASH"
       }
     ],
     "paymentTotals": {
