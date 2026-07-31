@@ -21,8 +21,8 @@
     "fuelType": "Gasoline",
     "titleType": "Clean",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-07-31T21:51:46.861Z",
     "images": [
       "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F95%2FAfter%20repair%20photos%2Fb39ab7ab-b596-4f92-bc50-143af4c933f7.jpeg&sig=mpCcWJlrP4aYAaIKX6GsHesw4RRb2w00yUiG9EDurzs"
     ]
