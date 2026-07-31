@@ -18,8 +18,8 @@
     "drivetrain": "AWD/All-Wheel Drive",
     "fuelEconomy": "",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-07-31T17:44:18.256Z",
     "images": [
       "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F91%2FAfter%20repair%20photos%2Fe5506618-15ca-4c5e-b3cc-5e48d2a548d1.png&sig=Y5rEN_tZw_aS6bIBY-gidIHL0V6_VuZM3SPTYK2PpnE"
     ]
