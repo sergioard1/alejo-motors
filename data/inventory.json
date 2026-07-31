@@ -1,5 +1,30 @@
 [
   {
+    "id": "f1cb656ae9b7419a95abac44",
+    "year": "2016",
+    "make": "Subaru",
+    "model": "Crosstrek",
+    "category": "car",
+    "miles": "98249",
+    "price": "4800.00",
+    "notes": "Stock #AM-1011",
+    "stockNumber": "100001",
+    "vin": "JF2GPALC7GH299425",
+    "condition": "Used",
+    "engine": "2.0L · Naturally Aspirated",
+    "transmission": "Continuously Variable Transmission (CVT)",
+    "exteriorColor": "",
+    "interiorColor": "Grey",
+    "drivetrain": "AWD/All-Wheel Drive",
+    "fuelEconomy": "",
+    "damage": "",
+    "status": "available",
+    "soldAt": "",
+    "images": [
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F91%2FAfter%20repair%20photos%2Fe5506618-15ca-4c5e-b3cc-5e48d2a548d1.png&sig=Y5rEN_tZw_aS6bIBY-gidIHL0V6_VuZM3SPTYK2PpnE"
+    ]
+  },
+  {
     "id": "c02a0b4c6de08455da3fe062",
     "year": "2009",
     "make": "Subaru",
