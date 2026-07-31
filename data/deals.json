@@ -1,1 +1,73 @@
-[]
+[
+  {
+    "id": "0dfa17b3429ba6fb420ed18a",
+    "dealNumber": "AM-20260731-0ED18A",
+    "status": "open",
+    "createdAt": "2026-07-31T13:25:54.514Z",
+    "updatedAt": "2026-07-31T13:27:09.277Z",
+    "vehicleId": "e6df299acde17174a38871b7",
+    "vehicle": {
+      "year": "2010",
+      "make": "HONDA",
+      "model": "Accord",
+      "vin": "1HGCP2F33AA080980",
+      "stockNumber": "",
+      "miles": "230000",
+      "color": "Grey",
+      "bodyStyle": "car"
+    },
+    "customer": {
+      "fullName": "Sergio",
+      "phone": "789658964",
+      "email": "sergio@gmail.com",
+      "identificationType": "U.S. Driver License/ID Card",
+      "identificationNumber": "1256987",
+      "identificationState": "TX",
+      "streetAddress": "708 shady creek dr",
+      "city": "kennedale",
+      "state": "TX",
+      "zip": "76112",
+      "county": "Tarrant"
+    },
+    "saleDate": "2026-07-31",
+    "settings": {
+      "taxRate": 6.25,
+      "stateInspection": 25,
+      "stickerShipping": 10,
+      "dealerProcessingFee": 50,
+      "titleRegistrationFees": 120,
+      "buyerPlateFee": 10
+    },
+    "pricing": {
+      "mode": "base",
+      "inputAmount": 3200,
+      "includeDealerProcessingFee": true,
+      "taxRate": 6.25,
+      "basePrice": 3200,
+      "taxAmount": 200,
+      "stateInspection": 25,
+      "stickerShipping": 10,
+      "dealerProcessingFee": 50,
+      "titleRegistrationFees": 120,
+      "buyerPlateFee": 10,
+      "totalFees": 215,
+      "outTheDoor": 3615
+    },
+    "payments": [
+      {
+        "id": "b43ed3f6-d6d4-43fb-9c1e-01d20f970a95",
+        "type": "payment",
+        "amount": 3615,
+        "date": "2026-07-31",
+        "note": "cash"
+      }
+    ],
+    "paymentTotals": {
+      "deposits": 0,
+      "otherPayments": 3615,
+      "received": 3615,
+      "balance": 0
+    },
+    "notes": ""
+  }
+]
