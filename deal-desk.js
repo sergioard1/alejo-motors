@@ -20,6 +20,24 @@ const state = {
   payments: [],
 };
 let countyLookupTimer = 0;
+const uppercaseFieldIds = new Set([
+  "dealMake",
+  "dealModel",
+  "dealVin",
+  "dealStock",
+  "dealMiles",
+  "dealColor",
+  "dealBodyStyle",
+  "buyerFullName",
+  "buyerIdentificationNumber",
+  "buyerIdentificationState",
+  "buyerAddress",
+  "buyerCity",
+  "buyerState",
+  "buyerCounty",
+  "paymentNote",
+  "dealNotes",
+]);
 
 if (app) {
   renderShell();
@@ -398,6 +416,12 @@ function renderShell() {
     </div>
   `;
 
+  uppercaseFieldIds.forEach((id) => {
+    const field = document.querySelector(`#${id}`);
+    if (!field) return;
+    field.dataset.uppercase = "true";
+    field.setAttribute("autocapitalize", "characters");
+  });
   setTodayDefaults();
 }
 
@@ -454,6 +478,9 @@ function bindEvents() {
   });
 
   app.addEventListener("input", (event) => {
+    if (uppercaseFieldIds.has(event.target.id)) {
+      event.target.value = uppercaseEntry(event.target.value);
+    }
     if (event.target.id === "pricingAmount") {
       state.pricingAmount = Number(event.target.value) || 0;
       renderPricing();
@@ -1057,7 +1084,9 @@ function setTodayDefaults() {
 
 function setValue(id, value) {
   const field = document.querySelector(`#${id}`);
-  if (field) field.value = value ?? "";
+  if (field) {
+    field.value = uppercaseFieldIds.has(id) ? uppercaseEntry(value) : value ?? "";
+  }
 }
 
 function getValue(id) {
@@ -1085,6 +1114,10 @@ function formatNumber(value) {
 function parseMoney(value) {
   const parsed = Number(String(value ?? "").replace(/[$,\s]/g, ""));
   return Number.isFinite(parsed) ? Math.round((parsed + Number.EPSILON) * 100) / 100 : 0;
+}
+
+function uppercaseEntry(value) {
+  return String(value ?? "").toLocaleUpperCase("en-US");
 }
 
 function vehicleTitle(deal) {

@@ -1488,7 +1488,7 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
         type: payment.type === "deposit" ? "deposit" : "payment",
         amount: Math.max(0, safeMoney(payment.amount)),
         date: safeText(payment.date, 10),
-        note: safeText(payment.note, 200),
+        note: uppercaseText(payment.note, 200),
       }))
     : [];
   const paymentTotals = calculatePayments(payments, pricing.outTheDoor);
@@ -1506,21 +1506,21 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
     vehicleId: safeText(input.vehicleId, 100),
     vehicle: {
       year: safeText(input.vehicle?.year, 4),
-      make: safeText(input.vehicle?.make, 80),
-      model: safeText(input.vehicle?.model, 120),
-      vin: safeText(input.vehicle?.vin, 17).toUpperCase(),
-      stockNumber: safeText(input.vehicle?.stockNumber, 60),
-      miles: safeText(input.vehicle?.miles, 60),
-      color: safeText(input.vehicle?.color, 80),
-      bodyStyle: safeText(input.vehicle?.bodyStyle, 80),
+      make: uppercaseText(input.vehicle?.make, 80),
+      model: uppercaseText(input.vehicle?.model, 120),
+      vin: uppercaseText(input.vehicle?.vin, 17),
+      stockNumber: uppercaseText(input.vehicle?.stockNumber, 60),
+      miles: uppercaseText(input.vehicle?.miles, 60),
+      color: uppercaseText(input.vehicle?.color, 80),
+      bodyStyle: uppercaseText(input.vehicle?.bodyStyle, 80),
     },
     customer: {
-      fullName: safeText(input.customer?.fullName, 180),
+      fullName: uppercaseText(input.customer?.fullName, 180),
       phone: safeText(input.customer?.phone, 50),
       email: safeText(input.customer?.email, 180),
       identificationType:
         safeText(input.customer?.identificationType, 80) || "U.S. Driver License/ID Card",
-      identificationNumber: safeText(
+      identificationNumber: uppercaseText(
         input.customer?.identificationNumber || input.customer?.identification,
         120
       ),
@@ -1528,21 +1528,21 @@ function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, pre
         input.customer?.identificationState || input.customer?.idState,
         2
       ).toUpperCase(),
-      streetAddress: safeText(
+      streetAddress: uppercaseText(
         input.customer?.streetAddress || input.customer?.address,
         180
       ),
-      city: safeText(input.customer?.city, 100),
+      city: uppercaseText(input.customer?.city, 100),
       state: safeText(input.customer?.state, 2).toUpperCase() || "TX",
       zip: safeText(input.customer?.zip, 10),
-      county: safeText(input.customer?.county, 80),
+      county: uppercaseText(input.customer?.county, 80),
     },
     saleDate: safeText(input.saleDate, 10) || now.slice(0, 10),
     settings,
     pricing,
     payments,
     paymentTotals,
-    notes: safeText(input.notes, 2000),
+    notes: uppercaseText(input.notes, 2000),
   };
 }
 
@@ -1552,6 +1552,10 @@ function normalizeStoredDeal(input = {}) {
 
 function safeText(value, maxLength = 300) {
   return String(value || "").trim().slice(0, maxLength);
+}
+
+function uppercaseText(value, maxLength = 300) {
+  return safeText(value, maxLength).toLocaleUpperCase("en-US");
 }
 
 function safeMoney(value) {
