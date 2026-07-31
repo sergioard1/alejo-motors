@@ -70,7 +70,11 @@ let searchTerm = "";
 let selectedPhotos = [];
 let isAdmin = false;
 let apiAvailable = true;
-let authToken = window.localStorage.getItem("alejo_owner_token") || "";
+// Dealer access is deliberately kept to this browser tab. A closed tab or a
+// new device must authenticate again before inventory management is available.
+const dealerTokenKey = "alejo_dealer_session_token";
+const legacyDealerTokenKey = "alejo_owner_token";
+let authToken = window.sessionStorage.getItem(dealerTokenKey) || "";
 let editingVehicleId = "";
 let editingVehicleImages = [];
 let editingVehicleStatus = "available";
@@ -88,6 +92,7 @@ if (window.location.hash === "#owner-login") {
 async function init() {
   applyUrlCategory();
   await registerPageVisit();
+  await clearLegacyDealerSession();
   await loadSession();
   await Promise.all([loadVehicles(), loadSiteData()]);
   updateAdminUI();
@@ -95,6 +100,7 @@ async function init() {
   if (!isEditingVehicle()) {
     resetVehicleFormState();
   }
+  promptForDealerLoginIfNeeded();
   requestAnimationFrame(scrollToCurrentHash);
 }
 
@@ -313,6 +319,7 @@ window.addEventListener("hashchange", () => {
     return;
   }
 
+  promptForDealerLoginIfNeeded();
   updateAdminUI();
   renderVehicles();
 });
@@ -449,6 +456,13 @@ vehicleGrid.addEventListener("click", async (event) => {
 });
 
 async function loadSession() {
+  // Do not restore a dealer session just because an old browser cookie exists.
+  // The explicit token is created only after the dealer signs in in this tab.
+  if (!authToken) {
+    isAdmin = false;
+    return;
+  }
+
   try {
     const session = await apiRequest("/api/session");
     isAdmin = Boolean(session.authenticated);
@@ -589,11 +603,39 @@ async function apiRequest(url, options = {}) {
 
 function syncStoredAuthToken() {
   if (authToken) {
-    window.localStorage.setItem("alejo_owner_token", authToken);
+    window.sessionStorage.setItem(dealerTokenKey, authToken);
     return;
   }
 
-  window.localStorage.removeItem("alejo_owner_token");
+  window.sessionStorage.removeItem(dealerTokenKey);
+}
+
+async function clearLegacyDealerSession() {
+  const legacyToken = window.localStorage.getItem(legacyDealerTokenKey);
+  window.localStorage.removeItem(legacyDealerTokenKey);
+
+  if (authToken || !legacyToken) {
+    return;
+  }
+
+  try {
+    await fetch(buildApiUrl("/api/logout"), {
+      method: "POST",
+      credentials: apiBaseUrl ? "include" : "same-origin",
+      headers: { Authorization: `Bearer ${legacyToken}` },
+    });
+  } catch {
+    // A public visitor can still use the site if the stale login cannot be cleared.
+  }
+}
+
+function promptForDealerLoginIfNeeded() {
+  if (isAdmin || !["#manager", "#deal-desk"].includes(window.location.hash)) {
+    return;
+  }
+
+  history.replaceState(null, "", "#inventory");
+  openLoginModal();
 }
 
 function buildApiUrl(url) {
