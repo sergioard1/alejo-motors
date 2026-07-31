@@ -1154,13 +1154,15 @@ async function normalizeVehicle(vehicle, existingVehicles = []) {
   const id = randomBytes(12).toString("hex");
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
   const uploadedImages = await prepareVehicleImages(id, images);
-  const stockNumber = buildAutomaticStockNumber(existingVehicles);
+  const stockNumber = requestedStockNumber(vehicle.stockNumber, existingVehicles)
+    || buildAutomaticStockNumber(existingVehicles);
 
   return {
     id,
     year: String(vehicle.year || "").trim(),
     make: String(vehicle.make || "").trim(),
     model: String(vehicle.model || "").trim(),
+    trim: String(vehicle.trim || "").trim(),
     category: ["car", "suv", "pickup"].includes(vehicle.category) ? vehicle.category : "car",
     miles: String(vehicle.miles || "").trim(),
     price: String(vehicle.price || "Call for price").trim(),
@@ -1174,6 +1176,8 @@ async function normalizeVehicle(vehicle, existingVehicles = []) {
     interiorColor: String(vehicle.interiorColor || "").trim(),
     drivetrain: String(vehicle.drivetrain || "").trim(),
     fuelEconomy: String(vehicle.fuelEconomy || "").trim(),
+    fuelType: String(vehicle.fuelType || "").trim(),
+    titleType: String(vehicle.titleType || "").trim(),
     damage: String(vehicle.damage || "").trim(),
     status: "available",
     soldAt: "",
@@ -1190,7 +1194,8 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle, existingVehicles
   const status = String(vehicle.status || currentVehicle.status || "available").trim().toLowerCase() === "sold"
     ? "sold"
     : "available";
-  const stockNumber = String(currentVehicle.stockNumber || "").trim()
+  const stockNumber = requestedStockNumber(vehicle.stockNumber, existingVehicles, currentVehicle.id)
+    || String(currentVehicle.stockNumber || "").trim()
     || buildAutomaticStockNumber(existingVehicles, currentVehicle.id);
 
   return {
@@ -1198,6 +1203,7 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle, existingVehicles
     year: String(vehicle.year || "").trim(),
     make: String(vehicle.make || "").trim(),
     model: String(vehicle.model || "").trim(),
+    trim: String(vehicle.trim || "").trim(),
     category: ["car", "suv", "pickup"].includes(vehicle.category) ? vehicle.category : currentVehicle.category,
     miles: String(vehicle.miles || "").trim(),
     price: String(vehicle.price || "Call for price").trim(),
@@ -1211,6 +1217,8 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle, existingVehicles
     interiorColor: String(vehicle.interiorColor || "").trim(),
     drivetrain: String(vehicle.drivetrain || "").trim(),
     fuelEconomy: String(vehicle.fuelEconomy || "").trim(),
+    fuelType: String(vehicle.fuelType || "").trim(),
+    titleType: String(vehicle.titleType || "").trim(),
     damage: String(vehicle.damage || "").trim(),
     status,
     soldAt: status === "sold"
@@ -1218,6 +1226,16 @@ async function normalizeVehicleUpdate(existingVehicle, vehicle, existingVehicles
       : "",
     images: uploadedImages.length ? uploadedImages : ["assets/alejo-motors-logo.svg"]
   };
+}
+
+function requestedStockNumber(value, vehicles, excludeVehicleId = "") {
+  const requested = String(value || "").trim().toUpperCase();
+  if (!requested || !/^[A-Z0-9-]{1,24}$/.test(requested)) return "";
+  const duplicate = (Array.isArray(vehicles) ? vehicles : [])
+    .map(migrateVehicle)
+    .some((vehicle) => vehicle.id !== excludeVehicleId
+      && String(vehicle.stockNumber || "").trim().toUpperCase() === requested);
+  return duplicate ? "" : requested;
 }
 
 function buildAutomaticStockNumber(vehicles, excludeVehicleId = "") {
@@ -1326,6 +1344,7 @@ function migrateVehicle(vehicle) {
     year: String(vehicle.year || ""),
     make: String(vehicle.make || ""),
     model: String(vehicle.model || ""),
+    trim: String(vehicle.trim || ""),
     category: ["car", "suv", "pickup"].includes(vehicle.category) ? vehicle.category : "car",
     miles: String(vehicle.miles || ""),
     price: String(vehicle.price || "Call for price"),
@@ -1339,6 +1358,8 @@ function migrateVehicle(vehicle) {
     interiorColor: String(vehicle.interiorColor || ""),
     drivetrain: String(vehicle.drivetrain || ""),
     fuelEconomy: String(vehicle.fuelEconomy || ""),
+    fuelType: String(vehicle.fuelType || ""),
+    titleType: String(vehicle.titleType || ""),
     damage: String(vehicle.damage || ""),
     status: String(vehicle.status || "available").trim().toLowerCase() === "sold" ? "sold" : "available",
     soldAt: String(vehicle.soldAt || "").trim(),

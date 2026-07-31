@@ -374,7 +374,7 @@ function renderVehicleInfo(vehicle) {
     { icon: "engine", label: "Engine", value: vehicle.engine || "Call for information" },
     { icon: "transmission", label: "Transmission", value: vehicle.transmission || "Call for information" },
     { icon: "drivetrain", label: "Drivetrain", value: vehicle.drivetrain || "Call for information" },
-    { icon: "fuel", label: "Fuel", value: "Gasoline" },
+    { icon: "fuel", label: "Fuel", value: vehicle.fuelType || "Gasoline" },
     { icon: "paint", label: "Exterior Color", value: vehicle.exteriorColor || "Call for information" },
     { icon: "seat", label: "Interior Color", value: vehicle.interiorColor || "Call for information" },
     { icon: "hash", label: "Stock #", value: vehicle.stockNumber || "Call for information" },
