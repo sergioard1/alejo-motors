@@ -1,5 +1,30 @@
 [
   {
+    "id": "d52f410addd7e49d269005d2",
+    "year": "2016",
+    "make": "Mercedes-Benz",
+    "model": "E-Class",
+    "category": "car",
+    "miles": "0",
+    "price": "9800.00",
+    "notes": "Stock #AM-1010\n\nDano en fron bumper y no enciendee",
+    "stockNumber": "100001",
+    "vin": "WDDHF6FBXGB171811",
+    "condition": "Used",
+    "engine": "3.0L · V-Shaped · 6 cyl",
+    "transmission": "AUT",
+    "exteriorColor": "GRAY",
+    "interiorColor": "",
+    "drivetrain": "RWD",
+    "fuelEconomy": "24 CITY/ 36 HWY",
+    "damage": "",
+    "status": "available",
+    "soldAt": "",
+    "images": [
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F68%2FAfter%20repair%20photos%2F2761adb2-1723-4d99-a317-5decade80bc3.png&sig=q_Xh-DlIZ_3DVZ__h6SvW2BH8xS9LbtVPmK1rqL23Nk"
+    ]
+  },
+  {
     "id": "c02a0b4c6de08455da3fe062",
     "year": "2009",
     "make": "Subaru",
