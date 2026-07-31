@@ -323,7 +323,7 @@ function renderShell() {
           </div>
           <div class="calculator-document-actions">
             <div>
-              <strong>Printable Negotiation Quote</strong>
+              <strong>Printable Quote</strong>
               <small>Dealer, customer, vehicle and pricing details in one print-ready PDF.</small>
             </div>
             <button class="button primary document-action" data-document="quote" type="button">Open / Print Quote PDF</button>
@@ -377,15 +377,15 @@ function renderShell() {
           <div class="primary-documents">
             <article class="document-card primary-document">
               <span class="document-number">01</span>
-              <h4>Vehicle Purchase Agreement</h4>
-              <p>English agreement with buyer, vehicle, price and payment details filled in.</p>
-              <button class="button quiet document-action" data-document="vehicle-purchase-agreement" type="button">Generate Filled Word</button>
+              <h4>Cash Vehicle Purchase Agreement</h4>
+              <p>The new English agreement with buyer, vehicle, price and payment details filled in.</p>
+              <button class="button quiet document-action" data-document="cash-purchase-agreement" type="button">Open Filled PDF</button>
             </article>
             <article class="document-card primary-document">
               <span class="document-number">02</span>
-              <h4>Bill of Sale</h4>
-              <p>English bill of sale based on Alejo Motors' current document.</p>
-              <button class="button quiet document-action" data-document="bill-of-sale" type="button">Generate Filled Word</button>
+              <h4>Buyer's Guide</h4>
+              <p>Official English FTC guide, always completed as AS IS — NO DEALER WARRANTY.</p>
+              <button class="button quiet document-action" data-document="buyers-guide" type="button">Open Filled PDF</button>
             </article>
             <article class="document-card primary-document">
               <span class="document-number">03</span>
@@ -435,6 +435,12 @@ function bindEvents() {
         state.pricingMode === "base" ? current.basePrice : current.outTheDoor;
       document.querySelector("#pricingAmount").value = state.pricingAmount.toFixed(2);
       renderPricing();
+      return;
+    }
+
+    const deleteDealButton = event.target.closest("[data-delete-deal-id]");
+    if (deleteDealButton) {
+      await deleteSavedDeal(deleteDealButton.dataset.deleteDealId);
       return;
     }
 
@@ -894,14 +900,36 @@ function renderDealList(filter = "") {
         .filter(Boolean)
         .join(" ");
       return `
-        <button class="saved-deal ${state.currentDeal?.id === deal.id ? "active" : ""}" type="button" data-deal-id="${escapeHtml(deal.id)}">
-          <span>${escapeHtml(deal.dealNumber)}</span>
-          <strong>${escapeHtml(deal.customer?.fullName || "Buyer not entered")}</strong>
-          <small>${escapeHtml(title || "Vehicle")} · ${formatMoney(deal.pricing?.outTheDoor)}</small>
-        </button>
+        <div class="saved-deal-row ${state.currentDeal?.id === deal.id ? "active" : ""}">
+          <button class="saved-deal" type="button" data-deal-id="${escapeHtml(deal.id)}">
+            <span>${escapeHtml(deal.dealNumber)}</span>
+            <strong>${escapeHtml(deal.customer?.fullName || "Buyer not entered")}</strong>
+            <small>${escapeHtml(title || "Vehicle")} · ${formatMoney(deal.pricing?.outTheDoor)}</small>
+          </button>
+          <button class="delete-saved-deal" type="button" data-delete-deal-id="${escapeHtml(deal.id)}" aria-label="Delete ${escapeHtml(deal.dealNumber)}">Delete</button>
+        </div>
       `;
     })
     .join("");
+}
+
+async function deleteSavedDeal(dealId) {
+  const deal = state.deals.find((entry) => entry.id === dealId);
+  if (!deal) return;
+  const description = [deal.dealNumber, deal.customer?.fullName].filter(Boolean).join(" — ");
+  if (!window.confirm(`Delete ${description}? Use this only for a sale that was not completed. This cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    await dealerApi(`/api/deals/${encodeURIComponent(dealId)}`, { method: "DELETE" });
+    state.deals = state.deals.filter((entry) => entry.id !== dealId);
+    if (state.currentDeal?.id === dealId) startNewDeal();
+    renderDealList(getValue("dealSearch"));
+    setStatus(`${deal.dealNumber} deleted.`, "success");
+  } catch (error) {
+    setStatus(error.message || "The deal could not be deleted.", "error");
+  }
 }
 
 async function saveDefaultSettings() {
@@ -943,14 +971,20 @@ function renderSettingsInputs() {
 async function openDocument(type) {
   const draft = buildDraft();
   const missing = [];
-  const pdfType = ["form-130-u", "quote", "invoice"].includes(type);
-  const requiresAddress = type !== "quote";
+  const pdfType = [
+    "cash-purchase-agreement",
+    "buyers-guide",
+    "form-130-u",
+    "quote",
+    "invoice",
+  ].includes(type);
+  const requiresBuyer = type !== "buyers-guide";
+  const requiresAddress = ["cash-purchase-agreement", "form-130-u", "invoice"].includes(type);
   const requiresIdentification = [
-    "vehicle-purchase-agreement",
-    "bill-of-sale",
+    "cash-purchase-agreement",
     "form-130-u",
   ].includes(type);
-  if (!draft.customer.fullName) missing.push("buyer name");
+  if (requiresBuyer && !draft.customer.fullName) missing.push("buyer name");
   if (!draft.vehicle.vin) missing.push("VIN");
   if (!draft.vehicle.year || !draft.vehicle.make || !draft.vehicle.model) missing.push("vehicle details");
   if (requiresAddress && (
@@ -1125,9 +1159,9 @@ function vehicleTitle(deal) {
 }
 
 function documentLabel(type) {
-  if (type === "vehicle-purchase-agreement") return "Vehicle Purchase Agreement";
-  if (type === "bill-of-sale") return "Bill of Sale";
-  if (type === "quote") return "Negotiation Quote";
+  if (type === "cash-purchase-agreement") return "Cash Vehicle Purchase Agreement";
+  if (type === "buyers-guide") return "Buyer's Guide";
+  if (type === "quote") return "Quote";
   if (type === "invoice") return "Customer Invoice";
   return "Form 130-U";
 }

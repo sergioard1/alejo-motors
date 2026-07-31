@@ -53,7 +53,7 @@ test("creates a one-page letter invoice PDF with Alejo Motors metadata", async (
   assert.match(pdf.getTitle(), /^INVOICE INV-/);
 });
 
-test("creates a one-page negotiation quote with dealer processing disabled", async () => {
+test("creates a one-page quote with dealer processing disabled", async () => {
   const deal = sampleDeal(false);
   const bytes = await createSalesDocumentPdf("quote", deal);
   const pdf = await PDFDocument.load(bytes);
@@ -61,7 +61,7 @@ test("creates a one-page negotiation quote with dealer processing disabled", asy
   assert.equal(deal.pricing.totalFees, 165);
   assert.equal(deal.pricing.outTheDoor, 5690);
   assert.equal(pdf.getPageCount(), 1);
-  assert.match(pdf.getTitle(), /^NEGOTIATION QUOTE QT-/);
+  assert.match(pdf.getTitle(), /^QUOTE QT-/);
 });
 
 test("rejects unknown client PDF types", async () => {

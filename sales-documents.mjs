@@ -4,7 +4,6 @@ import { calculatePayments } from "./deal-math.mjs";
 const LETTER = [612, 792];
 const COLORS = {
   navy: rgb(8 / 255, 35 / 255, 95 / 255),
-  red: rgb(217 / 255, 30 / 255, 40 / 255),
   ink: rgb(32 / 255, 35 / 255, 42 / 255),
   muted: rgb(91 / 255, 98 / 255, 112 / 255),
   line: rgb(211 / 255, 215 / 255, 222 / 255),
@@ -20,7 +19,7 @@ const DEALER = {
   email: "alejomotorstx@gmail.com",
 };
 
-export async function createSalesDocumentPdf(documentType, deal, options = {}) {
+export async function createSalesDocumentPdf(documentType, deal) {
   if (!['quote', 'invoice'].includes(documentType)) {
     throw new Error("Unsupported sales PDF type.");
   }
@@ -32,18 +31,18 @@ export async function createSalesDocumentPdf(documentType, deal, options = {}) {
   const pricing = deal?.pricing || {};
   const paymentTotals = calculatePayments(deal?.payments || [], pricing.outTheDoor);
   const isInvoice = documentType === "invoice";
-  const documentTitle = isInvoice ? "INVOICE" : "NEGOTIATION QUOTE";
+  const documentTitle = isInvoice ? "INVOICE" : "QUOTE";
   const documentNumber = createDocumentNumber(documentType, deal);
   const totalLabel = isInvoice ? "Invoice Total" : "Quote Total";
 
   pdf.setTitle(`${documentTitle} ${documentNumber}`);
   pdf.setAuthor(DEALER.name);
-  pdf.setSubject(`${isInvoice ? "Sales invoice" : "Vehicle negotiation quote"} for ${vehicleTitle(deal)}`);
+  pdf.setSubject(`${isInvoice ? "Sales invoice" : "Vehicle quote"} for ${vehicleTitle(deal)}`);
   pdf.setCreator("Alejo Motors Deal Desk");
   pdf.setProducer("Alejo Motors Deal Desk");
 
-  page.drawRectangle({ x: 0, y: 784, width: 612, height: 8, color: COLORS.red });
-  await drawBrand(page, pdf, options.logoBytes, regular, bold);
+  page.drawRectangle({ x: 0, y: 784, width: 612, height: 8, color: COLORS.navy });
+  drawBrand(page, bold);
   drawDocumentHeading(page, {
     title: documentTitle,
     number: documentNumber,
@@ -84,29 +83,13 @@ function drawDocumentHeading(page, { title, number, date, balance, isInvoice, re
   drawRightText(page, title, 566, 741, bold, title.length > 12 ? 20 : 28, COLORS.ink, 250);
   drawRightText(page, `# ${number}`, 566, 718, bold, 10.5, COLORS.ink, 230);
   drawRightText(page, `${isInvoice ? "Invoice" : "Quote"} Date: ${date || "-"}`, 566, 698, regular, 8.5, COLORS.muted, 230);
-  drawRightText(page, isInvoice ? "Terms: Due on Receipt" : "Purpose: Vehicle Negotiation", 566, 684, regular, 8.5, COLORS.muted, 230);
+  drawRightText(page, isInvoice ? "Terms: Due on Receipt" : "Purpose: Vehicle Quote", 566, 684, regular, 8.5, COLORS.muted, 230);
 
   drawRightText(page, isInvoice ? "BALANCE DUE" : "CURRENT BALANCE", 566, 661, bold, 7.5, COLORS.muted, 180);
-  drawRightText(page, formatMoney(balance), 566, 640, bold, 17, isInvoice ? COLORS.red : COLORS.navy, 190);
+  drawRightText(page, formatMoney(balance), 566, 640, bold, 17, COLORS.navy, 190);
 }
 
-async function drawBrand(page, pdf, logoBytes, regular, bold) {
-  if (logoBytes) {
-    try {
-      const logo = await pdf.embedPng(logoBytes);
-      const scale = Math.min(225 / logo.width, 63 / logo.height);
-      page.drawImage(logo, {
-        x: 40,
-        y: 712,
-        width: logo.width * scale,
-        height: logo.height * scale,
-      });
-      return;
-    } catch {
-      // The text brand below keeps the PDF usable if the optional image is unavailable.
-    }
-  }
-
+function drawBrand(page, bold) {
   drawText(page, DEALER.name, {
     x: 44,
     y: 746,
@@ -119,7 +102,7 @@ async function drawBrand(page, pdf, logoBytes, regular, bold) {
     y: 729,
     font: bold,
     size: 8,
-    color: COLORS.red,
+    color: COLORS.navy,
   });
 }
 
@@ -359,7 +342,7 @@ function drawTermsAndSignatures(page, { isInvoice, regular, bold }) {
         "All sales are final except where otherwise required by law or stated in a signed written agreement.",
       ]
     : [
-        "Negotiation quote only. This is not a purchase agreement, receipt, or proof of ownership.",
+        "Quote only. This is not a purchase agreement, receipt, or proof of ownership.",
         "Pricing is based on the information shown and may be revised before the final documents are signed.",
         "A completed purchase requires signed sales documents and confirmation of all funds received.",
       ];

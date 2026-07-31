@@ -2692,6 +2692,13 @@ textarea {
   padding-right: 3px;
 }
 
+.saved-deal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 6px;
+}
+
 .saved-deal {
   display: grid;
   gap: 4px;
@@ -2706,9 +2713,26 @@ textarea {
 }
 
 .saved-deal:hover,
-.saved-deal.active {
+.saved-deal-row.active .saved-deal {
   border-color: var(--accent);
   background: #fff1f1;
+}
+
+.delete-saved-deal {
+  width: 58px;
+  border: 1px solid #c9c2ba;
+  border-radius: 10px;
+  background: #fff;
+  color: #554f49;
+  font: 800 0.68rem/1 "Manrope", sans-serif;
+  cursor: pointer;
+}
+
+.delete-saved-deal:hover,
+.delete-saved-deal:focus-visible {
+  border-color: #1f2937;
+  background: #f1f3f5;
+  color: #111827;
 }
 
 .saved-deal span {
@@ -3299,6 +3323,10 @@ textarea {
   .payment-summary,
   .primary-documents {
     grid-template-columns: 1fr;
+  }
+
+  .saved-deal-row {
+    grid-template-columns: minmax(0, 1fr) 64px;
   }
 
   .deal-wide {

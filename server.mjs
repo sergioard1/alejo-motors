@@ -3,7 +3,6 @@ import { createServer } from "node:http";
 import { randomBytes, createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import PizZip from "pizzip";
 import {
   DEFAULT_DEAL_SETTINGS,
   calculateDealPricing,
@@ -11,6 +10,10 @@ import {
   normalizeDealSettings,
 } from "./deal-math.mjs";
 import { createSalesDocumentPdf } from "./sales-documents.mjs";
+import {
+  createBuyersGuidePdf,
+  createCashPurchaseAgreementPdf,
+} from "./client-documents.mjs";
 
 const root = resolve(".");
 const port = Number(process.env.PORT || 8080);
@@ -25,24 +28,7 @@ const sitePath = join(dataRoot, "site.json");
 const dealsPath = join(dataRoot, "deals.json");
 const dealSettingsPath = join(dataRoot, "deal-settings.json");
 const form130UPath = join(root, "assets", "dealer-documents", "form-130-u.pdf");
-const salesDocumentLogoPath = join(
-  root,
-  "assets",
-  "dealer-documents",
-  "alejo-motors-document-logo.png"
-);
-const purchaseAgreementTemplatePath = join(
-  root,
-  "assets",
-  "dealer-documents",
-  "vehicle-purchase-agreement-template.docx"
-);
-const billOfSaleTemplatePath = join(
-  root,
-  "assets",
-  "dealer-documents",
-  "bill-of-sale-template.docx"
-);
+const buyersGuidePath = join(root, "assets", "dealer-documents", "buyers-guide-english.pdf");
 const githubRepo = process.env.GITHUB_REPO || "";
 const githubBranch = process.env.GITHUB_BRANCH || "main";
 const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
@@ -304,7 +290,7 @@ async function handleApi(request, response, url) {
   }
 
   const clientDocumentMatch = url.pathname.match(
-    /^\/api\/deals\/([^/]+)\/(vehicle-purchase-agreement|bill-of-sale)\.docx$/
+    /^\/api\/deals\/([^/]+)\/(cash-purchase-agreement|buyers-guide)\.pdf$/
   );
   if (request.method === "GET" && clientDocumentMatch) {
     requireAuth(request, response);
@@ -318,16 +304,20 @@ async function handleApi(request, response, url) {
       return;
     }
 
-    const document = createClientDocx(documentType, deal);
-    const suffix =
-      documentType === "vehicle-purchase-agreement"
-        ? "vehicle-purchase-agreement"
-        : "bill-of-sale";
+    if (documentType === "buyers-guide" && !existsSync(buyersGuidePath)) {
+      sendJson(response, 500, { error: "Buyers Guide template is unavailable." });
+      return;
+    }
+
+    const document =
+      documentType === "cash-purchase-agreement"
+        ? await createCashPurchaseAgreementPdf(deal)
+        : await createBuyersGuidePdf(deal, readFileSync(buyersGuidePath));
     response.writeHead(200, {
-      "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "content-type": "application/pdf",
       "content-disposition": `attachment; filename="${safeFilename(
         deal.dealNumber || deal.id
-      )}-${suffix}.docx"`,
+      )}-${documentType}.pdf"`,
       "cache-control": "no-store",
     });
     response.end(document);
@@ -369,11 +359,7 @@ async function handleApi(request, response, url) {
       return;
     }
 
-    const pdf = await createSalesDocumentPdf(documentType, deal, {
-      logoBytes: existsSync(salesDocumentLogoPath)
-        ? readFileSync(salesDocumentLogoPath)
-        : undefined,
-    });
+    const pdf = await createSalesDocumentPdf(documentType, deal);
     response.writeHead(200, {
       "content-type": "application/pdf",
       "content-disposition": `inline; filename="${safeFilename(
@@ -1421,55 +1407,6 @@ async function lookupCounty({ street, city, state, zip }) {
   };
 }
 
-function createClientDocx(documentType, deal) {
-  const templatePath =
-    documentType === "vehicle-purchase-agreement"
-      ? purchaseAgreementTemplatePath
-      : billOfSaleTemplatePath;
-
-  if (!existsSync(templatePath)) {
-    throw Object.assign(new Error("Client document template is unavailable."), { status: 500 });
-  }
-
-  const zip = new PizZip(readFileSync(templatePath));
-  const documentPart = zip.file("word/document.xml");
-  if (!documentPart) {
-    throw Object.assign(new Error("Client document template is invalid."), { status: 500 });
-  }
-
-  const replacements = {
-    dealNumber: deal.dealNumber,
-    saleDateLong: formatLongUsDate(deal.saleDate),
-    totalPurchasePrice: formatDocumentMoney(deal.pricing.outTheDoor),
-    buyerName: deal.customer.fullName,
-    buyerAddress: formatCustomerAddress(deal.customer),
-    buyerPhone: deal.customer.phone,
-    buyerIdentification: formatCustomerIdentification(deal.customer),
-    vehicleMake: deal.vehicle.make,
-    vehicleModel: deal.vehicle.model,
-    vehicleYear: deal.vehicle.year,
-    vehicleVin: deal.vehicle.vin,
-    vehicleMileage: deal.vehicle.miles,
-    vehicleColor: deal.vehicle.color,
-  };
-  let xml = documentPart.asText();
-
-  for (const [key, value] of Object.entries(replacements)) {
-    xml = xml.replaceAll(`{${key}}`, escapeXml(value));
-  }
-
-  if (/\{[A-Za-z][A-Za-z0-9]*\}/.test(xml)) {
-    throw Object.assign(new Error("A client document field could not be completed."), { status: 500 });
-  }
-
-  zip.file("word/document.xml", xml);
-  return zip.generate({
-    type: "nodebuffer",
-    compression: "DEFLATE",
-    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  });
-}
-
 function normalizeDeal(input = {}, fallbackSettings = DEFAULT_DEAL_SETTINGS, preserveTimestamps = false) {
   const now = new Date().toISOString();
   const settings = normalizeDealSettings(input.settings || fallbackSettings);
@@ -1566,45 +1503,6 @@ function safeMoney(value) {
 function createDealNumber(id) {
   const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
   return `AM-${date}-${String(id).slice(-6).toUpperCase()}`;
-}
-
-function formatLongUsDate(value) {
-  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return "";
-  return new Date(`${value}T12:00:00`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "America/Chicago",
-  });
-}
-
-function formatDocumentMoney(value) {
-  return Number(value || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatCustomerAddress(customer = {}) {
-  const stateAndZip = [customer.state, customer.zip].filter(Boolean).join(" ");
-  return [customer.streetAddress, customer.city, stateAndZip].filter(Boolean).join(", ");
-}
-
-function formatCustomerIdentification(customer = {}) {
-  const type = safeText(customer.identificationType, 80);
-  const state = safeText(customer.identificationState, 2).toUpperCase();
-  const number = safeText(customer.identificationNumber, 120);
-  return [type, state, number].filter(Boolean).join(" - ");
-}
-
-function escapeXml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
 }
 
 async function createForm130U(deal) {
