@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check script.js && node --check detail.js && node --check deal-desk.js && node --check deal-math.mjs",
+    "check": "node --check server.mjs && node --check script.js && node --check detail.js && node --check deal-desk.js && node --check deal-math.mjs && node --check sales-documents.mjs",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {

@@ -3006,6 +3006,38 @@ textarea {
   font-size: 1.45rem;
 }
 
+.calculator-document-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  border: 1px solid rgba(8, 35, 95, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f7f9ff 0%, #fff 100%);
+  padding: 15px 16px;
+}
+
+.calculator-document-actions > div {
+  display: grid;
+  gap: 4px;
+}
+
+.calculator-document-actions strong {
+  font: 800 0.94rem/1.2 "Sora", "Manrope", sans-serif;
+  color: #08235f;
+}
+
+.calculator-document-actions small {
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.calculator-document-actions .button {
+  flex: 0 0 auto;
+}
+
 .default-fees-editor {
   margin-top: 18px;
   border-top: 1px solid var(--line);
@@ -3120,7 +3152,7 @@ textarea {
 
 .primary-documents {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -3233,14 +3265,16 @@ textarea {
 
   .deal-desk-heading-actions,
   .fees-editor-actions,
-  .deal-save-actions {
+  .deal-save-actions,
+  .calculator-document-actions {
     display: grid;
     grid-template-columns: 1fr;
   }
 
   .deal-desk-heading-actions .button,
   .fees-editor-actions .button,
-  .deal-save-actions .button {
+  .deal-save-actions .button,
+  .calculator-document-actions .button {
     width: 100%;
   }
 

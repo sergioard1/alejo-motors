@@ -303,6 +303,13 @@ function renderShell() {
               <div class="price-line out-the-door"><span>Total Out the Door</span><strong id="summaryOtd">$0.00</strong></div>
             </div>
           </div>
+          <div class="calculator-document-actions">
+            <div>
+              <strong>Printable Negotiation Quote</strong>
+              <small>Dealer, customer, vehicle and pricing details in one print-ready PDF.</small>
+            </div>
+            <button class="button primary document-action" data-document="quote" type="button">Open / Print Quote PDF</button>
+          </div>
         </section>
 
         <section class="deal-card">
@@ -345,7 +352,7 @@ function renderShell() {
               <span class="deal-step">4</span>
               <div>
                 <h3>Primary Documents</h3>
-                <p>Únicamente los tres documentos del cliente, completados con la información del expediente.</p>
+                <p>Los cuatro documentos principales del cliente, generados desde cualquier computadora o móvil.</p>
               </div>
             </div>
           </div>
@@ -367,6 +374,12 @@ function renderShell() {
               <h4>Form 130-U</h4>
               <p>Official Texas form with vehicle, buyer, sales price and tax fields completed.</p>
               <button class="button quiet document-action" data-document="form-130-u" type="button">Open Filled PDF</button>
+            </article>
+            <article class="document-card primary-document">
+              <span class="document-number">04</span>
+              <h4>Customer Invoice</h4>
+              <p>Print-ready invoice with dealer, buyer, vehicle, charges, payments and balance due.</p>
+              <button class="button quiet document-action" data-document="invoice" type="button">Open / Print Invoice PDF</button>
             </article>
           </div>
         </section>
@@ -903,18 +916,27 @@ function renderSettingsInputs() {
 async function openDocument(type) {
   const draft = buildDraft();
   const missing = [];
+  const pdfType = ["form-130-u", "quote", "invoice"].includes(type);
+  const requiresAddress = type !== "quote";
+  const requiresIdentification = [
+    "vehicle-purchase-agreement",
+    "bill-of-sale",
+    "form-130-u",
+  ].includes(type);
   if (!draft.customer.fullName) missing.push("buyer name");
   if (!draft.vehicle.vin) missing.push("VIN");
   if (!draft.vehicle.year || !draft.vehicle.make || !draft.vehicle.model) missing.push("vehicle details");
-  if (
+  if (requiresAddress && (
     !draft.customer.streetAddress ||
     !draft.customer.city ||
     !draft.customer.state ||
     !draft.customer.zip
-  ) {
+  )) {
     missing.push("complete buyer address");
   }
-  if (!draft.customer.identificationNumber) missing.push("identification number");
+  if (requiresIdentification && !draft.customer.identificationNumber) {
+    missing.push("identification number");
+  }
   if (type === "form-130-u" && !draft.customer.county) missing.push("buyer county");
 
   if (missing.length) {
@@ -922,9 +944,9 @@ async function openDocument(type) {
     return;
   }
 
-  const preview = type === "form-130-u" ? window.open("", "_blank") : null;
-  if (type === "form-130-u" && !preview) {
-    setStatus("Allow pop-ups for Alejo Motors to open Form 130-U.", "error");
+  const preview = pdfType ? window.open("", "_blank") : null;
+  if (pdfType && !preview) {
+    setStatus(`Allow pop-ups for Alejo Motors to open ${documentLabel(type)}.`, "error");
     return;
   }
   if (preview) {
@@ -933,21 +955,21 @@ async function openDocument(type) {
 
   try {
     const deal = await saveDeal({ quiet: true });
-    const extension = type === "form-130-u" ? "pdf" : "docx";
+    const extension = pdfType ? "pdf" : "docx";
     const endpoint = `/api/deals/${encodeURIComponent(deal.id)}/${type}.${extension}`;
     const response = await fetchPrivateFile(endpoint);
     const objectUrl = URL.createObjectURL(await response.blob());
 
-    if (type === "form-130-u" && preview) {
+    if (pdfType && preview) {
       preview.location.href = objectUrl;
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 120_000);
-      setStatus("Filled Form 130-U opened in a private tab.", "success");
+      setStatus(`${documentLabel(type)} opened. Use the PDF controls to print, save or share it.`, "success");
       return;
     }
 
     const download = document.createElement("a");
     download.href = objectUrl;
-    download.download = `${deal.dealNumber}-${type}.docx`;
+    download.download = `${deal.dealNumber}-${type}.${extension}`;
     document.body.append(download);
     download.click();
     download.remove();
@@ -1072,6 +1094,8 @@ function vehicleTitle(deal) {
 function documentLabel(type) {
   if (type === "vehicle-purchase-agreement") return "Vehicle Purchase Agreement";
   if (type === "bill-of-sale") return "Bill of Sale";
+  if (type === "quote") return "Negotiation Quote";
+  if (type === "invoice") return "Customer Invoice";
   return "Form 130-U";
 }
 

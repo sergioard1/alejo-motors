@@ -10,6 +10,7 @@ import {
   calculatePayments,
   normalizeDealSettings,
 } from "./deal-math.mjs";
+import { createSalesDocumentPdf } from "./sales-documents.mjs";
 
 const root = resolve(".");
 const port = Number(process.env.PORT || 8080);
@@ -24,6 +25,12 @@ const sitePath = join(dataRoot, "site.json");
 const dealsPath = join(dataRoot, "deals.json");
 const dealSettingsPath = join(dataRoot, "deal-settings.json");
 const form130UPath = join(root, "assets", "dealer-documents", "form-130-u.pdf");
+const salesDocumentLogoPath = join(
+  root,
+  "assets",
+  "dealer-documents",
+  "alejo-motors-document-logo.png"
+);
 const purchaseAgreementTemplatePath = join(
   root,
   "assets",
@@ -343,6 +350,35 @@ async function handleApi(request, response, url) {
     response.writeHead(200, {
       "content-type": "application/pdf",
       "content-disposition": `inline; filename="${safeFilename(deal.dealNumber || deal.id)}-form-130-u.pdf"`,
+      "cache-control": "no-store",
+    });
+    response.end(pdf);
+    return;
+  }
+
+  const salesPdfMatch = url.pathname.match(/^\/api\/deals\/([^/]+)\/(quote|invoice)\.pdf$/);
+  if (request.method === "GET" && salesPdfMatch) {
+    requireAuth(request, response);
+    if (response.writableEnded) return;
+    const dealId = decodeURIComponent(salesPdfMatch[1]);
+    const documentType = salesPdfMatch[2];
+    const deal = (await readDeals()).find((entry) => entry.id === dealId);
+
+    if (!deal) {
+      sendJson(response, 404, { error: "Deal not found" });
+      return;
+    }
+
+    const pdf = await createSalesDocumentPdf(documentType, deal, {
+      logoBytes: existsSync(salesDocumentLogoPath)
+        ? readFileSync(salesDocumentLogoPath)
+        : undefined,
+    });
+    response.writeHead(200, {
+      "content-type": "application/pdf",
+      "content-disposition": `inline; filename="${safeFilename(
+        deal.dealNumber || deal.id
+      )}-${documentType}.pdf"`,
       "cache-control": "no-store",
     });
     response.end(pdf);
