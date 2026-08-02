@@ -3,15 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check script.js && node --check detail.js && node --check deal-desk.js && node --check deal-math.mjs && node --check sales-documents.mjs && node --check client-documents.mjs",
+    "start": "node scripts/preview-static.mjs",
+    "build": "node scripts/build-static.mjs",
+    "preview": "node scripts/preview-static.mjs",
+    "check:static": "node --check static-src/app.js && node --check static-src/detail.js && node --check scripts/build-static.mjs && node --check scripts/preview-static.mjs",
+    "test:static": "node --test tests/static-site.test.mjs",
+    "check": "pnpm run check:static && node --check deal-math.mjs && node --check sales-documents.mjs && node --check client-documents.mjs",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "pdf-lib": "1.17.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "sharp": "0.34.5"
   }
 }
