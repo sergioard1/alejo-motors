@@ -40,7 +40,7 @@
     "trim": "",
     "category": "car",
     "miles": "230000",
-    "price": "4200.00",
+    "price": "4000.00",
     "notes": "Stock #AM-1002\n\nRuns & drives good\nAutomatic transmission\n4-cylinder engine\nCold A/C – Heater works\nPower windows & locks\nCruise control\nVery clean interior\nEmission inspection done\nClean title\nReliable, fuel-efficient, and low maintenance. Perfect daily driver and ready to drive today.\nCash deal\n\nCondición publicada: Runs and drives\n\nRendimiento publicado: 20 city/ 25 hwy\n\nSincronizado desde el inventario público de Alejo Motors.",
     "stockNumber": "AM-1002",
     "vin": "1HGCP2F33AA080980",
@@ -57,17 +57,14 @@
     "status": "available",
     "soldAt": "",
     "images": [
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-1-1785423156011-561f0d11.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-2-1785423157265-7f17becf.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-3-1785423158435-9aaab56f.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-4-1785423159671-b824ccbc.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-5-1785423161358-c087c6cf.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-6-1785423162602-241a027a.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-7-1785423163722-0ae65a20.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-8-1785423164854-daa60e5b.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-9-1785423165987-ddb24650.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-10-1785423167079-19e3a39f.jpg",
-      "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/e6df299acde17174a38871b7/photo-11-1785423168116-ea1aed93.jpg"
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F6cd03a28-0bdc-4d17-8eab-c8c943215f89.jpg&sig=2OZB5Np8DYIgA5js_lqaApkYPMc7yLXFdjehmE6XB_I",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F9a74f539-57f8-49f3-8821-922c135d1abc.jpg&sig=6IZ6Felv2q__lt2V6pMm5Hhe90bNLrYM4C4BBgd6NWk",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2Fdaf9d5e8-1701-457f-bd12-76309e375fbc.jpg&sig=lZFx12mx5oC6Bx3MMjbqXMfYvXtf940HCf3ibT6WJ_E",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F1c4829c3-1a15-4707-beb7-8f82b2b60ed1.jpg&sig=D0YW-6CjAyg7MVW_fcwhnIXbPNtaMmNP8eyFkgegNsc",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F441074bf-3aca-4528-b6bb-03011f0695d8.jpg&sig=bWxiGj10v2cu4NmCa2QkdpqJhKEHSlxYkQd88brkXFU",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2Fa1a0bdf1-1f74-4f62-8f0e-aa9591aced47.jpg&sig=x4NJdWFTz1lYjxVPkUqWlGJtTedJGnP8elu0Oqj8cA4",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F1ba08650-6c44-4ba1-86ab-b0e7fd21f25c.jpg&sig=ubnINzS3GC6lZJqep3Z9SJ9A4jTxWJ-vLhu40FHhAXg",
+      "https://alejo-vehicle-manager.alejomotors.chatgpt.site/api/public-files?key=inventory%2F6%2FAfter%20repair%20photos%2F460217e3-4c9e-4cdf-b1e8-d9367f82e1b5.jpg&sig=_i6xbsLu3waP2yq2lNWdknT33PWeBgVOTYQ6tDmWnLA"
     ]
   },
   {
