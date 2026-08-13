@@ -37,6 +37,17 @@ test("home prerenders available vehicles and only three sold vehicles", async ()
   assert.doesNotMatch(sold, /href="tel:|href="sms:|wa\.me/);
 });
 
+test("home and vehicle details omit inventory update timestamps", async () => {
+  const home = await readFile(path.join(dist, "index.html"), "utf8");
+  const detail = await readFile(path.join(dist, "detail.html"), "utf8");
+  const app = await readFile(path.join(root, "static-src", "app.js"), "utf8");
+  const detailScript = await readFile(path.join(root, "static-src", "detail.js"), "utf8");
+  assert.doesNotMatch(home, /vehicles available now|inventoryUpdated|availableCount/i);
+  assert.doesNotMatch(detailScript, /Last updated|detailUpdated/i);
+  assert.doesNotMatch(app, /inventoryUpdated|availableCount/i);
+  assert.match(detail, /id="detailUpdated"/);
+});
+
 test("sold vehicles have a searchable dedicated page with the full sold catalog", async () => {
   const snapshot = JSON.parse(await readFile(path.join(dist, "data", "public-inventory.json"), "utf8"));
   const html = await readFile(path.join(dist, "sold.html"), "utf8");

@@ -132,7 +132,7 @@ const availableCards = vehicles.filter((item) => item.status === "available").ma
 const soldCards = vehicles.filter((item) => item.status === "sold").slice(0, 3).map((item) => card(item)).join("");
 const allSoldCards = vehicles.filter((item) => item.status === "sold").map((item) => card(item)).join("");
 let indexHtml = await readFile(path.join(sourceDir, "index.html"), "utf8");
-indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards).replace('id="availableCount">0', `id="availableCount">${publicData.counts.available}`).replace("Last inventory update loading…", `Updated ${new Date(generatedAt).toLocaleDateString("en-US")}`);
+indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards);
 let detailHtml = await readFile(path.join(sourceDir, "detail.html"), "utf8");
 detailHtml = detailHtml.replace("assets/site.css", cssAsset).replace("assets/detail.js", detailAsset);
 let soldHtml = await readFile(path.join(sourceDir, "sold.html"), "utf8");

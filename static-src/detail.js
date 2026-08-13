@@ -32,7 +32,6 @@ function render() {
   const specs = [["Engine",vehicle.engine],["Transmission",/^aut$/i.test(text(vehicle.transmission))?"Automatic":vehicle.transmission],["Drivetrain",vehicle.drivetrain],["Fuel",vehicle.fuelType],["Exterior",vehicle.exteriorColor],["Interior",vehicle.interiorColor],["Title",vehicle.titleType]].filter(([,value])=>text(value));
   document.querySelector("#detailSpecs").replaceChildren(...specs.map(([label,value])=>{const div=document.createElement("div");const dt=document.createElement("dt");const dd=document.createElement("dd");dt.textContent=label;dd.textContent=text(value);div.append(dt,dd);return div;}));
   document.querySelector("#detailDescription").textContent = text(vehicle.description) || "Contact Alejo Motors for complete vehicle information.";
-  document.querySelector("#detailUpdated").textContent = vehicle.updatedAt ? `Last updated ${new Date(vehicle.updatedAt).toLocaleString()}` : "";
   document.title = `${name(vehicle)} | Alejo Motors Autosales`;
   document.querySelector('meta[name="description"]').content = `${name(vehicle)}, ${text(vehicle.mileage)} miles, available from Alejo Motors Autosales.`;
   document.querySelector('meta[property="og:title"]').content = `${name(vehicle)} | Alejo Motors`;

@@ -100,8 +100,6 @@ function render() {
   const available = snapshot.vehicles.filter((vehicle) => vehicle.status === "available" && (activeFilter === "all" || vehicle.category === activeFilter) && `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase().includes(query));
   grid.replaceChildren(...available.map((vehicle, index) => card(vehicle, index < 3)));
   soldGrid.replaceChildren(...snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").sort(soldOrder).slice(0, 3).map((vehicle) => card(vehicle)));
-  document.querySelector("#availableCount").textContent = String(snapshot.vehicles.filter((vehicle) => vehicle.status === "available").length);
-  document.querySelector("#inventoryUpdated").textContent = snapshot.generatedAt ? `Updated ${new Date(snapshot.generatedAt).toLocaleString()}` : "Latest published inventory";
   state.hidden = available.length > 0;
   state.textContent = available.length ? "" : "No available vehicles match this search. Call or text us for help.";
 }
