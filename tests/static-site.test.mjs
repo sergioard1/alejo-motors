@@ -54,7 +54,7 @@ test("home hero uses the newest available vehicle photo as its background", asyn
   const featured = snapshot.vehicles.find((vehicle) => vehicle.status === "available" && vehicle.photos.length);
   assert.ok(featured?.photos[0]?.detail);
   assert.match(home, new RegExp(featured.photos[0].detail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(home, /--hero-image:url/);
+  assert.match(home, /background-image:linear-gradient/);
 });
 
 test("sold vehicles have a searchable dedicated page with the full sold catalog", async () => {

@@ -101,7 +101,7 @@ function render() {
   const available = snapshot.vehicles.filter((vehicle) => vehicle.status === "available" && (activeFilter === "all" || vehicle.category === activeFilter) && `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase().includes(query));
   const featured = snapshot.vehicles.filter((vehicle) => vehicle.status === "available").sort((left, right) => (validTimestamp(right.updatedAt) ?? 0) - (validTimestamp(left.updatedAt) ?? 0))[0];
   const featuredPhoto = featured ? photo(featured, "detail") : "";
-  if (featuredPhoto) hero.style.setProperty("--hero-image", `url("${featuredPhoto.replaceAll('"', '%22')}")`);
+  if (featuredPhoto) hero.style.backgroundImage = `linear-gradient(90deg,rgba(5,12,20,.88),rgba(5,12,20,.7) 48%,rgba(5,12,20,.28)),url("${featuredPhoto.replaceAll('"', '%22')}")`;
   grid.replaceChildren(...available.map((vehicle, index) => card(vehicle, index < 3)));
   soldGrid.replaceChildren(...snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").sort(soldOrder).slice(0, 3).map((vehicle) => card(vehicle)));
   state.hidden = available.length > 0;
