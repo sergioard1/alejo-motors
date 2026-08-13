@@ -40,8 +40,17 @@ function localImagePath(url) {
 async function outputPhotos(vehicle) {
   const photos = [];
   for (const [index, original] of (vehicle.images || []).slice(0, 20).entries()) {
-    const input = localImagePath(original);
-    try { await stat(input); } catch { continue; }
+    let input;
+    if (/^https?:\/\//i.test(text(original))) {
+      try {
+        const response = await fetch(original);
+        if (!response.ok) continue;
+        input = Buffer.from(await response.arrayBuffer());
+      } catch { continue; }
+    } else {
+      input = localImagePath(original);
+      try { await stat(input); } catch { continue; }
+    }
     const base = `media/${vehicle.id}/${String(index + 1).padStart(2, "0")}`;
     const sizes = { thumbnail: [400, 68], card: [800, 76], detail: [1400, 82] };
     const item = {};
@@ -129,10 +138,12 @@ await writeFile(path.join(outputDir, "assets", "vehicle-placeholder.svg"), '<svg
 await writeFile(path.join(outputDir, "config.js"), `window.ALEJO_CONFIG=${JSON.stringify({ inventoryEndpoint: process.env.PUBLIC_INVENTORY_ENDPOINT || "", leadEndpoint: process.env.PUBLIC_LEAD_ENDPOINT || "", phone })};\n`);
 
 const availableCards = vehicles.filter((item) => item.status === "available").map((item, index) => card(item, index < 3)).join("");
+const featuredVehicle = vehicles.filter((item) => item.status === "available" && item.photos.length).sort(publicVehicleComparator)[0];
+const featuredPhoto = featuredVehicle?.photos[0]?.detail ? `/${featuredVehicle.photos[0].detail}` : "/assets/vehicle-placeholder.svg";
 const soldCards = vehicles.filter((item) => item.status === "sold").slice(0, 3).map((item) => card(item)).join("");
 const allSoldCards = vehicles.filter((item) => item.status === "sold").map((item) => card(item)).join("");
 let indexHtml = await readFile(path.join(sourceDir, "index.html"), "utf8");
-indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards);
+indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("assets/vehicle-placeholder.svg')", `${featuredPhoto}')`).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards);
 let detailHtml = await readFile(path.join(sourceDir, "detail.html"), "utf8");
 detailHtml = detailHtml.replace("assets/site.css", cssAsset).replace("assets/detail.js", detailAsset);
 let soldHtml = await readFile(path.join(sourceDir, "sold.html"), "utf8");

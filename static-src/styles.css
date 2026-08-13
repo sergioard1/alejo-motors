@@ -29,3 +29,6 @@ footer{background:#172431}footer img{filter:none}.mobile-contact{background:#172
 body{overflow-x:clip}@media(max-width:1250px) and (min-width:1021px){.site-header{gap:18px}.brand img{width:210px}.site-header nav{gap:15px}.header-call{display:none}}
 .hero{grid-template-columns:1fr}.hero-copy{max-width:980px}
 #detailUpdated{display:none!important}
+.hero{position:relative;isolation:isolate;min-height:clamp(430px,60vh,680px);background-image:linear-gradient(90deg,rgba(5,12,20,.88) 0%,rgba(5,12,20,.7) 48%,rgba(5,12,20,.28) 100%),var(--hero-image);background-position:center;background-size:cover;color:#fff}
+.hero:after{position:absolute;z-index:-1;inset:0;background:linear-gradient(0deg,rgba(5,12,20,.28),transparent 45%);content:""}.hero-copy>span{color:#ffd37a}.hero h1{color:#fff;text-shadow:0 3px 22px rgba(0,0,0,.28)}.hero p{color:rgba(255,255,255,.88)}.hero .button.primary{background:#fff;color:var(--navy)}.hero .button.secondary{border-color:rgba(255,255,255,.55);background:rgba(10,20,32,.42);color:#fff;backdrop-filter:blur(8px)}
+@media(max-width:680px){.hero{min-height:500px;background-position:62% center}.hero h1{font-size:52px}.hero p{font-size:16px}}

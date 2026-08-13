@@ -3,6 +3,7 @@ const phone = String(config.phone || "+16789271739");
 const digits = phone.replace(/\D/g, "");
 const grid = document.querySelector("#inventoryGrid");
 const soldGrid = document.querySelector("#soldGrid");
+const hero = document.querySelector("#home");
 const template = document.querySelector("#vehicleCardTemplate");
 const state = document.querySelector("#inventoryState");
 const search = document.querySelector("#inventorySearch");
@@ -98,6 +99,9 @@ function render() {
   if (!validSnapshot(snapshot)) return;
   const query = text(search.value).toLowerCase();
   const available = snapshot.vehicles.filter((vehicle) => vehicle.status === "available" && (activeFilter === "all" || vehicle.category === activeFilter) && `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase().includes(query));
+  const featured = snapshot.vehicles.filter((vehicle) => vehicle.status === "available").sort((left, right) => (validTimestamp(right.updatedAt) ?? 0) - (validTimestamp(left.updatedAt) ?? 0))[0];
+  const featuredPhoto = featured ? photo(featured, "detail") : "";
+  if (featuredPhoto) hero.style.setProperty("--hero-image", `url("${featuredPhoto.replaceAll('"', '%22')}")`);
   grid.replaceChildren(...available.map((vehicle, index) => card(vehicle, index < 3)));
   soldGrid.replaceChildren(...snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").sort(soldOrder).slice(0, 3).map((vehicle) => card(vehicle)));
   state.hidden = available.length > 0;

@@ -48,6 +48,15 @@ test("home and vehicle details omit inventory update timestamps", async () => {
   assert.match(detail, /id="detailUpdated"/);
 });
 
+test("home hero uses the newest available vehicle photo as its background", async () => {
+  const home = await readFile(path.join(dist, "index.html"), "utf8");
+  const snapshot = JSON.parse(await readFile(path.join(dist, "data", "public-inventory.json"), "utf8"));
+  const featured = snapshot.vehicles.find((vehicle) => vehicle.status === "available" && vehicle.photos.length);
+  assert.ok(featured?.photos[0]?.detail);
+  assert.match(home, new RegExp(featured.photos[0].detail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(home, /--hero-image:url/);
+});
+
 test("sold vehicles have a searchable dedicated page with the full sold catalog", async () => {
   const snapshot = JSON.parse(await readFile(path.join(dist, "data", "public-inventory.json"), "utf8"));
   const html = await readFile(path.join(dist, "sold.html"), "utf8");
