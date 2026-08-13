@@ -77,15 +77,21 @@ async function normalizeVehicle(vehicle) {
 function vehicleName(vehicle) { return `${vehicle.year || ""} ${vehicle.make} ${vehicle.model} ${vehicle.trim}`.replace(/\s+/g, " ").trim(); }
 function money(value) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value || 0); }
 function card(vehicle, eager = false) {
+  if (vehicle.status === "sold") return soldCard(vehicle, eager);
   const detail = `detail.html?id=${encodeURIComponent(vehicle.id)}`;
   const first = vehicle.photos[0] || {};
   const contact = encodeURIComponent(`Hi Alejo Motors, I am interested in ${vehicleName(vehicle)}${vehicle.stock ? `, stock ${vehicle.stock}` : ""}.`);
   const image = first.card || "assets/vehicle-placeholder.svg";
   const srcset = first.thumbnail ? ` srcset="${first.thumbnail} 400w, ${first.card} 800w, ${first.detail} 1400w" sizes="(max-width:680px) 100vw, (max-width:1020px) 50vw, 33vw"` : "";
-  const actions = vehicle.status === "sold"
-    ? `<a class="button primary detail-link" href="${detail}">View Details</a>`
-    : `<a class="button primary detail-link" href="${detail}">View Details</a><a class="icon-action" href="tel:${phone}">Call</a><a class="icon-action" href="sms:${phone}?&body=${contact}">Text</a><a class="icon-action" href="https://wa.me/${digits}?text=${contact}" target="_blank" rel="noopener">WhatsApp</a>`;
-  return `<article class="vehicle-card"><a class="vehicle-image" href="${detail}"><img width="800" height="600" src="${image}"${srcset} alt="${escapeHtml(vehicleName(vehicle))}" loading="${eager ? "eager" : "lazy"}" decoding="async"${eager ? ' fetchpriority="high"' : ""}><span class="status-pill${vehicle.status === "sold" ? " sold" : ""}">${vehicle.status === "sold" ? "Sold" : "Available"}</span></a><div class="vehicle-body"><span class="stock">${vehicle.stock ? `Stock #${escapeHtml(vehicle.stock)}` : "Alejo Motors"}</span><h3>${escapeHtml(vehicleName(vehicle))}</h3><strong class="price">${vehicle.status === "sold" ? "Sold" : money(vehicle.price)}</strong><div class="specs"><span>${vehicle.mileage ? `${vehicle.mileage.toLocaleString("en-US")} mi` : "Mileage unavailable"}</span><span>${escapeHtml(vehicle.titleType)}</span><span>${escapeHtml(vehicle.engine)}</span><span>${escapeHtml(vehicle.transmission)}</span></div><div class="card-actions">${actions}</div></div></article>`;
+  const actions = `<a class="button primary detail-link" href="${detail}">View Details</a><a class="icon-action" href="tel:${phone}">Call</a><a class="icon-action" href="sms:${phone}?&body=${contact}">Text</a><a class="icon-action" href="https://wa.me/${digits}?text=${contact}" target="_blank" rel="noopener">WhatsApp</a>`;
+  return `<article class="vehicle-card"><a class="vehicle-image" href="${detail}"><img width="800" height="600" src="${image}"${srcset} alt="${escapeHtml(vehicleName(vehicle))}" loading="${eager ? "eager" : "lazy"}" decoding="async"${eager ? ' fetchpriority="high"' : ""}><span class="status-pill">Available</span></a><div class="vehicle-body"><span class="stock">${vehicle.stock ? `Stock #${escapeHtml(vehicle.stock)}` : "Alejo Motors"}</span><h3>${escapeHtml(vehicleName(vehicle))}</h3><strong class="price">${money(vehicle.price)}</strong><div class="specs"><span>${vehicle.mileage ? `${vehicle.mileage.toLocaleString("en-US")} mi` : "Mileage unavailable"}</span><span>${escapeHtml(vehicle.titleType)}</span><span>${escapeHtml(vehicle.engine)}</span><span>${escapeHtml(vehicle.transmission)}</span></div><div class="card-actions">${actions}</div></div></article>`;
+}
+
+function soldCard(vehicle, eager = false) {
+  const first = vehicle.photos[0] || {};
+  const image = first.card || "assets/vehicle-placeholder.svg";
+  const srcset = first.thumbnail ? ` srcset="${first.thumbnail} 400w, ${first.card} 800w, ${first.detail} 1400w" sizes="(max-width:680px) 100vw, (max-width:1020px) 50vw, 33vw"` : "";
+  return `<article class="vehicle-card sold-card"><div class="vehicle-image"><img width="800" height="600" src="${image}"${srcset} alt="${escapeHtml(vehicleName(vehicle))}" loading="${eager ? "eager" : "lazy"}" decoding="async"><span class="sold-watermark">SOLD</span></div><h3 class="sold-name">${escapeHtml(vehicleName(vehicle))}</h3></article>`;
 }
 
 async function hashedAsset(sourceName, outputStem) {

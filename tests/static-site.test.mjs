@@ -33,7 +33,7 @@ test("home prerenders available vehicles and only three sold vehicles", async ()
   const inventory = html.match(/<div id="inventoryGrid"[\s\S]*?<\/div>\s*<p id="inventoryState"/)?.[0] || "";
   const sold = html.match(/<div id="soldGrid"[\s\S]*?<\/div>\s*<\/section>/)?.[0] || "";
   assert.ok((inventory.match(/class="vehicle-card"/g) || []).length > 0);
-  assert.equal((sold.match(/class="vehicle-card"/g) || []).length, 3);
+  assert.equal((sold.match(/class="vehicle-card(?: sold-card)?"/g) || []).length, 3);
   assert.doesNotMatch(sold, /href="tel:|href="sms:|wa\.me/);
 });
 
@@ -42,7 +42,7 @@ test("sold vehicles have a searchable dedicated page with the full sold catalog"
   const html = await readFile(path.join(dist, "sold.html"), "utf8");
   assert.match(html, /<h1>SOLD VEHICLES<\/h1>/);
   assert.match(html, /id="soldSearch"/);
-  assert.equal((html.match(/class="vehicle-card"/g) || []).length, snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").length);
+  assert.equal((html.match(/class="vehicle-card(?: sold-card)?"/g) || []).length, snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").length);
   assert.doesNotMatch(html.match(/<div id="allSoldGrid"[\s\S]*?<p id="soldState"/)?.[0] || "", /href="tel:|href="sms:|wa\.me/);
 });
 

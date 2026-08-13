@@ -36,6 +36,7 @@ function validSnapshot(value) {
 }
 
 function card(vehicle, eager = false) {
+  if (vehicle.status === "sold") return soldCard(vehicle);
   const node = template.content.firstElementChild.cloneNode(true);
   const detailUrl = `detail.html?id=${encodeURIComponent(vehicle.id)}`;
   const image = node.querySelector("img");
@@ -49,23 +50,47 @@ function card(vehicle, eager = false) {
     image.sizes = "(max-width:680px) 100vw, (max-width:1020px) 50vw, 33vw";
   }
   node.querySelector("[data-role=detail]").href = detailUrl;
-  const pill = node.querySelector(".status-pill"); pill.textContent = vehicle.status === "sold" ? "Sold" : "Available"; pill.classList.toggle("sold", vehicle.status === "sold");
+  const pill = node.querySelector(".status-pill"); pill.textContent = "Available";
   node.querySelector(".stock").textContent = vehicle.stock ? `Stock #${vehicle.stock}` : "Alejo Motors";
   node.querySelector("h3").textContent = vehicleName(vehicle);
-  node.querySelector(".price").textContent = vehicle.status === "sold" ? "Sold" : money(vehicle.price);
+  node.querySelector(".price").textContent = money(vehicle.price);
   node.querySelector(".miles").textContent = miles(vehicle.mileage);
   node.querySelector(".title").textContent = text(vehicle.titleType);
   node.querySelector(".engine").textContent = text(vehicle.engine);
   node.querySelector(".transmission").textContent = transmission(vehicle.transmission);
   node.querySelector(".detail-link").href = detailUrl;
-  if (vehicle.status === "sold") {
-    node.querySelectorAll(".call-link,.text-link,.whatsapp-link").forEach((link) => link.remove());
-    return node;
-  }
   const message = messageFor(vehicle);
   node.querySelector(".call-link").href = `tel:${phone}`;
   node.querySelector(".text-link").href = `sms:${phone}?&body=${message}`;
   node.querySelector(".whatsapp-link").href = `https://wa.me/${digits}?text=${message}`;
+  return node;
+}
+
+function soldCard(vehicle) {
+  const node = document.createElement("article");
+  node.className = "vehicle-card sold-card";
+  const visual = document.createElement("div");
+  visual.className = "vehicle-image";
+  const image = document.createElement("img");
+  image.width = 800;
+  image.height = 600;
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.alt = vehicleName(vehicle);
+  image.src = photo(vehicle, "card") || "assets/vehicle-placeholder.svg";
+  const first = vehicle.photos?.[0];
+  if (first && typeof first === "object") {
+    image.srcset = `${first.thumbnail} 400w, ${first.card} 800w, ${first.detail} 1400w`;
+    image.sizes = "(max-width:680px) 100vw, (max-width:1020px) 50vw, 33vw";
+  }
+  const watermark = document.createElement("span");
+  watermark.className = "sold-watermark";
+  watermark.textContent = "SOLD";
+  const name = document.createElement("h3");
+  name.className = "sold-name";
+  name.textContent = vehicleName(vehicle);
+  visual.append(image, watermark);
+  node.append(visual, name);
   return node;
 }
 

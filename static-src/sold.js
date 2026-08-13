@@ -34,16 +34,11 @@ function image(vehicle) {
 }
 function card(vehicle) {
   const article = document.createElement("article");
-  article.className = "vehicle-card";
-  const detail = `detail.html?id=${encodeURIComponent(vehicle.id)}`;
-  article.innerHTML = `<a class="vehicle-image" href="${detail}"><img width="800" height="600" loading="lazy" decoding="async" alt=""><span class="status-pill sold">Sold</span></a><div class="vehicle-body"><span class="stock"></span><h3></h3><strong class="price">Sold</strong><div class="specs"><span></span><span></span></div><div class="card-actions"><a class="button primary detail-link" href="${detail}">View Details</a></div></div>`;
+  article.className = "vehicle-card sold-card";
+  article.innerHTML = `<div class="vehicle-image"><img width="800" height="600" loading="lazy" decoding="async" alt=""><span class="sold-watermark">SOLD</span></div><h3 class="sold-name"></h3>`;
   article.querySelector("img").src = image(vehicle);
   article.querySelector("img").alt = name(vehicle);
-  article.querySelector(".stock").textContent = vehicle.stock ? `Stock #${vehicle.stock}` : "Alejo Motors";
-  article.querySelector("h3").textContent = name(vehicle);
-  const specs = article.querySelectorAll(".specs span");
-  specs[0].textContent = vehicle.mileage ? `${Number(vehicle.mileage).toLocaleString("en-US")} mi` : "";
-  specs[1].textContent = text(vehicle.titleType);
+  article.querySelector(".sold-name").textContent = name(vehicle);
   return article;
 }
 function setSnapshot(snapshot) {
