@@ -236,8 +236,8 @@
     "fuelType": "Gasoline",
     "titleType": "Clean",
     "damage": "",
-    "status": "available",
-    "soldAt": "",
+    "status": "sold",
+    "soldAt": "2026-08-13T01:25:11.889Z",
     "images": [
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-1-1779651501448-8b16eb09.jpg",
       "https://raw.githubusercontent.com/sergioard1/alejo-motors/main/uploads/150ef36f86e040b50f7f4cd9/photo-2-1779651502782-bb2f5279.jpg",
