@@ -3,6 +3,7 @@ import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { transform } from "esbuild";
 import sharp from "sharp";
+import { publicVehicleComparator } from "./catalog-order.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const sourceDir = path.join(root, "static-src");
@@ -66,7 +67,7 @@ async function normalizeVehicle(vehicle) {
     category: normalizeCategory(vehicle.category), price: number(vehicle.price), mileage: number(vehicle.miles || vehicle.mileage),
     engine: text(vehicle.engine), transmission: normalizeTransmission(vehicle.transmission), bodyStyle: text(vehicle.bodyStyle),
     drivetrain: text(vehicle.drivetrain), fuelType: text(vehicle.fuelType || vehicle.fuel), exteriorColor: text(vehicle.exteriorColor),
-    interiorColor: text(vehicle.interiorColor), titleType: text(vehicle.titleType || vehicle.title), vin: text(vehicle.vin),
+    interiorColor: text(vehicle.interiorColor), titleType: text(vehicle.titleType || vehicle.title),
     description: cleanDescription(vehicle.publicDescription || vehicle.notes), status,
     publishedAt: text(vehicle.publishedAt), updatedAt: text(vehicle.updatedAt || vehicle.soldAt || vehicle.publishedAt),
     soldAt: status === "sold" ? text(vehicle.soldAt) : "", photos, primaryPhoto: photos[0]?.detail || "",
@@ -81,7 +82,10 @@ function card(vehicle, eager = false) {
   const contact = encodeURIComponent(`Hi Alejo Motors, I am interested in ${vehicleName(vehicle)}${vehicle.stock ? `, stock ${vehicle.stock}` : ""}.`);
   const image = first.card || "assets/vehicle-placeholder.svg";
   const srcset = first.thumbnail ? ` srcset="${first.thumbnail} 400w, ${first.card} 800w, ${first.detail} 1400w" sizes="(max-width:680px) 100vw, (max-width:1020px) 50vw, 33vw"` : "";
-  return `<article class="vehicle-card"><a class="vehicle-image" href="${detail}"><img width="800" height="600" src="${image}"${srcset} alt="${escapeHtml(vehicleName(vehicle))}" loading="${eager ? "eager" : "lazy"}" decoding="async"${eager ? ' fetchpriority="high"' : ""}><span class="status-pill${vehicle.status === "sold" ? " sold" : ""}">${vehicle.status === "sold" ? "Sold" : "Available"}</span></a><div class="vehicle-body"><span class="stock">${vehicle.stock ? `Stock #${escapeHtml(vehicle.stock)}` : "Alejo Motors"}</span><h3>${escapeHtml(vehicleName(vehicle))}</h3><strong class="price">${vehicle.status === "sold" ? "Sold" : money(vehicle.price)}</strong><div class="specs"><span>${vehicle.mileage ? `${vehicle.mileage.toLocaleString("en-US")} mi` : "Mileage unavailable"}</span><span>${escapeHtml(vehicle.titleType)}</span><span>${escapeHtml(vehicle.engine)}</span><span>${escapeHtml(vehicle.transmission)}</span></div><div class="card-actions"><a class="button primary detail-link" href="${detail}">View Details</a><a class="icon-action" href="tel:${phone}">Call</a><a class="icon-action" href="sms:${phone}?&body=${contact}">Text</a><a class="icon-action" href="https://wa.me/${digits}?text=${contact}" target="_blank" rel="noopener">WhatsApp</a></div></div></article>`;
+  const actions = vehicle.status === "sold"
+    ? `<a class="button primary detail-link" href="${detail}">View Details</a>`
+    : `<a class="button primary detail-link" href="${detail}">View Details</a><a class="icon-action" href="tel:${phone}">Call</a><a class="icon-action" href="sms:${phone}?&body=${contact}">Text</a><a class="icon-action" href="https://wa.me/${digits}?text=${contact}" target="_blank" rel="noopener">WhatsApp</a>`;
+  return `<article class="vehicle-card"><a class="vehicle-image" href="${detail}"><img width="800" height="600" src="${image}"${srcset} alt="${escapeHtml(vehicleName(vehicle))}" loading="${eager ? "eager" : "lazy"}" decoding="async"${eager ? ' fetchpriority="high"' : ""}><span class="status-pill${vehicle.status === "sold" ? " sold" : ""}">${vehicle.status === "sold" ? "Sold" : "Available"}</span></a><div class="vehicle-body"><span class="stock">${vehicle.stock ? `Stock #${escapeHtml(vehicle.stock)}` : "Alejo Motors"}</span><h3>${escapeHtml(vehicleName(vehicle))}</h3><strong class="price">${vehicle.status === "sold" ? "Sold" : money(vehicle.price)}</strong><div class="specs"><span>${vehicle.mileage ? `${vehicle.mileage.toLocaleString("en-US")} mi` : "Mileage unavailable"}</span><span>${escapeHtml(vehicle.titleType)}</span><span>${escapeHtml(vehicle.engine)}</span><span>${escapeHtml(vehicle.transmission)}</span></div><div class="card-actions">${actions}</div></div></article>`;
 }
 
 async function hashedAsset(sourceName, outputStem) {
@@ -104,7 +108,7 @@ await mkdir(path.join(outputDir, "data"), { recursive: true });
 const raw = JSON.parse(await readFile(path.join(root, "data", "inventory.json"), "utf8"));
 const vehicles = [];
 for (const vehicle of raw) vehicles.push(await normalizeVehicle(vehicle));
-vehicles.sort((a, b) => Number(a.status === "sold") - Number(b.status === "sold") || text(b.updatedAt).localeCompare(text(a.updatedAt)));
+vehicles.sort(publicVehicleComparator);
 const generatedAt = new Date().toISOString();
 const publicData = { contract: "alejo-motors.public-inventory.v1", schemaVersion: 1, version: 0, generatedAt, counts: { available: vehicles.filter((item) => item.status === "available").length, sold: vehicles.filter((item) => item.status === "sold").length, total: vehicles.length }, vehicles };
 publicData.checksum = hash(JSON.stringify(publicData));

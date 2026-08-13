@@ -29,7 +29,7 @@ function render() {
   document.querySelector("#detailName").textContent = name(vehicle);
   document.querySelector("#detailPrice").textContent = vehicle.status === "sold" ? "Sold" : money(vehicle.price);
   document.querySelector("#detailMileage").textContent = number(vehicle.mileage) ? `${new Intl.NumberFormat("en-US").format(number(vehicle.mileage))} miles` : text(vehicle.mileage);
-  const specs = [["Engine",vehicle.engine],["Transmission",/^aut$/i.test(text(vehicle.transmission))?"Automatic":vehicle.transmission],["Drivetrain",vehicle.drivetrain],["Fuel",vehicle.fuelType],["Exterior",vehicle.exteriorColor],["Interior",vehicle.interiorColor],["Title",vehicle.titleType],["VIN",vehicle.vin]].filter(([,value])=>text(value));
+  const specs = [["Engine",vehicle.engine],["Transmission",/^aut$/i.test(text(vehicle.transmission))?"Automatic":vehicle.transmission],["Drivetrain",vehicle.drivetrain],["Fuel",vehicle.fuelType],["Exterior",vehicle.exteriorColor],["Interior",vehicle.interiorColor],["Title",vehicle.titleType]].filter(([,value])=>text(value));
   document.querySelector("#detailSpecs").replaceChildren(...specs.map(([label,value])=>{const div=document.createElement("div");const dt=document.createElement("dt");const dd=document.createElement("dd");dt.textContent=label;dd.textContent=text(value);div.append(dt,dd);return div;}));
   document.querySelector("#detailDescription").textContent = text(vehicle.description) || "Contact Alejo Motors for complete vehicle information.";
   document.querySelector("#detailUpdated").textContent = vehicle.updatedAt ? `Last updated ${new Date(vehicle.updatedAt).toLocaleString()}` : "";
@@ -41,7 +41,12 @@ function render() {
   const socialImage=photoUrl((vehicle.photos||[])[0],"detail");if(socialImage){const meta=document.createElement("meta");meta.property="og:image";meta.content=new URL(socialImage,location.href).href;document.head.append(meta);}
   const thumbnails = document.querySelector("#thumbnails"); thumbnails.replaceChildren(...(vehicle.photos || []).map((item, position)=>{const button=document.createElement("button");const image=document.createElement("img");image.src=photoUrl(item,"thumbnail");image.alt=`${name(vehicle)} thumbnail ${position+1}`;image.loading="lazy";button.addEventListener("click",()=>showPhoto(position));button.append(image);return button;}));
   showPhoto(0); setContacts();
-  const structured = { "@context":"https://schema.org", "@type":"Vehicle", name:name(vehicle), vehicleIdentificationNumber:text(vehicle.vin), mileageFromOdometer:number(vehicle.mileage)?{ "@type":"QuantitativeValue", value:number(vehicle.mileage), unitCode:"SMI"}:undefined, offers:{ "@type":"Offer", price:number(vehicle.price), priceCurrency:"USD", availability:vehicle.status==="available"?"https://schema.org/InStock":"https://schema.org/SoldOut", url:location.href }, image:(vehicle.photos||[]).map((item)=>photoUrl(item,"detail")) };
+  if (vehicle.status === "sold") {
+    document.querySelectorAll("#detailCall,#detailText,#detailWhatsApp").forEach((action) => { action.hidden = true; });
+    document.querySelector(".detail-contact").hidden = true;
+    document.querySelector(".mobile-contact").hidden = true;
+  }
+  const structured = { "@context":"https://schema.org", "@type":"Vehicle", name:name(vehicle), mileageFromOdometer:number(vehicle.mileage)?{ "@type":"QuantitativeValue", value:number(vehicle.mileage), unitCode:"SMI"}:undefined, offers:{ "@type":"Offer", price:number(vehicle.price), priceCurrency:"USD", availability:vehicle.status==="available"?"https://schema.org/InStock":"https://schema.org/SoldOut", url:location.href }, image:(vehicle.photos||[]).map((item)=>photoUrl(item,"detail")) };
   const script=document.createElement("script");script.type="application/ld+json";script.textContent=JSON.stringify(structured);document.head.append(script);
 }
 

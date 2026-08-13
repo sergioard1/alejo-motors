@@ -1,12 +1,12 @@
-# Alejo Motors public catalog — Static Site migration
+﻿# Alejo Motors public catalog â€” Static Site migration
 
-Date: 2026-08-01  
-Branch: `codex/render-static-preview`  
+Date: 2026-08-13
+Branch: `codex/public-catalog-completion`
 Production status: **not deployed, changed, renamed or removed**
 
 ## Audit result
 
-The current public repository is plain HTML/CSS/JavaScript plus a Node HTTP server. The Web Service reads/writes JSON and GitHub data, serves dealer authentication and Deal Desk endpoints, and serves 130 original photos totaling 54.09 MB. Visitors therefore depend on the free Node service starting before the HTML/inventory is available. The current public frontend also downloads dealer code that visitors do not need.
+GitHub `main` already contains the modern static build, while the current Render Web Service still serves the older dealer-enabled deployment. Visitors to production therefore still see the legacy navigation and may depend on the free Node service starting. This branch completes the modern catalog without changing that service.
 
 The public visitor experience can be a Static Site. Authentication, inventory mutation, Deal Desk, private sales, document generation and lead persistence require a backend and now belong to Vehicle Manager. The static output does not publish `server.mjs`, `deal-desk.js`, dealer HTML/CSS or private data.
 
@@ -14,20 +14,21 @@ After confirming the replacement build and Vehicle Manager endpoints, the previe
 
 ## Prepared architecture
 
-`Vehicle Manager (private D1/R2/Drive) → versioned public-inventory snapshot → Render CDN static catalog`
+`Vehicle Manager (private D1/R2/Drive) â†’ versioned public-inventory snapshot â†’ Render CDN static catalog`
 
 The build produces a complete last-known-valid `dist/data/public-inventory.json` and pre-renders current available cards into `index.html`. Browser JavaScript displays that copy immediately, keeps a last valid local copy and optionally revalidates against Vehicle Manager in the background. Empty/corrupt/live failures never replace a valid catalog.
 
-The v1 contract publishes only public ID, stock, year/make/model/trim, price, mileage, public mechanical/color/title fields, public description, responsive photos, status and publication/update timestamps. Tests reject known private fields and literal secrets.
+The v1 contract publishes only public ID, stock, year/make/model/trim, price, mileage, public mechanical/color/title fields, public description, responsive photos, status and publication/update timestamps. It does not publish VIN. Tests reject known private fields and literal secrets.
 
 ## Static build contents
 
-- `static-src/index.html`: available vehicles first, exact available count, search/filters, maximum three recently sold, contact form.
-- `static-src/detail.html` and `detail.js`: direct `detail.html?id=…` support, touch gallery, one initial detail image, thumbnails, share, structured Vehicle data and fixed mobile Call/Text/WhatsApp actions.
+- `static-src/index.html`: complete `All Inventory | Cars | SUVs | Trucks | Sold | Contact` navigation, available vehicles first, exact available count, search/filters, exactly three recently sold and contact form.
+- `static-src/sold.html`: every sold vehicle, ordered by valid `soldAt` descending with deterministic update/ID fallback, historical details only and no purchase actions.
+- `static-src/detail.html` and `detail.js`: direct `detail.html?id=â€¦` support, touch gallery, one initial detail image, thumbnails, share, structured Vehicle data and fixed mobile Call/Text/WhatsApp actions.
 - `scripts/build-static.mjs`: sanitized contract, pre-rendered cards, fingerprinted CSS/JS, WebP variants and cache files.
 - `scripts/preview-static.mjs`: local-only preview server.
 - `tests/static-site.test.mjs`: public-data, no-admin/no-secret, pre-render, responsive-image and cache/route tests.
-- `render.yaml`: separate static service blueprint with auto-deploy disabled.
+- `render-static-site.yaml`: separate static service blueprint with auto-deploy disabled. Existing `render.yaml` remains the current Web Service blueprint.
 
 Original images remain in the private/legacy source. Static output generates approximately 400 px thumbnail, 800 px card and 1400 px detail WebP variants without enlarging small originals. Cards use `srcset`, dimensions, eager loading only for the first visible available cards and lazy loading for the rest. A detail page loads one detail image and thumbnail variants until the visitor navigates.
 
@@ -36,13 +37,12 @@ Original images remain in the private/legacy source. Static output generates app
 Create a **new** Static Site only after approval:
 
 - Repository: `sergioard1/alejo-motors`
-- Branch: `codex/render-static-preview` for acceptance; later use the approved release branch
+- Branch: `codex/public-catalog-completion` for acceptance; later use the approved release branch
 - Root directory: repository root / blank
-- Build command: `pnpm install --frozen-lockfile && pnpm run build`
+- Build command: `corepack enable && pnpm install --frozen-lockfile && pnpm run build`
 - Publish directory: `./dist`
 - Auto deploy: disabled until cutover approval
 - Node: 20 or newer
-- `SKIP_INSTALL_DEPS=true` because the build command performs the frozen install explicitly
 
 Non-secret build variables:
 
@@ -54,9 +54,9 @@ Vehicle Manager must allow the preview/static origin in `PUBLIC_SITE_ORIGINS`. N
 
 Blueprint rewrites:
 
-- `/detail` → `/detail.html`
-- `/vehicle` → `/detail.html`
-- Existing `detail.html?id=…` links continue unchanged.
+- `/detail` â†’ `/detail.html`
+- `/vehicle` â†’ `/detail.html`
+- Existing `detail.html?id=â€¦` links continue unchanged.
 
 Fingerprint assets/media use one-year immutable cache; public data revalidates after 60 seconds with a one-day stale fallback; HTML is revalidated. Render will also serve static assets from its CDN with Brotli and HTTP/2.
 
@@ -75,7 +75,7 @@ Observed audit comparison on 2026-08-01:
 | Measurement | Current Web Service | Prepared static output |
 | --- | ---: | ---: |
 | First HTML TTFB after sleep | 12.383 s | CDN preview pending |
-| Warm HTML TTFB | 0.193–0.250 s | CDN preview pending |
+| Warm HTML TTFB | 0.193â€“0.250 s | CDN preview pending |
 | Live inventory API | 0.691 s | Not required for first catalog render |
 | Original image repository | 54.09 MB | 36.76 MB for all 273 responsive variants |
 | Initial local critical files | Server/API dependent | about 428 KB before Brotli, including the first three vehicle photos |
@@ -85,22 +85,22 @@ The static architecture removes the measured 12.383-second cold-start path becau
 
 No hosted preview URL exists because this branch was not pushed and no Render service was created, per the production restriction. Local preview: `pnpm run preview` after `pnpm run build`.
 
-## Acceptance test before cutover
+## Two-stage publication and acceptance
 
-1. Push the two branches only after approval and create the new Static Site with a new name/subdomain.
-2. Configure the two Vehicle Manager public endpoints and exact CORS origin.
-3. Run clean-cache, warm-cache, slow-network and backend-unavailable tests.
-4. Publish/update/reorder/unpublish/sell in a staging Vehicle Manager and verify versions, checksums and last-valid fallback.
-5. Test direct detail URLs, search/filter, gallery/share, contact form/idempotency and Call/Text/WhatsApp on iPhone, Android, iPad/tablet, laptop and desktop.
-6. Run Lighthouse from the actual CDN preview; local results are not a substitute for real network measurements.
-7. Inspect `dist` and network requests again for private fields/admin code.
-8. Record results and obtain explicit cutover approval.
+1. Present these branch results and obtain explicit approval before any push or deployment.
+2. Deploy Vehicle Manager first and configure the two public endpoints plus exact CORS origins.
+3. Update the current Web Service from the approved modern build so `alejo-motors.onrender.com` keeps its URL; retain its previous Render deployment for rollback.
+4. Create the independent Static Site only after the Web Service is verified, then run clean-cache, warm-cache, slow-network and backend-unavailable tests on its new URL.
+5. Publish/update/reorder/unpublish/sell in staging and verify versions, checksums and last-valid fallback.
+6. Test direct detail URLs, search/filter, gallery/share, contact form/idempotency and Call/Text/WhatsApp on iPhone, Android, iPad/tablet, laptop and desktop.
+7. Run Lighthouse against the real CDN preview and inspect its files/network requests for private data or admin code.
+8. Move custom-domain traffic only after a second explicit approval.
 
 ## URL and cutover strategy
 
 A new Render Static Site receives a different `onrender.com` hostname. Do not assume the existing `alejo-motors.onrender.com` hostname can be reassigned. The safest durable option is a custom Alejo Motors domain: attach it to the verified static preview, lower DNS TTL in advance, switch DNS only after acceptance, keep the old Web Service running, and monitor leads/inventory.
 
-If the existing Render subdomain must be retained, contact Render support and obtain confirmation before touching the old service. Do not delete the Web Service to “free” the name without written confirmation and a rollback path.
+If the existing Render subdomain must be retained, contact Render support and obtain confirmation before touching the old service. Do not delete the Web Service to â€œfreeâ€ the name without written confirmation and a rollback path.
 
 ## Rollback
 

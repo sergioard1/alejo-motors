@@ -23,6 +23,13 @@ const vehicleName = (vehicle) => `${vehicle.year || ""} ${titleCase(vehicle.make
 const messageFor = (vehicle) => encodeURIComponent(`Hi Alejo Motors, I am interested in ${vehicleName(vehicle)}${vehicle.stock ? `, stock ${vehicle.stock}` : ""}. ${location.origin}/detail.html?id=${encodeURIComponent(vehicle.id)}`);
 const money = (value) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(number(value));
 const miles = (value) => Number.isFinite(number(value)) && number(value) > 0 ? `${new Intl.NumberFormat("en-US").format(number(value))} mi` : text(value) || "Mileage unavailable";
+const validTimestamp = (value) => { const parsed = Date.parse(text(value)); return text(value) && Number.isFinite(parsed) ? parsed : null; };
+const soldOrder = (left, right) => {
+  const leftSold = validTimestamp(left.soldAt); const rightSold = validTimestamp(right.soldAt);
+  if (leftSold !== null || rightSold !== null) { if (leftSold === null) return 1; if (rightSold === null) return -1; if (leftSold !== rightSold) return rightSold - leftSold; }
+  const leftUpdated = validTimestamp(left.updatedAt) ?? 0; const rightUpdated = validTimestamp(right.updatedAt) ?? 0;
+  return rightUpdated - leftUpdated || text(left.id).localeCompare(text(right.id), "en");
+};
 
 function validSnapshot(value) {
   return value?.contract === "alejo-motors.public-inventory.v1" && value.schemaVersion === 1 && Array.isArray(value.vehicles) && value.vehicles.length > 0 && value.vehicles.every((vehicle) => vehicle.id && ["available", "sold"].includes(vehicle.status));
@@ -51,6 +58,10 @@ function card(vehicle, eager = false) {
   node.querySelector(".engine").textContent = text(vehicle.engine);
   node.querySelector(".transmission").textContent = transmission(vehicle.transmission);
   node.querySelector(".detail-link").href = detailUrl;
+  if (vehicle.status === "sold") {
+    node.querySelectorAll(".call-link,.text-link,.whatsapp-link").forEach((link) => link.remove());
+    return node;
+  }
   const message = messageFor(vehicle);
   node.querySelector(".call-link").href = `tel:${phone}`;
   node.querySelector(".text-link").href = `sms:${phone}?&body=${message}`;
@@ -63,7 +74,7 @@ function render() {
   const query = text(search.value).toLowerCase();
   const available = snapshot.vehicles.filter((vehicle) => vehicle.status === "available" && (activeFilter === "all" || vehicle.category === activeFilter) && `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase().includes(query));
   grid.replaceChildren(...available.map((vehicle, index) => card(vehicle, index < 3)));
-  soldGrid.replaceChildren(...snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").slice(0, 3).map((vehicle) => card(vehicle)));
+  soldGrid.replaceChildren(...snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").sort(soldOrder).slice(0, 3).map((vehicle) => card(vehicle)));
   document.querySelector("#availableCount").textContent = String(snapshot.vehicles.filter((vehicle) => vehicle.status === "available").length);
   document.querySelector("#inventoryUpdated").textContent = snapshot.generatedAt ? `Updated ${new Date(snapshot.generatedAt).toLocaleString()}` : "Latest published inventory";
   state.hidden = available.length > 0;
@@ -94,7 +105,14 @@ async function loadInventory() {
   } catch { /* The last valid static snapshot remains visible. */ }
 }
 
-filterButtons.forEach((button) => button.addEventListener("click", () => { activeFilter = button.dataset.filter; filterButtons.forEach((item) => item.classList.toggle("active", item === button)); render(); }));
+function selectFilter(next) {
+  activeFilter = ["all", "car", "suv", "pickup"].includes(next) ? next : "all";
+  filterButtons.forEach((item) => item.classList.toggle("active", item.dataset.filter === activeFilter));
+  render();
+}
+filterButtons.forEach((button) => button.addEventListener("click", () => selectFilter(button.dataset.filter)));
+document.querySelectorAll("[data-nav-filter]").forEach((link) => link.addEventListener("click", () => selectFilter(link.dataset.navFilter)));
+selectFilter(new URLSearchParams(location.search).get("category") || "all");
 search.addEventListener("input", render);
 document.querySelector("#year").textContent = String(new Date().getFullYear());
 
