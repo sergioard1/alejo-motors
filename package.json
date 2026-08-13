@@ -18,10 +18,8 @@
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "pdf-lib": "1.17.1"
-  },
-  "devDependencies": {
     "esbuild": "0.28.1",
+    "pdf-lib": "1.17.1",
     "sharp": "0.34.5"
   }
 }
