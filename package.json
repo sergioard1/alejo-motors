@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node scripts/production-static.mjs",
+    "migrate": "node scripts/compat-migrate.mjs",
     "build": "node scripts/build-static.mjs",
     "preview": "node scripts/preview-static.mjs",
     "check:static": "node --check static-src/app.js && node --check static-src/detail.js && node --check static-src/sold.js && node --check scripts/build-static.mjs && node --check scripts/preview-static.mjs && node --check scripts/production-static.mjs",
