@@ -92,6 +92,12 @@ test("vehicle details include contact fallback, lead capture and share metadata"
   assert.match(await readFile(path.join(dist, "assets", scripts[0]), "utf8"), /leadEndpoint/);
 });
 
+test("the Render web service builds the static catalog before starting", async () => {
+  const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+  assert.equal(pkg.scripts.start, "node scripts/build-static.mjs && node scripts/production-static.mjs");
+  await stat(path.join(root, "static-src", "404.html"));
+});
+
 test("the public artifact contains neither VIN nor private sales and document modules", async () => {
   const files = await readdir(dist, { recursive: true });
   assert.equal(files.some((file) => /deal|buyer|invoice|sales-document|client-document/i.test(file)), false);

@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node scripts/production-static.mjs",
+    "start": "node scripts/build-static.mjs && node scripts/production-static.mjs",
     "migrate": "node scripts/compat-migrate.mjs",
     "build": "node scripts/build-static.mjs",
     "preview": "node scripts/preview-static.mjs",
