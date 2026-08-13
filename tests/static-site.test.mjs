@@ -35,6 +35,14 @@ test("home prerenders available vehicles and only three sold vehicles", async ()
   assert.equal((sold.match(/class="vehicle-card"/g) || []).length, 3);
 });
 
+test("sold vehicles have a searchable dedicated page with the full sold catalog", async () => {
+  const snapshot = JSON.parse(await readFile(path.join(dist, "data", "public-inventory.json"), "utf8"));
+  const html = await readFile(path.join(dist, "sold.html"), "utf8");
+  assert.match(html, /<h1>SOLD VEHICLES<\/h1>/);
+  assert.match(html, /id="soldSearch"/);
+  assert.equal((html.match(/class="vehicle-card"/g) || []).length, snapshot.vehicles.filter((vehicle) => vehicle.status === "sold").length);
+});
+
 test("assets are fingerprinted and responsive images are smaller than originals", async () => {
   const html = await readFile(path.join(dist, "index.html"), "utf8");
   assert.match(html, /assets\/site-[a-f0-9]{10}\.css/);

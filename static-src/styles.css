@@ -4,3 +4,13 @@
 [hidden]{display:none!important}
 .header-call{flex:0 0 auto;white-space:nowrap}
 .detail-contact{display:grid;grid-template-columns:minmax(0,.8fr) minmax(320px,1.2fr);gap:28px;align-items:start}.detail-lead-form{display:grid;grid-template-columns:1fr 1fr;gap:11px}.detail-lead-form label{display:grid;gap:4px;color:var(--muted);font-size:12px;font-weight:800}.detail-lead-form input,.detail-lead-form textarea{width:100%;border:1px solid #ccd4dc;border-radius:10px;background:#fff;padding:10px}.detail-lead-form label:nth-of-type(4),.detail-lead-form button,.detail-lead-form .form-state{grid-column:1/-1}@media(max-width:680px){.detail-contact,.detail-lead-form{grid-template-columns:1fr}.detail-lead-form label:nth-of-type(4),.detail-lead-form button,.detail-lead-form .form-state{grid-column:auto}}
+
+/* Modern compact catalog with vehicle-first hierarchy. */
+:root{--navy:#0b2341;--canvas:#f6f7f8;--line:#e3e6e9;--shadow:0 18px 55px rgba(11,35,65,.09)}
+.site-header{min-height:74px}.site-header nav a{font-size:14px;letter-spacing:.01em}.hero{min-height:350px;padding-top:48px;padding-bottom:48px;background:radial-gradient(circle at 78% 20%,rgba(215,39,49,.08),transparent 27%),linear-gradient(120deg,#f3f5f7,#fff)}
+.hero h1{max-width:850px;margin:12px 0;font-size:clamp(48px,6.2vw,82px);letter-spacing:-.06em}.hero p{font-size:17px}.hero-stat{min-height:210px;border-radius:22px;box-shadow:none}.hero-stat strong{font-size:68px}
+.inventory-section,.sold-section,.contact-section{padding-top:62px;padding-bottom:62px}.vehicle-card{border-radius:16px;box-shadow:0 8px 30px rgba(11,35,65,.06);transition:transform .2s,box-shadow .2s}.vehicle-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.vehicle-body h3{font-size:26px;letter-spacing:-.025em}.stock{order:2}.vehicle-body h3{order:1}.price{order:3}.specs{order:4}.card-actions{order:5}.text-link{color:var(--navy);font-weight:850}
+.detail-summary h1{font-size:clamp(42px,4.4vw,64px);letter-spacing:-.045em}.detail-price{font-size:46px}.detail-summary>p{font-size:18px;font-weight:750}.detail-summary dl{font-size:14px}.detail-actions .button{font-size:14px}
+.sold-catalog-hero{padding:55px clamp(18px,6vw,90px) 30px}.sold-catalog-hero h1{margin:8px 0;font-size:clamp(44px,6vw,76px);letter-spacing:-.055em}.sold-catalog-hero p{max-width:650px;color:var(--muted)}.sold-catalog{padding:25px clamp(18px,6vw,90px) 80px}.sold-toolbar{display:flex;justify-content:flex-end;margin-bottom:22px}
+@media(max-width:680px){.hero{padding-top:34px;padding-bottom:34px}.hero h1{font-size:46px}.hero-stat{min-height:140px}.inventory-section,.sold-section,.contact-section{padding-top:44px;padding-bottom:44px}.detail-summary h1{font-size:40px}.detail-price{font-size:38px}.sold-catalog-hero{padding-top:38px}}

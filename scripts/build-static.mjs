@@ -113,20 +113,25 @@ await writeFile(path.join(outputDir, "data", "public-inventory.json"), `${JSON.s
 const cssAsset = await hashedAsset("styles.css", "site.css");
 const appAsset = await hashedAsset("app.js", "app.js");
 const detailAsset = await hashedAsset("detail.js", "detail.js");
+const soldAsset = await hashedAsset("sold.js", "sold.js");
 await cp(path.join(root, "assets", "alejo-motors-logo.svg"), path.join(outputDir, "assets", "alejo-motors-logo.svg"));
 await writeFile(path.join(outputDir, "assets", "vehicle-placeholder.svg"), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600" fill="#e9ecef"/><path d="M170 370h460l-45-120H260l-90 120Zm55 0a55 55 0 1 0 110 0 55 55 0 0 0-110 0Zm240 0a55 55 0 1 0 110 0 55 55 0 0 0-110 0Z" fill="#8b949d"/></svg>');
 await writeFile(path.join(outputDir, "config.js"), `window.ALEJO_CONFIG=${JSON.stringify({ inventoryEndpoint: process.env.PUBLIC_INVENTORY_ENDPOINT || "", leadEndpoint: process.env.PUBLIC_LEAD_ENDPOINT || "", phone })};\n`);
 
 const availableCards = vehicles.filter((item) => item.status === "available").map((item, index) => card(item, index < 3)).join("");
 const soldCards = vehicles.filter((item) => item.status === "sold").slice(0, 3).map((item) => card(item)).join("");
+const allSoldCards = vehicles.filter((item) => item.status === "sold").map((item) => card(item)).join("");
 let indexHtml = await readFile(path.join(sourceDir, "index.html"), "utf8");
 indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards).replace('id="availableCount">0', `id="availableCount">${publicData.counts.available}`).replace("Last inventory update loading…", `Updated ${new Date(generatedAt).toLocaleDateString("en-US")}`);
 let detailHtml = await readFile(path.join(sourceDir, "detail.html"), "utf8");
 detailHtml = detailHtml.replace("assets/site.css", cssAsset).replace("assets/detail.js", detailAsset);
+let soldHtml = await readFile(path.join(sourceDir, "sold.html"), "utf8");
+soldHtml = soldHtml.replace("assets/site.css", cssAsset).replace("assets/sold.js", soldAsset).replace("<!-- ALL_SOLD_CARDS -->", allSoldCards);
 let notFoundHtml = await readFile(path.join(sourceDir, "404.html"), "utf8");
 notFoundHtml = notFoundHtml.replace("assets/site.css", cssAsset);
 await writeFile(path.join(outputDir, "index.html"), indexHtml);
 await writeFile(path.join(outputDir, "detail.html"), detailHtml);
+await writeFile(path.join(outputDir, "sold.html"), soldHtml);
 await writeFile(path.join(outputDir, "404.html"), notFoundHtml);
 await writeFile(path.join(outputDir, "_redirects"), "/detail /detail.html 200\n/vehicle /detail.html 200\n");
 await writeFile(path.join(outputDir, "_headers"), `/*.html\n  Cache-Control: public, max-age=0, must-revalidate\n/config.js\n  Cache-Control: public, max-age=60, must-revalidate\n/data/*\n  Cache-Control: public, max-age=60, stale-while-revalidate=86400\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/media/*\n  Cache-Control: public, max-age=31536000, immutable\n  X-Content-Type-Options: nosniff\n/*\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n  X-Content-Type-Options: nosniff\n`);
