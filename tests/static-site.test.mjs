@@ -112,6 +112,19 @@ test("vehicle details include contact fallback, lead capture and share metadata"
   assert.match(await readFile(path.join(dist, "assets", scripts[0]), "utf8"), /leadEndpoint/);
 });
 
+test("vehicle photos open in an accessible full-screen zoom viewer", async () => {
+  const html = await readFile(path.join(root, "static-src", "detail.html"), "utf8");
+  const script = await readFile(path.join(root, "static-src", "detail.js"), "utf8");
+  const styles = await readFile(path.join(root, "static-src", "lightbox.css"), "utf8");
+  assert.match(html, /id="photoLightbox"[^>]*role="dialog"/);
+  assert.match(html, /id="closeLightbox"/);
+  assert.match(script, /event\.target===event\.currentTarget\)closeLightbox/);
+  assert.match(script, /#lightboxViewport[\s\S]*event\.target===event\.currentTarget\)closeLightbox/);
+  assert.match(script, /setZoom\(zoom\+\.5\)/);
+  assert.match(script, /event\.key==="Escape"/);
+  assert.match(styles, /\.photo-lightbox-viewport img/);
+});
+
 test("the Render web service builds the static catalog before starting", async () => {
   const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   assert.equal(pkg.scripts.start, "node scripts/build-static.mjs && node scripts/production-static.mjs");

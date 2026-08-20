@@ -23,6 +23,14 @@ const cleanDescription = (value) => text(value)
   .filter((line) => !/(sincronizado desde|condici[oó]n publicada|rendimiento publicado|internal id|vehicle manager)/i.test(line))
   .join("\n").trim();
 const hash = (value) => createHash("sha256").update(value).digest("hex");
+const imageWaiters = [];
+let activeImageJobs = 0;
+async function withImageSlot(task) {
+  if (activeImageJobs >= 6) await new Promise((resolve) => imageWaiters.push(resolve));
+  activeImageJobs += 1;
+  try { return await task(); }
+  finally { activeImageJobs -= 1; imageWaiters.shift()?.(); }
+}
 
 function localImagePath(url) {
   const raw = text(url);
@@ -38,18 +46,17 @@ function localImagePath(url) {
 }
 
 async function outputPhotos(vehicle) {
-  const photos = [];
-  for (const [index, original] of (vehicle.images || []).slice(0, 20).entries()) {
+  const photos = await Promise.all((vehicle.images || []).slice(0, 20).map((original, index) => withImageSlot(async () => {
     let input;
     if (/^https?:\/\//i.test(text(original))) {
       try {
-        const response = await fetch(original);
-        if (!response.ok) continue;
+        const response = await fetch(original, { signal: AbortSignal.timeout(15_000) });
+        if (!response.ok) return null;
         input = Buffer.from(await response.arrayBuffer());
-      } catch { continue; }
+      } catch { return null; }
     } else {
       input = localImagePath(original);
-      try { await stat(input); } catch { continue; }
+      try { await stat(input); } catch { return null; }
     }
     const base = `media/${vehicle.id}/${String(index + 1).padStart(2, "0")}`;
     const sizes = { thumbnail: [400, 68], card: [800, 76], detail: [1400, 82] };
@@ -62,9 +69,9 @@ async function outputPhotos(vehicle) {
       item[variant] = relative.replaceAll("\\", "/");
     }
     item.fallback = item.detail;
-    photos.push(item);
-  }
-  return photos;
+    return item;
+  })));
+  return photos.filter(Boolean);
 }
 
 async function normalizeVehicle(vehicle) {
@@ -121,8 +128,7 @@ await rm(outputDir, { recursive: true, force: true });
 await mkdir(path.join(outputDir, "assets"), { recursive: true });
 await mkdir(path.join(outputDir, "data"), { recursive: true });
 const raw = JSON.parse(await readFile(path.join(root, "data", "inventory.json"), "utf8"));
-const vehicles = [];
-for (const vehicle of raw) vehicles.push(await normalizeVehicle(vehicle));
+const vehicles = await Promise.all(raw.map((vehicle) => normalizeVehicle(vehicle)));
 vehicles.sort(publicVehicleComparator);
 const generatedAt = new Date().toISOString();
 const publicData = { contract: "alejo-motors.public-inventory.v1", schemaVersion: 1, version: 0, generatedAt, counts: { available: vehicles.filter((item) => item.status === "available").length, sold: vehicles.filter((item) => item.status === "sold").length, total: vehicles.length }, vehicles };
@@ -130,6 +136,7 @@ publicData.checksum = hash(JSON.stringify(publicData));
 await writeFile(path.join(outputDir, "data", "public-inventory.json"), `${JSON.stringify(publicData, null, 2)}\n`);
 
 const cssAsset = await hashedAsset("styles.css", "site.css");
+const lightboxAsset = await hashedAsset("lightbox.css", "lightbox.css");
 const appAsset = await hashedAsset("app.js", "app.js");
 const detailAsset = await hashedAsset("detail.js", "detail.js");
 const soldAsset = await hashedAsset("sold.js", "sold.js");
@@ -145,7 +152,7 @@ const allSoldCards = vehicles.filter((item) => item.status === "sold").map((item
 let indexHtml = await readFile(path.join(sourceDir, "index.html"), "utf8");
 indexHtml = indexHtml.replace("assets/site.css", cssAsset).replace("assets/app.js", appAsset).replace("/assets/vehicle-placeholder.svg')", `${featuredPhoto}')`).replace("<!-- INVENTORY_CARDS -->", availableCards).replace("<!-- SOLD_CARDS -->", soldCards);
 let detailHtml = await readFile(path.join(sourceDir, "detail.html"), "utf8");
-detailHtml = detailHtml.replace("assets/site.css", cssAsset).replace("assets/detail.js", detailAsset);
+detailHtml = detailHtml.replace("assets/site.css", cssAsset).replace("assets/lightbox.css", lightboxAsset).replace("assets/detail.js", detailAsset);
 let soldHtml = await readFile(path.join(sourceDir, "sold.html"), "utf8");
 soldHtml = soldHtml.replace("assets/site.css", cssAsset).replace("assets/sold.js", soldAsset).replace("<!-- ALL_SOLD_CARDS -->", allSoldCards);
 let notFoundHtml = await readFile(path.join(sourceDir, "404.html"), "utf8");

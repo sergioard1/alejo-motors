@@ -10,6 +10,7 @@ const money = (value) => new Intl.NumberFormat("en-US", { style: "currency", cur
 const valid = (snapshot) => snapshot?.contract === "alejo-motors.public-inventory.v1" && snapshot.schemaVersion === 1 && Array.isArray(snapshot.vehicles) && snapshot.vehicles.length > 0;
 const photoUrl = (photo, size) => typeof photo === "string" ? photo : photo?.[size] || photo?.fallback || "";
 let vehicle = null; let index = 0;
+let zoom = 1; let panX = 0; let panY = 0; let dragging = false; let dragStartX = 0; let dragStartY = 0;
 
 async function inventory() {
   let snapshot = null;
@@ -22,6 +23,12 @@ async function inventory() {
 function contactMessage() { return encodeURIComponent(`Hi Alejo Motors, I am interested in ${name(vehicle)}${vehicle.stock ? `, stock ${vehicle.stock}` : ""}. ${location.href}`); }
 function setContacts() { const message = contactMessage(); for (const selector of ["#detailCall", "#mobileCall"]) document.querySelector(selector).href = `tel:${phone}`; for (const selector of ["#detailText", "#mobileText"]) document.querySelector(selector).href = `sms:${phone}?&body=${message}`; for (const selector of ["#detailWhatsApp", "#mobileWhatsApp"]) document.querySelector(selector).href = `https://wa.me/${digits}?text=${message}`; }
 function showPhoto(next) { const photos = vehicle.photos || []; if (!photos.length) return; index = (next + photos.length) % photos.length; const main = document.querySelector("#mainPhoto"); main.src = photoUrl(photos[index], "detail"); main.alt = `${name(vehicle)} photo ${index + 1}`; document.querySelector("#photoCount").textContent = `${index + 1}/${photos.length}`; [...document.querySelectorAll(".thumbnails button")].forEach((button, position) => button.classList.toggle("active", position === index)); }
+function applyZoom() { const image=document.querySelector("#lightboxPhoto"); image.style.transform=`translate3d(${panX}px,${panY}px,0) scale(${zoom})`; document.querySelector("#zoomReset").textContent=`${Math.round(zoom*100)}%`; }
+function setZoom(next) { zoom=Math.min(4,Math.max(1,next)); if(zoom===1){panX=0;panY=0;} applyZoom(); }
+function syncLightboxPhoto() { const photos=vehicle?.photos||[]; if(!photos.length)return; const image=document.querySelector("#lightboxPhoto"); image.src=photoUrl(photos[index],"detail"); image.alt=`${name(vehicle)} full photo ${index+1}`; document.querySelector("#lightboxCount").textContent=`${index+1}/${photos.length}`; zoom=1;panX=0;panY=0;applyZoom(); }
+function openLightbox() { if(!vehicle?.photos?.length)return; syncLightboxPhoto(); const viewer=document.querySelector("#photoLightbox"); viewer.hidden=false; document.body.classList.add("lightbox-open"); document.querySelector("#closeLightbox").focus(); }
+function closeLightbox() { document.querySelector("#photoLightbox").hidden=true; document.body.classList.remove("lightbox-open"); document.querySelector("#mainPhoto").focus(); }
+function lightboxPhoto(next) { showPhoto(next); syncLightboxPhoto(); }
 function render() {
   document.querySelector("#detailLoading").hidden = true; document.querySelector("#vehicleDetail").hidden = false;
   document.querySelector("#detailStatus").textContent = vehicle.status === "sold" ? "Sold" : "Available";
@@ -50,6 +57,23 @@ function render() {
 }
 
 document.querySelector("#previousPhoto").addEventListener("click",()=>showPhoto(index-1)); document.querySelector("#nextPhoto").addEventListener("click",()=>showPhoto(index+1));
+document.querySelector("#mainPhoto").addEventListener("click",openLightbox);
+document.querySelector("#mainPhoto").addEventListener("keydown",(event)=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openLightbox();}});
+document.querySelector("#closeLightbox").addEventListener("click",closeLightbox);
+document.querySelector("#photoLightbox").addEventListener("click",(event)=>{if(event.target===event.currentTarget)closeLightbox();});
+document.querySelector(".photo-lightbox-stage").addEventListener("click",(event)=>{if(event.target===event.currentTarget)closeLightbox();});
+document.querySelector("#lightboxViewport").addEventListener("click",(event)=>{if(event.target===event.currentTarget)closeLightbox();});
+document.querySelector("#lightboxPrevious").addEventListener("click",()=>lightboxPhoto(index-1));
+document.querySelector("#lightboxNext").addEventListener("click",()=>lightboxPhoto(index+1));
+document.querySelector("#zoomIn").addEventListener("click",()=>setZoom(zoom+.5));
+document.querySelector("#zoomOut").addEventListener("click",()=>setZoom(zoom-.5));
+document.querySelector("#zoomReset").addEventListener("click",()=>setZoom(zoom===1?2:1));
+document.querySelector("#lightboxViewport").addEventListener("wheel",(event)=>{event.preventDefault();setZoom(zoom+(event.deltaY < 0 ? .25 : -.25));},{passive:false});
+document.querySelector("#lightboxPhoto").addEventListener("dblclick",()=>setZoom(zoom===1?2.5:1));
+document.querySelector("#lightboxPhoto").addEventListener("pointerdown",(event)=>{if(zoom<=1)return;dragging=true;dragStartX=event.clientX-panX;dragStartY=event.clientY-panY;event.currentTarget.setPointerCapture(event.pointerId);});
+document.querySelector("#lightboxPhoto").addEventListener("pointermove",(event)=>{if(!dragging)return;panX=event.clientX-dragStartX;panY=event.clientY-dragStartY;applyZoom();});
+document.querySelector("#lightboxPhoto").addEventListener("pointerup",()=>{dragging=false;});
+document.addEventListener("keydown",(event)=>{if(document.querySelector("#photoLightbox").hidden)return;if(event.key==="Escape")closeLightbox();if(event.key==="ArrowLeft")lightboxPhoto(index-1);if(event.key==="ArrowRight")lightboxPhoto(index+1);if(event.key==="+")setZoom(zoom+.5);if(event.key==="-")setZoom(zoom-.5);});
 document.querySelector("#shareVehicle").addEventListener("click",async()=>{const data={title:name(vehicle),text:`See ${name(vehicle)} at Alejo Motors`,url:location.href};if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(location.href);document.querySelector("#shareVehicle").textContent="Link copied";}});
 let touchStart=0;document.querySelector(".main-photo").addEventListener("touchstart",(event)=>{touchStart=event.touches[0].clientX},{passive:true});document.querySelector(".main-photo").addEventListener("touchend",(event)=>{const end=event.changedTouches[0].clientX;if(Math.abs(end-touchStart)>45)showPhoto(index+(end<touchStart?1:-1));},{passive:true});
 

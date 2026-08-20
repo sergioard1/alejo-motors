@@ -1,0 +1,17 @@
+.main-photo img{cursor:zoom-in}
+.photo-open-hint{position:absolute;bottom:12px;left:12px;border-radius:999px;background:rgba(10,25,44,.78);color:#fff;padding:5px 10px;font-size:11px;font-weight:800}
+.lightbox-open{overflow:hidden}
+.photo-lightbox[hidden]{display:none}
+.photo-lightbox{position:fixed;z-index:500;inset:0;display:grid;place-items:center;background:rgba(4,8,14,.94);padding:18px}
+.photo-lightbox-stage{position:relative;width:100%;height:100%;display:grid;place-items:center}
+.photo-lightbox-viewport{display:grid;width:100%;height:100%;place-items:center;overflow:hidden;touch-action:none}
+.photo-lightbox-viewport img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center;transition:transform .12s ease;cursor:zoom-in;touch-action:none;user-select:none}
+.photo-lightbox-close,.photo-lightbox-nav,.photo-zoom-controls button{border:1px solid rgba(255,255,255,.35);background:rgba(11,22,36,.86);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.24)}
+.photo-lightbox-close{position:absolute;z-index:3;top:max(4px,env(safe-area-inset-top));right:4px;width:50px;height:50px;border-radius:50%;font-size:32px;line-height:1}
+.photo-lightbox-nav{position:absolute;z-index:2;top:50%;width:52px;height:62px;border-radius:14px;font-size:38px;transform:translateY(-50%)}
+.photo-lightbox-nav.previous{left:4px}.photo-lightbox-nav.next{right:4px}
+.photo-zoom-controls{position:absolute;z-index:3;bottom:max(4px,env(safe-area-inset-bottom));left:50%;display:flex;gap:6px;transform:translateX(-50%)}
+.photo-zoom-controls button{min-width:48px;height:44px;border-radius:11px;font-size:18px;font-weight:850}
+.photo-zoom-controls #zoomReset{min-width:72px;font-size:12px}
+.photo-lightbox-count{position:absolute;z-index:3;top:12px;left:12px;border-radius:999px;background:rgba(11,22,36,.86);color:#fff;padding:7px 11px;font-weight:800}
+@media(max-width:680px){.photo-lightbox{padding:0}.photo-open-hint{display:none}.photo-lightbox-nav{width:44px;height:54px}.photo-lightbox-close{right:10px}.photo-lightbox-count{left:10px}}
