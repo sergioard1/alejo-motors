@@ -2,9 +2,9 @@
 .photo-open-hint{position:absolute;bottom:12px;left:12px;border-radius:999px;background:rgba(10,25,44,.78);color:#fff;padding:5px 10px;font-size:11px;font-weight:800}
 .lightbox-open{overflow:hidden}
 .photo-lightbox[hidden]{display:none}
-.photo-lightbox{position:fixed;z-index:500;inset:0;display:grid;place-items:center;background:rgba(4,8,14,.94);padding:18px}
-.photo-lightbox-stage{position:relative;width:100%;height:100%;display:grid;place-items:center}
-.photo-lightbox-viewport{display:grid;width:100%;height:100%;place-items:center;overflow:hidden;touch-action:none}
+.photo-lightbox{position:fixed;z-index:500;inset:0;background:rgba(4,8,14,.94)}
+.photo-lightbox-stage{position:absolute;inset:18px;display:block}
+.photo-lightbox-viewport{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;touch-action:none}
 .photo-lightbox-viewport img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center;transition:transform .12s ease;cursor:zoom-in;touch-action:none;user-select:none;-webkit-user-drag:none}
 .photo-lightbox-viewport img.zoomed{cursor:grab}.photo-lightbox-viewport img.zoomed:active{cursor:grabbing;transition:none}
 .photo-lightbox-close,.photo-lightbox-nav,.photo-zoom-controls button{border:1px solid rgba(255,255,255,.35);background:rgba(11,22,36,.86);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.24)}
@@ -15,4 +15,4 @@
 .photo-zoom-controls button{min-width:48px;height:44px;border-radius:11px;font-size:18px;font-weight:850}
 .photo-zoom-controls #zoomReset{min-width:72px;font-size:12px}
 .photo-lightbox-count{position:absolute;z-index:3;top:12px;left:12px;border-radius:999px;background:rgba(11,22,36,.86);color:#fff;padding:7px 11px;font-weight:800}
-@media(max-width:680px){.photo-lightbox{padding:0}.photo-open-hint{display:none}.photo-lightbox-nav{width:44px;height:54px}.photo-lightbox-close{right:10px}.photo-lightbox-count{left:10px}.photo-zoom-controls{bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(max-width:680px){.photo-lightbox-stage{inset:0}.photo-open-hint{display:none}.photo-lightbox-nav{width:44px;height:54px}.photo-lightbox-close{right:10px}.photo-lightbox-count{left:10px}.photo-zoom-controls{bottom:max(12px,env(safe-area-inset-bottom))}}

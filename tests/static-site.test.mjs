@@ -127,6 +127,8 @@ test("vehicle photos open in an accessible full-screen zoom viewer", async () =>
   assert.match(script, /event\.key==="Escape"/);
   assert.match(styles, /\.photo-lightbox-viewport img/);
   assert.match(styles, /img\.zoomed/);
+  assert.match(styles, /\.photo-lightbox-stage\{position:absolute;inset:18px/);
+  assert.match(styles, /\.photo-lightbox-viewport\{position:absolute;inset:0/);
 });
 
 test("the Render web service builds the static catalog before starting", async () => {
